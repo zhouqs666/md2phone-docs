@@ -2,7 +2,7 @@
  * 策略：全部走 network-first（保证手机端一刷新就是最新版），失败时回退缓存（离线可读）。
  * 每次构建生成新 BUILD_ID → 新缓存名 → activate 时清掉旧缓存。
  */
-var VERSION = 'cf1a5381c9ed';
+var VERSION = 'db47ff5d5ca5';
 var CACHE = 'md2phone-' + VERSION;
 var SHELL = [
   './',

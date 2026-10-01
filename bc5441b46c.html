@@ -97,9 +97,10 @@
 <h2 id="_3">日常内容更新（最常用路径）</h2>
 <ol>
 <li><strong>改内容只改 <code>docs/*.md</code></strong>（会被下次构建覆盖的文件不要手改）；</li>
-<li><code>python3 build.py</code>；</li>
-<li>把 <code>文档库.html</code> 发到手机（微信/邮件）→ App 菜单「导入文档库」→ 完成（约 20 秒，不重装）。
-   ⚠️ 导入的永远是 <code>文档库.html</code> 整库快照，不是 .md 原文——App 不解析 md。</li>
+<li>方式一（推荐）：双击「自动同步.command」→ 弹窗确认「发布」→ 网站自动更新 → 手机刷新或 App「从网站拉取最新」；</li>
+<li>方式二（离线）：<code>python3 build.py</code> → 把 <code>文档库.html</code> 发到手机 → App 菜单「导入文档库」。
+   ⚠️ App 导入与拉取的永远是<strong>整库快照</strong>（文档库.html / library.html），不是 .md 原文——App 不解析 md。
+   ⚠️ 自动通道每次发布需弹窗确认（可选「本会话自动发布」）；手动运行 publish_github.py 视为已确认。</li>
 </ol>
 <h2 id="_4">正本与副本（防「改了正本忘了拷」）</h2>
 <p><code>docs/</code> 里有一部分文件是<strong>副本</strong>，正本在别处：</p>

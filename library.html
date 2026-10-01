@@ -241,10 +241,10 @@ body.toc-open .toc-panel { transform: none; }
   <button class="icon-btn fs" data-fs="1" aria-label="放大字号">A+</button>
 </header>
 <main class="list">
-<a class="card" href="#doc-bc5441b46c"><h2>md2phone · 内容与构建约定（AGENTS.md）</h2><div class="meta">更新于 2026-10-01 21:38 · 约 4 分钟</div></a>
-<a class="card" href="#doc-04c6e90faa"><h2>md2phone · 把 Markdown 放进手机</h2><div class="meta">更新于 2026-10-01 21:38 · 约 8 分钟</div></a>
-<a class="card" href="#doc-ea877eb60d"><h2>交付记录 · md2phone（2026-09-30）</h2><div class="meta">更新于 2026-10-01 21:38 · 约 9 分钟</div></a>
-<a class="card" href="#doc-899b96eadf"><h2>需求与验收 · md 文档手机阅读（2026-09-30）</h2><div class="meta">更新于 2026-10-01 21:38 · 约 10 分钟</div></a>
+<a class="card" href="#doc-bc5441b46c"><h2>md2phone · 内容与构建约定（AGENTS.md）</h2><div class="meta">更新于 2026-10-01 21:41 · 约 5 分钟</div></a>
+<a class="card" href="#doc-04c6e90faa"><h2>md2phone · 把 Markdown 放进手机</h2><div class="meta">更新于 2026-10-01 21:41 · 约 8 分钟</div></a>
+<a class="card" href="#doc-ea877eb60d"><h2>交付记录 · md2phone（2026-09-30）</h2><div class="meta">更新于 2026-10-01 21:41 · 约 11 分钟</div></a>
+<a class="card" href="#doc-899b96eadf"><h2>需求与验收 · md 文档手机阅读（2026-09-30）</h2><div class="meta">更新于 2026-10-01 21:41 · 约 10 分钟</div></a>
 <a class="card" href="#doc-76a7821113"><h2>FDE 工作指南（Forward Deployed Engineer Work Guide）</h2><div class="meta">更新于 2026-10-01 11:19 · 约 61 分钟</div></a>
 <a class="card" href="#doc-8f07a8680e"><h2>GitHub Pages 全自动发布：绕开 git 端点、空仓库与排障假信号</h2><div class="meta">更新于 2026-10-01 11:19 · 约 4 分钟</div></a>
 <a class="card" href="#doc-a8e08c60a5"><h2>形态选型复盘：为什么没有早点想到 App</h2><div class="meta">更新于 2026-10-01 11:19 · 约 5 分钟</div></a>
@@ -319,9 +319,10 @@ body.toc-open .toc-panel { transform: none; }
 <h2 id="bc5441b46c-_3">日常内容更新（最常用路径）</h2>
 <ol>
 <li><strong>改内容只改 <code>docs/*.md</code></strong>（会被下次构建覆盖的文件不要手改）；</li>
-<li><code>python3 build.py</code>；</li>
-<li>把 <code>文档库.html</code> 发到手机（微信/邮件）→ App 菜单「导入文档库」→ 完成（约 20 秒，不重装）。
-   ⚠️ 导入的永远是 <code>文档库.html</code> 整库快照，不是 .md 原文——App 不解析 md。</li>
+<li>方式一（推荐）：双击「自动同步.command」→ 弹窗确认「发布」→ 网站自动更新 → 手机刷新或 App「从网站拉取最新」；</li>
+<li>方式二（离线）：<code>python3 build.py</code> → 把 <code>文档库.html</code> 发到手机 → App 菜单「导入文档库」。
+   ⚠️ App 导入与拉取的永远是<strong>整库快照</strong>（文档库.html / library.html），不是 .md 原文——App 不解析 md。
+   ⚠️ 自动通道每次发布需弹窗确认（可选「本会话自动发布」）；手动运行 publish_github.py 视为已确认。</li>
 </ol>
 <h2 id="bc5441b46c-_4">正本与副本（防「改了正本忘了拷」）</h2>
 <p><code>docs/</code> 里有一部分文件是<strong>副本</strong>，正本在别处：</p>
@@ -529,6 +530,12 @@ DEPLOY_CMD=&quot;netlify deploy --dir site --prod&quot; python3 build.py --watch
 <td>FDE（自主）</td>
 <td>E2E-RESULT: PASS——新增 63s / 删除 73s 反映到公网；外部独立视角（WebFetch）确认可访问；三套回归通过</td>
 </tr>
+<tr>
+<td>v1.6 · 2026-10-01</td>
+<td>练习⑧：确认式上传 + App 云端拉取 + 阅读位置记忆（客户确认方案后实现）。新增：确认门（弹窗三按钮/终端降级/测试钩子）、version.json+library.html 发布端点、App「从网站拉取最新」（版本比对→按需下载→原子替换）、阅读位置记忆（多页按文档/单文件按篇+段内比例）；<strong>修复真 bug：index 构建时间戳破坏内容指纹 → 跳过守卫永不生效</strong>（改为内容驱动的确定性时间）</td>
+<td>FDE（自主）</td>
+<td>F1-RESULT PASS（跳过分支：仓库不动；确认分支：发布前进）；F2-RESULT PASS（公网端点+协议模拟+file:// 渲染）；F3-RESULT PASS（恢复/隔离/单文件五项）；三套回归通过；APK 重打</td>
+</tr>
 </tbody>
 </table></div>
 <h2 id="ea877eb60d-7">第三方可用性验证（练习⑦客户专项要求：依赖第三方但必须充分验证其可用性）</h2>
@@ -568,6 +575,10 @@ DEPLOY_CMD=&quot;netlify deploy --dir site --prod&quot; python3 build.py --watch
 <td>已知边界</td>
 <td>Pages CDN 缓存 ≤10 分钟（不可配置，对时效极敏感场景用 App 导入秒级）；真机（手机网络对 github.io 可达性、添加主屏）仍属未验证清单</td>
 </tr>
+<tr>
+<td>练习⑧边界</td>
+<td>确认弹窗的点击交互（本机人工验证——下次双击「自动同步.command」即自然覆盖）；App「从网站拉取」按钮手势与真机 WebView 记忆手感；记忆仅存本机 localStorage，不跨设备</td>
+</tr>
 </tbody>
 </table></div>
 <h2 id="ea877eb60d-04-3">已验证 / 未验证清单（红线 0.4-3：诚实声明验证边界）</h2>
@@ -585,6 +596,8 @@ DEPLOY_CMD=&quot;netlify deploy --dir site --prod&quot; python3 build.py --watch
 <li>单文件版（v1.2）：file:// 直接打开、零网络请求、无外部资源引用；卡片跳转/返回/每篇目录/字号调整与记忆通过；19 个表格全部容器内滚动（<code>verify_single.py</code> 可重复执行）</li>
 <li>局域网版（v1.3）：服务绑定所有网卡，经本机局域网 IP（等效手机视角）打开文档列表、点击进入阅读页；manifest 有效、图标文件可达（<code>verify_lan.py</code> 可重复执行）</li>
 <li>安卓 App（v1.4）：gradle assembleDebug 成功（gradle 本地缓存 + aliyun 源，可离线构建）；APK 静态检查：assets 内 7 页齐全、包名 com.mddocs、应用名「文档库」、启动 Activity 正确、自适应图标就位；三套回归全过（验证脚本预期值改为按 docs.json 动态取数，文档数量变化不再误报）</li>
+<li>练习⑧（v1.6）：F1 确认门两分支（跳过不发布/确认发布，同进程树编排）✅；F2 拉取协议全流程（指纹比对→按需下载→校验→落盘→file:// 渲染 8 篇）✅；F3 阅读记忆五项（多页恢复、跨文档隔离×2、单文件回篇、段内落点）✅；<code>verify_memory.py</code> 可重复执行</li>
+<li>内容指纹稳定性：确定性时间戳修复后，未变化内容重复构建 → 发布跳过（守卫生效实证）</li>
 </ul>
 <h3 id="ea877eb60d-fde">未验证及原因（部署后由 FDE 在真机补验）</h3>
 <ul>
