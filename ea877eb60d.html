@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>交付记录 · md2phone（2026-09-30） · 文档库</title>
+<meta name="theme-color" content="#2563eb">
+<meta name="robots" content="noindex">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="文档库">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="assets/icon-64.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <a class="icon-btn back" href="index.html" aria-label="返回列表">‹</a>
+  <div class="title">交付记录 · md2phone（2026-09-30）</div>
+  <button class="icon-btn fs" data-fs="-1" aria-label="缩小字号">A−</button>
+  <button class="icon-btn fs" data-fs="1" aria-label="放大字号">A+</button>
+  <button class="icon-btn" id="tocBtn" aria-label="目录">☰</button>
+</header>
+<div class="toc-backdrop"></div>
+<nav class="toc-panel" aria-label="目录">
+  <div class="toc-head">目录</div>
+<a class="lv2" href="#_1">交付日志</a>
+<a class="lv2" href="#04-3">已验证 / 未验证清单（红线 0.4-3：诚实声明验证边界）</a>
+<a class="lv3" href="#playwright-390844-tmpmd2phone_shots">已验证（本机，Playwright 390×844 手机视口 + 脚本断言，证据截图在 /tmp/md2phone_shots/）</a>
+<a class="lv3" href="#fde">未验证及原因（部署后由 FDE 在真机补验）</a>
+<a class="lv3" href="#51">验证替代理由（5.1 例外条款）</a>
+<a class="lv2" href="#backlog-46">风险与后续（Backlog，按 4.6 排序）</a>
+<a class="lv2" href="#c">演练复盘（回填附录 C）</a>
+</nav>
+<main><article class="doc">
+<h1 id="md2phone2026-09-30">交付记录 · md2phone（2026-09-30）</h1>
+<h2 id="_1">交付日志</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>版本/时间</th>
+<th>内容</th>
+<th>执行人</th>
+<th>发布后校验</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v1.0 · 2026-09-30</td>
+<td>build.py 生成器 + PWA 站点 + 双击/监听同步 + 自测脚本；示例文档《FDE 工作指南》</td>
+<td>FDE（演练）</td>
+<td>本地验证通过（见下）；<strong>尚未部署到公网托管</strong>，部署后需按 README 在真机复验 AC2-2 / AC3-5</td>
+</tr>
+<tr>
+<td>v1.1 · 2026-09-30</td>
+<td>多文档入库（5 篇：中英混排、长短混排、宽表格）；双端通用范围写入需求约束；跨端差异与上手引导沉淀至《实践沉淀/001》</td>
+<td>FDE（演练）</td>
+<td>本地复验：5 篇全部 390px 无横向滚动；增/改/删回归通过；表格窄列加宽至 6em</td>
+</tr>
+<tr>
+<td>v1.2 · 2026-09-30</td>
+<td>客户重切 MVP（练习③）：新增单文件版（文档库.html，自包含、零第三方依赖）；同步与 HTTPS 桌面安装移出第一版；PWA 版（site/）保留为升级路径</td>
+<td>FDE（演练）</td>
+<td>file:// 零网络请求；列表/目录/字号/返回交互通过；5 篇 390px 无横向滚动；<strong>发现并修复正文全出血 bug</strong>（article 未被栏宽选择器命中，内容更新后才暴露）；增删改回归通过</td>
+</tr>
+<tr>
+<td>v1.3 · 2026-09-30</td>
+<td>客户需求回归（练习④）：桌面图标 → 列表 → 阅读。新增局域网版（--serve --lan / 局域网分享.command），零第三方实现图标入口；PWA 产物（manifest/图标）复用</td>
+<td>FDE（演练）</td>
+<td>经本机局域网 IP 等效验证：列表 5 卡片、点击进入阅读、manifest 与图标可达（verify_lan.py）；单文件版与增删改回归通过</td>
+</tr>
+<tr>
+<td>v1.4 · 2026-09-30</td>
+<td>练习⑤：安卓 App（壳照 interview-prep 模式；更新层经客户复查后由「照搬重打重装」修正为「App 内导入」，与练习③确认的「手动导入」对齐）。产出 文档库.apk：内置 5 篇、菜单导入/恢复内置</td>
+<td>FDE（演练）</td>
+<td>gradle assembleDebug 成功（本机缓存离线可构建）；APK 静态检查通过（assets 页面齐全、包名 com.mddocs、应用名「文档库」）；<strong>真机安装与导入手势未验证</strong>（无连接设备）</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="04-3">已验证 / 未验证清单（红线 0.4-3：诚实声明验证边界）</h2>
+<h3 id="playwright-390844-tmpmd2phone_shots">已验证（本机，Playwright 390×844 手机视口 + 脚本断言，证据截图在 /tmp/md2phone_shots/）</h3>
+<ul>
+<li>故事 1 AC1（390px 无横向滚动；表格/代码块容器内滚动，长文档《FDE 工作指南》14 表 7 代码块渲染正常）</li>
+<li>故事 1 AC2（A−/A+ 字号调整 17→19px，刷新后保持）</li>
+<li>故事 1 AC3（目录 52 条，展开/跳转/收起）</li>
+<li>故事 1 AC4（断网后已访问页面可读，Service Worker 缓存回退）</li>
+<li>故事 2 AC1（manifest 字段完整、4 个图标产物齐全、SW 注入 BUILD_ID）</li>
+<li>故事 3 AC1–AC3（新增/更新/删除 → 构建后首页与产物一致，<code>verify_build.py</code> 可重复执行）</li>
+<li>故事 3 AC4（--watch：docs/ 新增文件后 6 秒内自动重建；DEPLOY_CMD 钩子触发成功）</li>
+<li>暗色模式跟随系统；无控制台错误</li>
+<li>多文档场景（v1.1）：5 篇共存（中文文件名 slug 稳定、14 表宽表格、代码块），各页 390px 无横向滚动，首页列表/阅读页/目录均正常</li>
+<li>单文件版（v1.2）：file:// 直接打开、零网络请求、无外部资源引用；卡片跳转/返回/每篇目录/字号调整与记忆通过；19 个表格全部容器内滚动（<code>verify_single.py</code> 可重复执行）</li>
+<li>局域网版（v1.3）：服务绑定所有网卡，经本机局域网 IP（等效手机视角）打开文档列表、点击进入阅读页；manifest 有效、图标文件可达（<code>verify_lan.py</code> 可重复执行）</li>
+<li>安卓 App（v1.4）：gradle assembleDebug 成功（gradle 本地缓存 + aliyun 源，可离线构建）；APK 静态检查：assets 内 7 页齐全、包名 com.mddocs、应用名「文档库」、启动 Activity 正确、自适应图标就位；三套回归全过（验证脚本预期值改为按 docs.json 动态取数，文档数量变化不再误报）</li>
+</ul>
+<h3 id="fde">未验证及原因（部署后由 FDE 在真机补验）</h3>
+<ul>
+<li><strong>故事 2 AC2</strong>：真机上「添加到主屏幕」、图标启动、standalone 显示——需要真实 HTTPS 域名与真机，本地 localhost 只能验证 PWA 产物合规。</li>
+<li><strong>故事 3 AC5</strong>：手机端刷新见到最新列表——依赖上一条的部署环境。</li>
+<li><strong>iOS Safari 实际表现</strong>（safe-area、添加主屏流程、微信内置浏览器打开）——需要真机；微信内置浏览器对「添加到主屏幕」不支持，需引导用户用 Safari 打开（README 已写）。</li>
+<li><strong>iOS 第三方浏览器（Chrome for iOS）添加主屏行为不统一</strong>——验收口径只承诺 Safari（差异表见《实践沉淀/001》）。</li>
+<li><strong>单文件版的真机传输路径</strong>（v1.2）：微信传输后 iPhone QuickLook 预览、Android「用其他应用打开」各机型菜单差异——需真机；本地以 file:// 等效验证。</li>
+<li><strong>单文件版在部分安卓浏览器的字号记忆</strong>：content:// 源下 localStorage 可能不持久，字号调节本身可用，记忆降级为可选。</li>
+<li><strong>局域网版真机环节</strong>（v1.3）：真手机同 WiFi 访问、添加到主屏幕（iOS 全屏 / Android 图标形态）、macOS 防火墙弹窗处理——需真机与真实局域网环境。</li>
+<li><strong>Netlify/GitHub Pages 部署步骤本身</strong>——需客户账号；命令行流程来自托管方公开文档，未在本机实跑。</li>
+</ul>
+<h3 id="51">验证替代理由（5.1 例外条款）</h3>
+<p>AC2-2 / AC3-5 属「依赖第三方界面与硬件条件」的验证，自动化成本明显高于收益，以显式证据（产物校验 + 本地全链路模拟）替代，经交付责任人（本人，演练）确认；<strong>真实客户场景下应转为真机验收项</strong>。</p>
+<h2 id="backlog-46">风险与后续（Backlog，按 4.6 排序）</h2>
+<ol>
+<li>P2｜全文搜索（文档多了以后的第一个需求）</li>
+<li>P2｜手动深色/浅色切换（当前仅跟随系统）</li>
+<li>P2｜iOS 微信内打开体验引导页</li>
+<li>P3｜发布状态回执（当前 DEPLOY_CMD 失败仅打印，不重试通知）</li>
+</ol>
+<h2 id="c">演练复盘（回填附录 C）</h2>
+<ul>
+<li>有效：访谈三问（使用方式/红线/规模）直接决定了方案分叉，避免了直接给「转 PDF」的错误方案；客户补述的「桌面图标 + 自动同步 + 字号」把交付形态从「转换文件」修正为「PWA 文档站」——<strong>印证 3.1「要故事不要观点」：第一句需求与真实需求差距很大</strong>。</li>
+<li>有效：P2 分级 + 轻量验证（构建断言 + UI 截图）与爆炸半径匹配，全程无过度工件。</li>
+<li>缺失：指南没有「客户非技术背景时，部署步骤如何代办/引导」的规则；本次用 README 三选一缓解，真实场景应写入边界契约（客户提供项：托管账号）。</li>
+<li>待改进：--watch 的「修改后自动重建」仅由 verify_build 的独立更新场景间接覆盖，监听循环内的修改路径未单独断言。</li>
+</ul>
+</article></main>
+<script src="app.js"></script>
+</body>
+</html>

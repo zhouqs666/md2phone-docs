@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>形态选型复盘：为什么没有早点想到 App · 文档库</title>
+<meta name="theme-color" content="#2563eb">
+<meta name="robots" content="noindex">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="文档库">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="assets/icon-64.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <a class="icon-btn back" href="index.html" aria-label="返回列表">‹</a>
+  <div class="title">形态选型复盘：为什么没有早点想到 App</div>
+  <button class="icon-btn fs" data-fs="-1" aria-label="缩小字号">A−</button>
+  <button class="icon-btn fs" data-fs="1" aria-label="放大字号">A+</button>
+  <button class="icon-btn" id="tocBtn" aria-label="目录">☰</button>
+</header>
+<div class="toc-backdrop"></div>
+<nav class="toc-panel" aria-label="目录">
+  <div class="toc-head">目录</div>
+<a class="lv2" href="#_1">一、时间线还原（谁在什么时候知道什么）</a>
+<a class="lv2" href="#_2">二、客观归因</a>
+<a class="lv2" href="#_3">三、参考项目到底解锁了什么</a>
+<a class="lv2" href="#_4">四、一个对称的事实（避免复盘变成单方面检讨）</a>
+<a class="lv2" href="#fde">五、给 FDE 的三条带走的动作</a>
+</nav>
+<main><article class="doc">
+<h1 id="app">形态选型复盘：为什么没有早点想到 App</h1>
+<blockquote>
+<p>定位：FDE 演练「md 文档手机阅读」练习⑥的复盘笔记。客户问了一句「没让你参考前，你的结论一直是需要依赖第三方——是我表达不清晰，还是你认知不够？」本文是该问题的客观拆解。
+规则层结论已收进《FDE 工作指南》v0.6（3.2「既有资产」行）；本文是完整过程与细节。</p>
+</blockquote>
+<h2 id="_1">一、时间线还原（谁在什么时候知道什么）</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>轮次</th>
+<th>客户输入</th>
+<th>FDE 交付</th>
+<th>当时缺了什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>①</td>
+<td>「放到手机桌面图标，<strong>APP 或什么形式无所谓</strong>，最好自动同步」</td>
+<td>PWA 托管文档站（唯一方案）</td>
+<td>没有给形态选项空间对照表；「APP」二字出现过但被轻放；未盘点既有资产；未问 M5 收尾题</td>
+</tr>
+<tr>
+<td>②</td>
+<td>问双端通用、问怎么用</td>
+<td>跨端差异表 + 上手引导</td>
+<td>—</td>
+</tr>
+<tr>
+<td>③</td>
+<td>「暂不同步、不依赖第三方」</td>
+<td>单文件 HTML + 三形态对比表（含零第三方局域网形态）</td>
+<td>响应快，但选项扩展仍是被动的</td>
+</tr>
+<tr>
+<td>④</td>
+<td>「要图标：点进去是列表」</td>
+<td>局域网版（零第三方图标）</td>
+<td>—</td>
+</tr>
+<tr>
+<td>⑤</td>
+<td>「限制太多，直接做一个APP」→ 确认时点名「参考桌面 interview-prep」</td>
+<td>选项清单里本就有「安卓真App」；参考后一个回合实现 APK</td>
+<td>复查又救回更新层偏差</td>
+</tr>
+<tr>
+<td>⑥</td>
+<td>「是表达不清还是认知不够？」</td>
+<td>本文复盘</td>
+<td>—</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="_2">二、客观归因</h2>
+<p><strong>不是客户表达不清晰。</strong> 首轮「APP 或什么形式无所谓」在访谈语境里是合规的——客户让渡形态选择权给 FDE 天经地义。但这意味着「选对形态」的责任 100% 落在 FDE 侧。同理，「参考项目」客户从一开始就知道它存在，但客户没有义务知道什么信息与需求相关——把相关事实挖出来正是 Discovery 的定义。</p>
+<p><strong>也不是「不会做 App」的技术认知问题。</strong> 反证：⑤轮在客户点名参考之前，FDE 给出的路线选项里就有「安卓真App（.apk 直接安装）」——能力和方案空间都在，最终实现也只花了一个回合。</p>
+<p><strong>真正的缺口是三处流程执行，且全部有指南条款对应：</strong></p>
+<ol>
+<li><strong>首轮没给形态选项空间对照表</strong>。3.4 方案概要要求「技术路线：关键选择及理由」，第 12 章的精神是把分歧与代价写成对照表交决策人裁定。正确动作是第一轮就摆出：托管 PWA / 单文件 / 局域网 / 安卓 App（WebView 壳）/ 现成 App，各自的成本、限制、依赖，让客户一次选。实际是选项被客户一轮一轮逼出来，多花了四轮对话。</li>
+<li><strong>没盘点既有资产</strong>。interview-prep（同类交付：md→html→APK，且本机构建链已被验证）在客户桌面放了很久。G0「业务匹配：是否属于我们交付过的类型」和 3.2 环境评估若真执行，「现场有没有同类交付/参考实现/可复用管线」这一问必然带出它。→ 已固化为指南 3.2「既有资产」行（v0.6）。</li>
+<li><strong>M5「必问收尾题」没问</strong>。3.1 访谈提纲最后一条：「有没有我没问到、但很重要的事？」——这条就是为 interview-prep 这类「客户没想到要主动提的相关事实」设计的，执行时被跳过。规则已有、未执行，不改文档，只记教训。</li>
+</ol>
+<h2 id="_3">三、参考项目到底解锁了什么</h2>
+<p>不是能力（选项⑤轮已有），是三样更值钱的东西：</p>
+<ol>
+<li><strong>确定性</strong>：本机 Android 构建链（SDK/JDK21/gradle 缓存/aliyun 源）已被 interview-prep 验证过——免掉了环境试错的最大风险；</li>
+<li><strong>信任</strong>：客户用过那个 App，模式已被接受；</li>
+<li><strong>约定</strong>：AGENTS.md 管线、debug 签名策略、目录结构可直接沿用，交接成本近乎为零。</li>
+</ol>
+<p>所以「参考之后一个回合就做出来」的真相是：<strong>技术能力一直在，被解锁的是风险与信任，而发现这两样本不需要客户点名。</strong></p>
+<h2 id="_4">四、一个对称的事实（避免复盘变成单方面检讨）</h2>
+<p>「需要依赖第三方」的结论在特定需求组合下至今成立：<strong>「自动同步 + 随时随地 + iPhone」至今只有托管 PWA 能同时满足</strong>（App 版用的也是客户确认的手动导入）。六轮里真正变化的是客户的需求权重：③放弃同步、③④放弃第三方、⑤要求 App 形态。FDE 的结论随需求配置演化本身没有错——错在<strong>演化发生在五轮对话里，而不是第一轮的选项表里</strong>。需求配置与可行形态的对照关系，应该一开始就摊开。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>需求配置</th>
+<th>可行形态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>自动同步 + 随时随地（不放弃）</td>
+<td>托管 PWA（唯一解，需免费第三方）</td>
+</tr>
+<tr>
+<td>不要第三方 + 接受手动更新</td>
+<td>单文件 / 安卓 App（导入式）</td>
+</tr>
+<tr>
+<td>不要第三方 + 要图标 + 电脑常开机</td>
+<td>局域网版</td>
+</tr>
+<tr>
+<td>要「真 App」+ 主力安卓</td>
+<td>WebView 壳 APK（本项目终态）</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="fde">五、给 FDE 的三条带走的动作</h2>
+<ol>
+<li>方案概要永远给<strong>选项空间对照表</strong>，哪怕推荐倾向明显——决策人裁定的对象是选项，不是论证；</li>
+<li>环境评估必问<strong>既有资产</strong>（同类交付、参考实现、可复用管线，"哪怕叫别的名字、放在别处"）；</li>
+<li>M5 收尾题「有没有我没问到但重要的事」是防「interview-prep 情形」的唯一闸门，<strong>必问，不许省</strong>。</li>
+</ol>
+</article></main>
+<script src="app.js"></script>
+</body>
+</html>

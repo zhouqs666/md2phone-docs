@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>md2phone · 把 Markdown 放进手机 · 文档库</title>
+<meta name="theme-color" content="#2563eb">
+<meta name="robots" content="noindex">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="文档库">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="assets/icon-64.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <a class="icon-btn back" href="index.html" aria-label="返回列表">‹</a>
+  <div class="title">md2phone · 把 Markdown 放进手机</div>
+  <button class="icon-btn fs" data-fs="-1" aria-label="缩小字号">A−</button>
+  <button class="icon-btn fs" data-fs="1" aria-label="放大字号">A+</button>
+  <button class="icon-btn" id="tocBtn" aria-label="目录">☰</button>
+</header>
+<div class="toc-backdrop"></div>
+<nav class="toc-panel" aria-label="目录">
+  <div class="toc-head">目录</div>
+<a class="lv2" href="#_1">两种用法</a>
+<a class="lv3" href="#a">用法 A · 单文件版（第一版：不依赖任何第三方，今天就能用）</a>
+<a class="lv3" href="#a2">用法 A2 · 局域网版（不要第三方，但要「桌面图标」）</a>
+<a class="lv3" href="#a3-appapk-app">用法 A3 · 安卓 App（文档库.apk）：真 App 形态</a>
+<a class="lv3" href="#b-pwa">用法 B · PWA 托管版（升级路径：随时随地 + 桌面图标 + 自动同步）</a>
+<a class="lv2" href="#a2-b">手机端一次性设置（装到桌面，用法 A2 / B）</a>
+<a class="lv2" href="#b-510">第一次部署（仅用法 B，三选一，都是免费档，约 5–10 分钟）</a>
+<a class="lv2" href="#vs">全自动 vs 半自动</a>
+<a class="lv2" href="#_2">常见问题</a>
+<a class="lv2" href="#_3">开发者</a>
+</nav>
+<main><article class="doc">
+<h1 id="md2phone-markdown">md2phone · 把 Markdown 放进手机</h1>
+<p>电脑上的 <code>.md</code> 文档 → 手机桌面图标、App 般的阅读体验、内容随电脑同步更新。
+纯静态产物（一个 <code>site/</code> 文件夹），不依赖任何付费服务；文档不经过本工具之外的第三方处理（部署到你自己选的托管上）。</p>
+<h2 id="_1">两种用法</h2>
+<h3 id="a">用法 A · 单文件版（第一版：不依赖任何第三方，今天就能用）</h3>
+<pre><code>1. 把 .md 文件放进 docs/ 文件夹（删除 = 从文件夹移除）
+2. 双击 sync.command（或终端运行 python3 build.py）
+3. 把生成的「文档库.html」发到手机（微信 / 邮件 / 数据线都行）
+</code></pre>
+<p>手机上怎么打开：
+- <strong>iPhone</strong>：微信里点开文件可直接读；或长按 → 存到「文件」App → 点开即读
+- <strong>Android</strong>：微信里点开 → 右上角「…」→ 用浏览器打开（或文件管理器 → Chrome）</p>
+<p>文档更新了：重跑第 2 步，把新的「文档库.html」再发一次（旧的删掉即可）。</p>
+<p>特点：一个文件装下全部文档 + 目录 + 字号调整，<strong>不需要联网、不注册任何服务</strong>；代价是没有自动同步（更新 = 重发文件），桌面图标暂缺（想要时用 A2 或 B）。</p>
+<h3 id="a2">用法 A2 · 局域网版（不要第三方，但要「桌面图标」）</h3>
+<p>双击「局域网分享.command」（或终端运行 <code>python3 build.py --serve --lan</code>），终端会显示一个形如 <code>http://192.168.x.x:8787/</code> 的地址：</p>
+<ol>
+<li>手机连到<strong>和电脑同一个 WiFi</strong>，浏览器打开该地址 → 文档列表，点文档即读；</li>
+<li><strong>iPhone</strong>：Safari 打开 → 分享 → 「添加到主屏幕」→ 桌面图标，点开全屏；
+   <strong>Android</strong>：Chrome 菜单 → 「添加到主屏幕」；</li>
+<li>文档更新后：双击 sync.command 重建 → 手机刷新即见最新（同 WiFi 内近似自动同步）。</li>
+</ol>
+<p>前提与代价：电脑开机、手机同 WiFi，离开家打不开；macOS 首次运行若弹防火墙询问，点「允许」。</p>
+<h3 id="a3-appapk-app">用法 A3 · 安卓 App（<code>文档库.apk</code>）：真 App 形态</h3>
+<ol>
+<li><strong>安装（一次）</strong>：把 <code>文档库.apk</code> 传到手机点开安装（首次需允许「安装未知应用」）；桌面出现「文档库」图标，点开即文档列表，出厂已内置全部文档，离线可读；</li>
+<li><strong>日常更新（约 20 秒，不重装）</strong>：电脑改 <code>docs/</code> → <code>python3 build.py</code> → 把新的 <code>文档库.html</code> 发到手机 → App 右上角菜单「<strong>导入文档库</strong>」选中该文件即完成；
+   ⚠️ 导入的是 <strong><code>文档库.html</code> 这个整库文件</strong>（里面已打包全部文档的最新版本），不是 .md 原文——App 不解析 md；改了几篇都只需发这一个文件；</li>
+<li>「<strong>恢复内置</strong>」：菜单里一键回到出厂文档。</li>
+</ol>
+<p>iPhone 不在此用法内（苹果不允许直接装安装包），用 A / A2 / B。</p>
+<h3 id="b-pwa">用法 B · PWA 托管版（升级路径：随时随地 + 桌面图标 + 自动同步）</h3>
+<p>构建会同时产出 <code>site/</code> 文件夹。按下面「第一次部署」配好托管后：手机浏览器打开网址 → 「添加到主屏幕」→ 桌面图标即成；此后电脑侧更新重建，手机刷新即最新（可配 <code>--watch</code> 全自动）。用法 A 的文件随时可以继续用，两者不冲突。</p>
+<h2 id="a2-b">手机端一次性设置（装到桌面，用法 A2 / B）</h2>
+<ol>
+<li>手机浏览器打开文档库网址（<strong>必须 https:// 开头</strong>，安装图标和离线缓存都依赖它）；</li>
+<li><strong>Android（Chrome）</strong>：右上角菜单 → 「添加到主屏幕 / 安装应用」；
+   <strong>iPhone（Safari）</strong>：底部分享按钮 → 「添加到主屏幕」；</li>
+<li>桌面出现「文档库」图标，点开即全屏阅读，断网也能读看过的文档。</li>
+</ol>
+<p>阅读页顶部：<code>‹</code> 返回列表 · <code>A−/A+</code> 调整字号（手机会记住）· <code>☰</code> 目录（点击条目直接跳小节）。深色模式跟随系统。</p>
+<h2 id="b-510">第一次部署（仅用法 B，三选一，都是免费档，约 5–10 分钟）</h2>
+<p>推荐 A，最省事且可全自动：</p>
+<p><strong>A. Netlify（推荐）</strong></p>
+<pre><code class="language-bash">npm install -g netlify-cli     # 需已安装 Node.js
+netlify login                  # 首次注册/登录
+# 之后每次同步自动发布（全自动：存盘 → 上线）：
+DEPLOY_CMD=&quot;netlify deploy --dir site --prod&quot; python3 build.py --watch
+</code></pre>
+<p>不想装命令行：打开 app.netlify.com/drop，把 <code>site/</code> 文件夹拖进去，得到网址（以后每次更新需手动再拖一次，半自动）。</p>
+<p><strong>B. GitHub Pages</strong>：建仓库，把 <code>site/</code> 内容推到 <code>gh-pages</code> 分支，仓库设置里开启 Pages。更新 = 把 site/ 重新提交推送。</p>
+<p><strong>C. Cloudflare Pages / Vercel</strong>：连接 GitHub 仓库自动部署，效果同 A。</p>
+<blockquote>
+<p>原理说明：<code>docs/</code> 是唯一内容来源。构建把 md 转成手机友好的静态页面（含 PWA 清单与 Service Worker）；托管只是把 <code>site/</code> 放上互联网。手机端每次打开都先取最新（network-first），取不到才用本地缓存，所以「电脑更新 → 重建 → 手机刷新即最新」。</p>
+</blockquote>
+<h2 id="vs">全自动 vs 半自动</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>方式</th>
+<th>操作</th>
+<th>适用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>半自动</td>
+<td>双击 <code>sync.command</code></td>
+<td>偶尔更新；未配置发布时用本地预览</td>
+</tr>
+<tr>
+<td>全自动</td>
+<td><code>DEPLOY_CMD="netlify deploy --dir site --prod" python3 build.py --watch</code></td>
+<td>挂在终端里，保存文档几秒后自动上线</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>build.py</code> 参数：<code>--watch</code> 监听 docs/ 与 assets/ 自动重建；<code>--serve</code> 本地预览 http://localhost:8787 （仅供电脑检查，手机安装需 HTTPS 托管）。</p>
+<h2 id="_2">常见问题</h2>
+<ul>
+<li><strong>手机上没出现「安装」提示？</strong> iPhone 需在 Safari 里用「分享 → 添加到主屏幕」手动添加；网址必须是 https。</li>
+<li><strong>删除的文档手机上还能看到？</strong> 列表刷新后即消失；已缓存的正文副本会在下次联网刷新后被清掉（Service Worker 按构建版本清理旧缓存）。</li>
+<li><strong>文档里表格太宽？</strong> 表格在手机上可左右滑动，不会撑破页面。</li>
+<li><strong>想换图标/名字？</strong> 改 <code>build.py</code> 里的 <code>manifest</code> 与 <code>make_icons()</code>，或直接替换 <code>site/assets/</code> 下的图标后重建。</li>
+</ul>
+<h2 id="_3">开发者</h2>
+<ul>
+<li><code>build.py</code> 生成器；<code>assets/</code> 模板与样式；<code>docs/</code> 内容源；<code>site/</code> 产物（可整目录重新生成，勿手改）。</li>
+<li>自测：<code>python3 verify_build.py</code>（增/改/删同步场景）；<code>python3 verify_ui.py</code>（需配合本地静态服务，见文件头注释）。</li>
+<li>需求、验收标准与验证边界见 <code>需求与验收.md</code> 与 <code>交付记录.md</code>。</li>
+</ul>
+</article></main>
+<script src="app.js"></script>
+</body>
+</html>

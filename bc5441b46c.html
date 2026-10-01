@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>md2phone · 内容与构建约定（AGENTS.md） · 文档库</title>
+<meta name="theme-color" content="#2563eb">
+<meta name="robots" content="noindex">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="文档库">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="assets/icon-64.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <a class="icon-btn back" href="index.html" aria-label="返回列表">‹</a>
+  <div class="title">md2phone · 内容与构建约定（AGENTS.md）</div>
+  <button class="icon-btn fs" data-fs="-1" aria-label="缩小字号">A−</button>
+  <button class="icon-btn fs" data-fs="1" aria-label="放大字号">A+</button>
+  <button class="icon-btn" id="tocBtn" aria-label="目录">☰</button>
+</header>
+<div class="toc-backdrop"></div>
+<nav class="toc-panel" aria-label="目录">
+  <div class="toc-head">目录</div>
+<a class="lv2" href="#_1">这是什么</a>
+<a class="lv2" href="#_2">目录结构</a>
+<a class="lv2" href="#_3">日常内容更新（最常用路径）</a>
+<a class="lv2" href="#_4">正本与副本（防「改了正本忘了拷」）</a>
+<a class="lv2" href="#apkmac-android-sdk">重打 APK（仅功能升级时；Mac 本机执行，需 Android SDK）</a>
+<a class="lv2" href="#_5">验证纪律</a>
+<a class="lv2" href="#iphone">iPhone 说明</a>
+</nav>
+<main><article class="doc">
+<h1 id="md2phone-agentsmd">md2phone · 内容与构建约定（AGENTS.md）</h1>
+<blockquote>
+<p><strong>任何会话在本目录工作前，先读本文件。</strong> 这是「手机文档库」的内容管线与构建约定，跨会话唯一的执行依据。（体例沿用 interview-prep 工程。）</p>
+</blockquote>
+<h2 id="_1">这是什么</h2>
+<p>Markdown 文档库，四种形态共用同一个内容源，最终形态是一个 Android App（WebView 套壳 + App 内导入更新）。</p>
+<p>内容链路（单向，勿反向手改）：</p>
+<pre><code>docs/*.md（源，唯一手改点）→ python3 build.py
+    ├→ site/                    （PWA 站点，供托管 / 局域网版）
+    ├→ 文档库.html              （单文件版，微信直接发手机）
+    └→ android-app/.../assets/web（APK 内置内容）
+        → ./gradlew assembleDebug → 文档库.apk
+</code></pre>
+<h2 id="_2">目录结构</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>路径</th>
+<th>作用</th>
+<th>是否手改</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>docs/</code></td>
+<td>唯一的源文件（md）</td>
+<td>✅ 只改这里</td>
+</tr>
+<tr>
+<td><code>build.py</code></td>
+<td>生成器（PWA + 单文件 + APK 资产同步）</td>
+<td>一般不改</td>
+</tr>
+<tr>
+<td><code>assets/</code></td>
+<td>网页模板与样式</td>
+<td>一般不改</td>
+</tr>
+<tr>
+<td><code>site/</code>、<code>文档库.html</code></td>
+<td>生成产物</td>
+<td>❌ 由脚本生成</td>
+</tr>
+<tr>
+<td><code>android-app/</code></td>
+<td>Kotlin WebView 壳工程（导入式更新，见 MainActivity.kt 头注释）</td>
+<td>一般不改</td>
+</tr>
+<tr>
+<td><code>文档库.apk</code></td>
+<td>打好的安装包</td>
+<td>❌ 由 gradle 产出</td>
+</tr>
+<tr>
+<td><code>verify_build.py</code> / <code>verify_single.py</code> / <code>verify_lan.py</code></td>
+<td>三个形态的可重复验收</td>
+<td>改动后必跑</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="_3">日常内容更新（最常用路径）</h2>
+<ol>
+<li><strong>改内容只改 <code>docs/*.md</code></strong>（会被下次构建覆盖的文件不要手改）；</li>
+<li><code>python3 build.py</code>；</li>
+<li>把 <code>文档库.html</code> 发到手机（微信/邮件）→ App 菜单「导入文档库」→ 完成（约 20 秒，不重装）。
+   ⚠️ 导入的永远是 <code>文档库.html</code> 整库快照，不是 .md 原文——App 不解析 md。</li>
+</ol>
+<h2 id="_4">正本与副本（防「改了正本忘了拷」）</h2>
+<p><code>docs/</code> 里有一部分文件是<strong>副本</strong>，正本在别处：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>docs/ 副本</th>
+<th>正本位置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FDE-工作指南.md</code></td>
+<td><code>~/Desktop/FDE-Playbook/FDE-工作指南.md</code></td>
+</tr>
+<tr>
+<td><code>需求与验收.md</code>、<code>交付记录.md</code>、<code>README.md</code>、<code>AGENTS.md</code></td>
+<td><code>md2phone/</code> 根目录同名文件</td>
+</tr>
+<tr>
+<td><code>001/002-*.md</code></td>
+<td><code>~/Desktop/FDE-Playbook/实践沉淀/</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>规则：改了正本，必须重新拷入 <code>docs/</code> 再构建</strong>，否则库里是旧版本（血泪：指南升到 v0.6，库里的副本还停在 v0.3，被客户一问才发现）。</p>
+<h2 id="apkmac-android-sdk">重打 APK（仅功能升级时；Mac 本机执行，需 Android SDK）</h2>
+<pre><code class="language-bash">cd android-app
+./gradlew assembleDebug
+cp app/build/outputs/apk/debug/app-debug.apk ../文档库.apk
+</code></pre>
+<ul>
+<li>debug 签名（自动签名可直接安装），个人用途足够，无需 release 签名；</li>
+<li><code>gradle.properties</code> 已把 Gradle 指向 Android Studio 内嵌 JDK 21，直接 <code>./gradlew</code> 即可，勿用系统 JDK 8；</li>
+<li>gradle 发行版与依赖走本地缓存 / aliyun 源（同 interview-prep），本机可离线构建。</li>
+</ul>
+<h2 id="_5">验证纪律</h2>
+<p>任何 <code>docs/</code>、<code>assets/</code>、<code>build.py</code> 改动后：<code>python3 verify_build.py &amp;&amp; python3 verify_single.py &amp;&amp; python3 verify_lan.py</code>。
+<strong>「上一版通过」不证明「这一版结构正确」</strong>（血泪：单文件版正文全出血 bug 连过两轮验证才暴露）。</p>
+<h2 id="iphone">iPhone 说明</h2>
+<p>苹果不允许直接装安装包；iPhone 走 site/ 托管 PWA（用法 B）、局域网版（A2）或单文件（A）。</p>
+</article></main>
+<script src="app.js"></script>
+</body>
+</html>

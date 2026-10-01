@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>把 md 放到手机上：PWA 跨端与实践笔记 · 文档库</title>
+<meta name="theme-color" content="#2563eb">
+<meta name="robots" content="noindex">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="文档库">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="assets/icon-64.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <a class="icon-btn back" href="index.html" aria-label="返回列表">‹</a>
+  <div class="title">把 md 放到手机上：PWA 跨端与实践笔记</div>
+  <button class="icon-btn fs" data-fs="-1" aria-label="缩小字号">A−</button>
+  <button class="icon-btn fs" data-fs="1" aria-label="放大字号">A+</button>
+  <button class="icon-btn" id="tocBtn" aria-label="目录">☰</button>
+</header>
+<div class="toc-backdrop"></div>
+<nav class="toc-panel" aria-label="目录">
+  <div class="toc-head">目录</div>
+<a class="lv2" href="#pwa">一、方案选型结论（为什么是 PWA 文档站）</a>
+<a class="lv3" href="#_1">三形态对比（同一构建器的三种交付形态）</a>
+<a class="lv3" href="#4">图标的技术本质（练习④：客户要「图标 → 列表 → 阅读」时）</a>
+<a class="lv2" href="#5">照搬参考实现的复查教训（练习⑤：客户问「参考项目是最佳的吗」）</a>
+<a class="lv2" href="#ios">二、跨端差异速查（「iOS/安卓通用」的客观边界）</a>
+<a class="lv2" href="#_2">三、客户上手引导脚本（非技术客户版）</a>
+<a class="lv2" href="#_3">四、踩坑记录（本次实做遇到并修掉的）</a>
+<a class="lv2" href="#_4">五、发布通道对比（内容不敏感场景）</a>
+<a class="lv2" href="#_5">六、遗留（下次实践补）</a>
+</nav>
+<main><article class="doc">
+<h1 id="md-pwa">把 md 放到手机上：PWA 跨端与实践笔记</h1>
+<blockquote>
+<p>定位：FDE 演练「md 文档手机阅读」的<strong>实践层</strong>沉淀——技术差异、操作步骤、踩坑记录。
+规则层结论已收进《FDE 工作指南》v0.4（3.2「用户端」行、边界契约「代办/引导」条目）；本文档只放不进指南的具体与技术内容。副本已入文档库供手机阅读，以本文件（实践沉淀/）为正本。</p>
+</blockquote>
+<h2 id="pwa">一、方案选型结论（为什么是 PWA 文档站）</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>候选</th>
+<th>结论</th>
+<th>理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>转 PDF/图片发聊天</td>
+<td>否决</td>
+<td>无同步、无图标、字号不可调；每次更新都要重发</td>
+</tr>
+<tr>
+<td>原生 App</td>
+<td>否决</td>
+<td>双端各开发一次，成本与「看文档」的需求不匹配</td>
+</tr>
+<tr>
+<td>现成笔记云（语雀/Notion）</td>
+<td>备选</td>
+<td>客户要求 md 文件原地更新自动同步，导入式平台语义不符</td>
+</tr>
+<tr>
+<td><strong>静态 PWA 文档站</strong></td>
+<td><strong>采纳</strong></td>
+<td>一份代码双端通用；文件夹即内容源；免费托管即可</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p>补记（练习③）：客户决定第一版「不同步、不依赖第三方」后，MVP 重切为<strong>单文件形态</strong>——上表里被否决的是「转 PDF」，不是「发文件」这个动作：发一个<strong>交互式单文件 HTML</strong>，阅读体验（排版/字号/目录/离线）不打折，牺牲的只有自动同步与桌面图标，且升级回 PWA 时全部复用。</p>
+</blockquote>
+<h3 id="_1">三形态对比（同一构建器的三种交付形态）</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>形态</th>
+<th>外部依赖</th>
+<th>内容更新</th>
+<th>桌面图标</th>
+<th>离线</th>
+<th>适用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>单文件 HTML</strong>（文档库.html）</td>
+<td>无</td>
+<td>重建后重发文件</td>
+<td>基本不可用</td>
+<td>天然离线</td>
+<td>第一版；完全零依赖</td>
+</tr>
+<tr>
+<td>局域网访问</td>
+<td>无第三方，但电脑要开机、同 WiFi</td>
+<td>同 WiFi 内刷新即最新</td>
+<td>双端可放（iOS 全屏 / Android 快捷方式）</td>
+<td>离开家不可用</td>
+<td>家里/办公室固定场景</td>
+</tr>
+<tr>
+<td>PWA 托管</td>
+<td>免费托管（Netlify 等）</td>
+<td>全自动</td>
+<td>双端完整</td>
+<td>完整</td>
+<td>最终形态</td>
+</tr>
+</tbody>
+</table></div>
+<p>单文件版的实现要点：全部样式与脚本内联；每篇标题锚点加文档前缀（同页多篇共存防 id 冲突）；目录改用 <code>&lt;details&gt;</code> 内联折叠（单文件里没有全局抽屉）；Service Worker 不注册（file:// 下本就无效，脚本里按协议自动跳过）。产物约 105KB/5 篇，微信传输无压力。</p>
+<h3 id="4">图标的技术本质（练习④：客户要「图标 → 列表 → 阅读」时）</h3>
+<p>手机桌面图标 = <strong>指向一个稳定入口地址的快捷方式</strong>。单文件（file://）没有稳定地址，所以给不了图标——这是操作系统的限制，不是功能没写。给了地址，图标随之成立，三条路：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>路</th>
+<th>前提</th>
+<th>效果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>局域网版</strong>（<code>--serve --lan</code>）</td>
+<td>电脑开机 + 同 WiFi，零第三方</td>
+<td>iOS Safari 添加主屏后全屏 standalone（HTTP 即可）；Android Chrome 添加主屏成图标快捷方式（非 standalone，浏览器标签形态打开）</td>
+</tr>
+<tr>
+<td>iOS 快捷指令（民间变体）</td>
+<td>手动配置一次</td>
+<td>给本地文件做「打开」动作并添加到主屏幕，图标自选；仅 iOS，Android 无系统级等价物</td>
+</tr>
+<tr>
+<td>HTTPS 托管（PWA）</td>
+<td>免费托管</td>
+<td>双端完整：图标、全屏、离线、安装提示</td>
+</tr>
+</tbody>
+</table></div>
+<p>局域网版的实现几乎零成本：站点产物复用 PWA 版，只是把服务绑定从 127.0.0.1 换成 0.0.0.0，用 UDP connect-trick（连一个不存在的地址、不发包）取本机局域网 IP 打给客户。验证上，本机用「自己的局域网 IP」访问即可等效手机视角（服务器与产物层），真机添加主屏仍要留到未验证清单。另注意 macOS 首次监听外网卡会弹防火墙授权，要提前告诉客户点「允许」。</p>
+<h2 id="5">照搬参考实现的复查教训（练习⑤：客户问「参考项目是最佳的吗」）</h2>
+<p>给客户做安卓 App 时照搬了本机 interview-prep 工程的成熟模式（WebView 套壳 + 内容打包进 APK + debug 签名）。客户一句「参考项目是最佳最合适的吗」逼出一次复查，结论值得记：</p>
+<ul>
+<li><strong>80% 该照搬的</strong>：壳工程（50 行 Kotlin、零依赖）、构建链（gradle 本地缓存 + aliyun 源 + JDK21 配置，本机被验证过可离线构建）、debug 签名策略、AGENTS.md 管线约定——这些是「在这台机器上跑通过」的具体知识。</li>
+<li><strong>20% 抄过头的</strong>：参考项目的更新模式是「重打 APK → 重装」（作者=开发者场景）；而客户在访谈里已明确选了「手动导入」。<strong>参考的默认流程 ≠ 客户确认的流程</strong>——照搬时把「技术性复用」（壳/资产）与「流程性差异」（更新/分发）分开逐层对照 AC，就不会带进来。最终改为：App 内「导入文档库」菜单（SAF 文件选择器 → 拷入私有目录 → 切换加载），APK 仅功能升级时重打。</li>
+<li><strong>逐层推倒重选的结论</strong>：内容层/阅读层/壳层重来一次仍会这样选（资产复用是核心价值）；更新层是唯一该改的。「要不要趁此次换 Flutter/原生/TWA」——都是负收益（丢已验证资产、苹果门槛照旧、引入托管依赖）。</li>
+<li>客户在开工前叫停复查（「开始前与我确认」），这次门禁起了实际作用——变更请求级别的选型，确认一轮是对的。</li>
+</ul>
+<h2 id="ios">二、跨端差异速查（「iOS/安卓通用」的客观边界）</h2>
+<p>核心阅读体验（自适应排版、字号调整、目录、离线缓存）由标准 Web 技术实现，<strong>双端一致</strong>；差异集中在「安装到桌面」这一个环节：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>环节</th>
+<th>Android</th>
+<th>iOS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>安装入口</td>
+<td>Chrome/Edge 菜单「添加到主屏幕/安装应用」，可能弹安装提示</td>
+<td><strong>Safari</strong> 分享按钮 →「添加到主屏幕」（路径固定、无提示，必须手动）</td>
+</tr>
+<tr>
+<td>桌面图标启动</td>
+<td>standalone 全屏</td>
+<td>standalone 全屏（需 manifest + apple-touch-icon）</td>
+</tr>
+<tr>
+<td>离线缓存</td>
+<td>正常</td>
+<td>正常（Service Worker 自 iOS 11.3 起支持）</td>
+</tr>
+<tr>
+<td>微信/钉钉等内嵌打开</td>
+<td>可阅读，<strong>无安装入口</strong>（右上角菜单没有添加主屏）</td>
+<td>同左；需引导「右上角 → 在浏览器打开」</td>
+</tr>
+<tr>
+<td>安装的硬前提</td>
+<td>HTTPS</td>
+<td>HTTPS + 建议用 Safari 操作</td>
+</tr>
+</tbody>
+</table></div>
+<p>给客户的口径：<strong>双端通用成立，但「安装」这一步两端路径不同，微信里只能看不能装</strong>——这三句话提前说清，能省掉大部分交付后答疑。</p>
+<h2 id="_2">三、客户上手引导脚本（非技术客户版）</h2>
+<p>「复制粘贴」是不行的：复制 md 文本到手机只解决「看一篇」，解决不了图标、同步、字号记忆。正确路径是装一次「文档库」：</p>
+<ol>
+<li><strong>部署（一次性，FDE 代办或引导，约 5 分钟）</strong>：把构建产物 <code>site/</code> 放上免费托管（推荐 Netlify），得到一个 https 网址。客户不会操作的两种代办方式：客户注册账号后远程共享屏幕由 FDE 操作；或客户授权 FDE 用自己的托管账号（内容不敏感时可行，需在边界契约里记一笔）。</li>
+<li><strong>手机安装（一次性，1 分钟）</strong>：手机浏览器打开网址 → Android：菜单「添加到主屏幕」；iPhone：Safari 分享 →「添加到主屏幕」。桌面出现「文档库」图标。</li>
+<li><strong>日常（每次 10 秒）</strong>：电脑上把 md 放进 <code>docs/</code>（或改/删）→ 双击 <code>sync.command</code>（配置了自动发布则连这步都不用）→ 手机点开图标即是最新。</li>
+</ol>
+<p>引导技巧：第 2 步最容易卡住（iOS 用户找不到分享按钮），演示时直接拿客户手机操作一遍，胜过发图文教程。</p>
+<h2 id="_3">四、踩坑记录（本次实做遇到并修掉的）</h2>
+<ol>
+<li><strong>表格窄列竖排</strong>：长文本表格在 390px 下会把「已实践」这类短词压成一个字一行。修法：<code>td/th { min-width: 5em }</code>，配合表格外层 <code>overflow-x: auto</code> 容器。4.5em 是临界值会翻车，留余量。</li>
+<li><strong>「刷新即最新」靠 network-first</strong>：Service Worker 若用 cache-first，手机端会长期停留在旧版。全站 network-first、失败回退缓存，才能同时满足「同步及时」和「离线可读」。</li>
+<li><strong>缓存必须带构建版本号</strong>：每次构建把全部输入内容哈希成 BUILD_ID 注入 sw.js，换缓存名 + activate 清旧缓存；否则「电脑删了文档、手机还能看到」会变成真 bug。</li>
+<li><strong>Service Worker 只在 HTTPS 或 localhost 注册</strong>：本地预览必须走 <code>http://localhost</code>，用局域网 IP 手机直接访问是注册不了的——这常被误判为「功能坏了」，其实是浏览器安全策略。</li>
+<li><strong>中文文件名不要进 URL</strong>：文件名做 slug 会得到一长串百分号编码；改用「文件名哈希前 10 位」做页面文件名，标题放清单里，链接永远干净稳定。</li>
+<li>** <code>- [ ]</code> 任务列表语法**：python-markdown 标准扩展不渲染任务列表，会显示字面 <code>[ ]</code>；客户文档若常用 GFM 语法，构建器要预留扩展位。</li>
+<li><strong>单文件正文全出血（真实 bug，验收复跑才暴露）</strong>：单文件里正文 <code>&lt;article&gt;</code> 不在 <code>&lt;main&gt;</code> 内，阅读页的栏宽选择器 <code>main &gt; article</code> 静默失效——内容照常显示，连续两轮验证都「通过」，直到某篇出现长标题才以 5px 横向溢出暴露。教训：a) 复用样式时，选择器依赖的 DOM 结构必须在所有产物形态下成立；b) <strong>内容变化后必须重跑验收</strong>——「上一版通过」证明不了「这一版结构正确」。</li>
+</ol>
+<h2 id="_4">五、发布通道对比（内容不敏感场景）</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>通道</th>
+<th>上手成本</th>
+<th>全自动可行性</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Netlify</strong>（推荐）</td>
+<td>最低（CLI 或网页拖拽）</td>
+<td>高：<code>DEPLOY_CMD="netlify deploy --dir site --prod" --watch</code></td>
+<td>免费档够用；网页拖拽适合完全不用终端的客户</td>
+</tr>
+<tr>
+<td>GitHub Pages</td>
+<td>中（需 git 流程）</td>
+<td>中：提交即部署</td>
+<td>适合仓库本来就是文档源的团队</td>
+</tr>
+<tr>
+<td>Cloudflare Pages / Vercel</td>
+<td>中</td>
+<td>高：连 Git 仓库自动部署</td>
+<td>与 B 同型，选客户熟悉的生态</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="_5">六、遗留（下次实践补）</h2>
+<ul>
+<li>真机双端验收（安装、图标、standalone、微信内打开引导）——需真实 HTTPS 域名 + 真机。</li>
+<li>iOS 上第三方浏览器（Chrome for iOS）添加主屏的行为不统一，本次未验证，口径上只承诺 Safari。</li>
+<li><code>--watch</code> 循环内「修改文件」路径只被间接覆盖，未单独断言。</li>
+</ul>
+</article></main>
+<script src="app.js"></script>
+</body>
+</html>
