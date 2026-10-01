@@ -26,6 +26,7 @@
 <nav class="toc-panel" aria-label="目录">
   <div class="toc-head">目录</div>
 <a class="lv2" href="#_1">交付日志</a>
+<a class="lv2" href="#7">第三方可用性验证（练习⑦客户专项要求：依赖第三方但必须充分验证其可用性）</a>
 <a class="lv2" href="#04-3">已验证 / 未验证清单（红线 0.4-3：诚实声明验证边界）</a>
 <a class="lv3" href="#playwright-390844-tmpmd2phone_shots">已验证（本机，Playwright 390×844 手机视口 + 脚本断言，证据截图在 /tmp/md2phone_shots/）</a>
 <a class="lv3" href="#fde">未验证及原因（部署后由 FDE 在真机补验）</a>
@@ -75,6 +76,51 @@
 <td>练习⑤：安卓 App（壳照 interview-prep 模式；更新层经客户复查后由「照搬重打重装」修正为「App 内导入」，与练习③确认的「手动导入」对齐）。产出 文档库.apk：内置 5 篇、菜单导入/恢复内置</td>
 <td>FDE（演练）</td>
 <td>gradle assembleDebug 成功（本机缓存离线可构建）；APK 静态检查通过（assets 页面齐全、包名 com.mddocs、应用名「文档库」）；<strong>真机安装与导入手势未验证</strong>（无连接设备）</td>
+</tr>
+<tr>
+<td>v1.5 · 2026-10-01</td>
+<td>练习⑦：全自动同步。GitHub Pages 发布通道全自动打通（publish_github.py 全 API 发布 + 自动同步.command）；客户不在场，全程自主完成；第三方可用性按客户专项要求逐项验证（见下节）</td>
+<td>FDE（自主）</td>
+<td>E2E-RESULT: PASS——新增 63s / 删除 73s 反映到公网；外部独立视角（WebFetch）确认可访问；三套回归通过</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="7">第三方可用性验证（练习⑦客户专项要求：依赖第三方但必须充分验证其可用性）</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>验证项</th>
+<th>方法与结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>认证与授权</td>
+<td>本机 gh CLI 既有登录（zhouqs666，token 含 repo scope）；<strong>未新建账号、token 全程由 gh 管理、不落盘不进日志</strong>（红线 0.4-2）</td>
+</tr>
+<tr>
+<td>网络可达性</td>
+<td>api.github.com 200（0.35s）、zhouqs666.github.io 200（0.93s）；<strong>github.com 主站（git 推送端点）8s 超时</strong> → 发布改为全 API（Git Data API），把不可达项从关键路径上移除</td>
+</tr>
+<tr>
+<td>仓库与 Pages 配置</td>
+<td>自动创建 public 仓库并开启 Pages（gh-pages 分支），幂等可重入</td>
+</tr>
+<tr>
+<td>端到端闭环</td>
+<td>自包含编排脚本（watch 子进程同进程树，等同客户双击运行）：新增 → 公网 63s；删除 → 公网 73s；两个周期发布文件数正确（19/18）</td>
+</tr>
+<tr>
+<td>外部独立视角</td>
+<td>WebFetch（独立于本机网络栈）确认首页 200、文档卡片可见</td>
+</tr>
+<tr>
+<td>验证方法论教训</td>
+<td>排障中被两类假信号误导：①验证轮询撞上 Pages CDN 缓存（max-age=600）读旧数据；②测试环境进程间文件视图隔离导致 watch「看不见」新文件——最终以「与真实使用同构的进程拓扑」重跑才得真值。<strong>验收结果必须来自与真实使用同构的链路</strong></td>
+</tr>
+<tr>
+<td>已知边界</td>
+<td>Pages CDN 缓存 ≤10 分钟（不可配置，对时效极敏感场景用 App 导入秒级）；真机（手机网络对 github.io 可达性、添加主屏）仍属未验证清单</td>
 </tr>
 </tbody>
 </table></div>

@@ -29,9 +29,9 @@
 <a class="lv3" href="#a">用法 A · 单文件版（第一版：不依赖任何第三方，今天就能用）</a>
 <a class="lv3" href="#a2">用法 A2 · 局域网版（不要第三方，但要「桌面图标」）</a>
 <a class="lv3" href="#a3-appapk-app">用法 A3 · 安卓 App（文档库.apk）：真 App 形态</a>
-<a class="lv3" href="#b-pwa">用法 B · PWA 托管版（升级路径：随时随地 + 桌面图标 + 自动同步）</a>
+<a class="lv3" href="#b-pwa">用法 B · PWA 托管版【已配置并实测 ✅】</a>
 <a class="lv2" href="#a2-b">手机端一次性设置（装到桌面，用法 A2 / B）</a>
-<a class="lv2" href="#b-510">第一次部署（仅用法 B，三选一，都是免费档，约 5–10 分钟）</a>
+<a class="lv2" href="#b">第一次部署（用法 B 已完成 ✅，以下仅备查；三选一，都是免费档）</a>
 <a class="lv2" href="#vs">全自动 vs 半自动</a>
 <a class="lv2" href="#_2">常见问题</a>
 <a class="lv2" href="#_3">开发者</a>
@@ -68,8 +68,15 @@
 <li>「<strong>恢复内置</strong>」：菜单里一键回到出厂文档。</li>
 </ol>
 <p>iPhone 不在此用法内（苹果不允许直接装安装包），用 A / A2 / B。</p>
-<h3 id="b-pwa">用法 B · PWA 托管版（升级路径：随时随地 + 桌面图标 + 自动同步）</h3>
-<p>构建会同时产出 <code>site/</code> 文件夹。按下面「第一次部署」配好托管后：手机浏览器打开网址 → 「添加到主屏幕」→ 桌面图标即成；此后电脑侧更新重建，手机刷新即最新（可配 <code>--watch</code> 全自动）。用法 A 的文件随时可以继续用，两者不冲突。</p>
+<h3 id="b-pwa">用法 B · PWA 托管版【已配置并实测 ✅】</h3>
+<p>发布通道已全自动打通（2026-10-01 端到端验收：新增 63s / 删除 73s 反映到公网）：</p>
+<p><strong>文档库网址：https://zhouqs666.github.io/md2phone-docs/</strong></p>
+<ul>
+<li><strong>电脑侧</strong>：双击「自动同步.command」→ docs/ 文件一变 → 自动构建 → 自动发布（约 1 分钟后手机刷新即见最新）；</li>
+<li><strong>手机侧（一次性）</strong>：浏览器打开网址 → Android：Chrome 菜单「添加到主屏幕」；iPhone：Safari 分享「添加到主屏幕」→ 桌面图标，全屏 App 体验；</li>
+<li>托管为 GitHub Pages（仓库 <code>zhouqs666/md2phone-docs</code>，public——免费 Pages 的前提），已加 noindex 防搜索引擎收录；</li>
+<li>已知边界：GitHub Pages 有 ≤10 分钟 CDN 缓存（不可配置），对时效极敏感时用用法 A3 的「文档库.html 导入」（秒级）；停用：GitHub 网页进仓库 Settings → Delete。</li>
+</ul>
 <h2 id="a2-b">手机端一次性设置（装到桌面，用法 A2 / B）</h2>
 <ol>
 <li>手机浏览器打开文档库网址（<strong>必须 https:// 开头</strong>，安装图标和离线缓存都依赖它）；</li>
@@ -78,7 +85,9 @@
 <li>桌面出现「文档库」图标，点开即全屏阅读，断网也能读看过的文档。</li>
 </ol>
 <p>阅读页顶部：<code>‹</code> 返回列表 · <code>A−/A+</code> 调整字号（手机会记住）· <code>☰</code> 目录（点击条目直接跳小节）。深色模式跟随系统。</p>
-<h2 id="b-510">第一次部署（仅用法 B，三选一，都是免费档，约 5–10 分钟）</h2>
+<h2 id="b">第一次部署（用法 B 已完成 ✅，以下仅备查；三选一，都是免费档）</h2>
+<p><strong>当前已配置：GitHub Pages + <code>publish_github.py</code> 全 API 发布 + <code>自动同步.command</code> 全自动同步。</strong>
+备选方案（如需更换托管）：</p>
 <p>推荐 A，最省事且可全自动：</p>
 <p><strong>A. Netlify（推荐）</strong></p>
 <pre><code class="language-bash">npm install -g netlify-cli     # 需已安装 Node.js

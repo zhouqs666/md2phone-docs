@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>GitHub Pages 全自动发布：绕开 git 端点、空仓库与排障假信号 · 文档库</title>
+<meta name="theme-color" content="#2563eb">
+<meta name="robots" content="noindex">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="文档库">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="assets/icon-64.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <a class="icon-btn back" href="index.html" aria-label="返回列表">‹</a>
+  <div class="title">GitHub Pages 全自动发布：绕开 git 端点、空仓库与排障假信号</div>
+  <button class="icon-btn fs" data-fs="-1" aria-label="缩小字号">A−</button>
+  <button class="icon-btn fs" data-fs="1" aria-label="放大字号">A+</button>
+  <button class="icon-btn" id="tocBtn" aria-label="目录">☰</button>
+</header>
+<div class="toc-backdrop"></div>
+<nav class="toc-panel" aria-label="目录">
+  <div class="toc-head">目录</div>
+<a class="lv2" href="#git-github-pages">一、方案：不经过 git 的 GitHub Pages 发布</a>
+<a class="lv2" href="#_1">二、三个真实的坑（都花过排障时间）</a>
+<a class="lv2" href="#_2">三、最大的教训：测试环境的进程视图 ≠ 真实环境</a>
+<a class="lv2" href="#_3">四、时延账本（客户预期管理）</a>
+</nav>
+<main><article class="doc">
+<h1 id="github-pages-git">GitHub Pages 全自动发布：绕开 git 端点、空仓库与排障假信号</h1>
+<blockquote>
+<p>定位：练习⑦（全自动同步）的实践层沉淀。规则层结论在指南 v0.7（3.2「外部服务依赖」行）。</p>
+</blockquote>
+<h2 id="git-github-pages">一、方案：不经过 git 的 GitHub Pages 发布</h2>
+<p>客户要求：可依赖第三方，但必须充分验证可用性，且尽量自主完成。能力探测发现本机 gh CLI 已登录（token 含 repo scope）——授权现成；但网络探测显示 <strong>github.com 主站（git push 端点）超时，api.github.com 却稳定</strong>。于是发布链路完全绕开 git：</p>
+<pre><code>build.py（构建 site/）
+  → publish_github.py：Git Data API（blob ×N → tree → commit → ref）
+      全部经 gh api 子进程（只碰 api.github.com）
+  → GitHub Pages 自动构建（30–60s）→ https://{owner}.github.io/{repo}/
+</code></pre>
+<p>要点：
+- <strong>token 不经手</strong>：HTTP 层全部走 <code>gh api</code> 子进程，gh 自管鉴权与 TLS——顺带解决了本机 python.org 版 3.9 缺 CA 证书（urllib SSL 验证失败）的问题，未动系统配置；
+- <strong>提交作者用 noreply 邮箱</strong>（<code>{id}+{login}@users.noreply.github.com</code>），不暴露真实邮箱；
+- <strong>幂等</strong>：仓库/Pages 不存在则自动创建（public 是免费 Pages 的前提）；内容哈希未变则跳过发布，避免 Pages 构建抖动；
+- <strong>noindex</strong>：robots.txt + meta robots，个人文档库不被搜索引擎收录。</p>
+<h2 id="_1">二、三个真实的坑（都花过排障时间）</h2>
+<ol>
+<li><strong>空仓库不能用 Git Data API</strong>：新建仓库（无提交）建 blob 直接 409 "Git Repository is empty"。解法：创建仓库时 <code>auto_init: true</code>；对已存在的空仓库用 Contents API 先引导一个提交。</li>
+<li><strong>gh api 的错误解析有两套格式</strong>：<code>-i</code> 时响应头在 stdout（<code>HTTP/2.0 409</code>），而 gh 的错误摘要在 stderr（<code>gh: xxx (HTTP 409)</code>）——只匹配一种就会把真实状态码显示成 0，排障方向全错。</li>
+<li><strong>Pages 的发布时延构成</strong>：API 发布 10–30s + Pages 构建 30–60s + <strong>CDN 缓存 max-age=600（不可配置）</strong>。验证同步是否生效必须给 URL 加缓存穿透参数（<code>?cb=随机数</code>），否则轮询读到的一直是旧缓存——本次排障被这个假信号误导了两轮。</li>
+</ol>
+<h2 id="_2">三、最大的教训：测试环境的进程视图 ≠ 真实环境</h2>
+<p>排障后期出现灵异现象：watch 明明活着、文件确实写入了，watch 却「看不见」新增文件；而删除又能感知。最后定位是<strong>测试工具的沙箱在跨调用/同调用后台进程之间存在文件视图隔离</strong>——不是产品 bug。最终用「自包含编排脚本」（watch 子进程与文件写入同进程树，等同客户在 Terminal 双击运行的真实拓扑）重跑，端到端一次通过：新增 63s、删除 73s。</p>
+<p>带走的规则：<strong>验收链路的进程拓扑必须与真实使用同构</strong>——「功能代码对了」和「在真实运行形态下验证过」是两回事；跨进程/跨沙箱的验证结果不能当作产品的判决证据。</p>
+<h2 id="_3">四、时延账本（客户预期管理）</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>环节</th>
+<th>耗时</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>watch 检测 + 构建</td>
+<td>2–5s</td>
+</tr>
+<tr>
+<td>API 发布（≈30 个请求）</td>
+<td>10–30s（随网络波动）</td>
+</tr>
+<tr>
+<td>Pages 构建</td>
+<td>30–60s</td>
+</tr>
+<tr>
+<td>CDN 缓存余量</td>
+<td>0–600s（最坏情况）</td>
+</tr>
+<tr>
+<td><strong>合计（典型 / 最坏）</strong></td>
+<td><strong>约 1–2 分钟 / 10 分钟内</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>对时效极敏感的场景（改完 10 秒内必须看到）：用 App 内导入（发 文档库.html），秒级。</p>
+</article></main>
+<script src="app.js"></script>
+</body>
+</html>
