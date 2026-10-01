@@ -1,0 +1,2503 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>文档库（单文件版）</title>
+<meta name="robots" content="noindex">
+<style>
+:root {
+  --fs: 17px;
+  --bg: #f5f6f8;
+  --card: #ffffff;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --brand: #2563eb;
+  --brand-weak: #eff4ff;
+  --line: #e5e7eb;
+  --code-bg: #f3f4f6;
+  --shadow: 0 1px 3px rgba(15, 23, 42, .08);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1419;
+    --card: #1a2028;
+    --text: #e6e9ee;
+    --muted: #9aa4b2;
+    --brand: #6d9bff;
+    --brand-weak: #1c2740;
+    --line: #2a323d;
+    --code-bg: #242c37;
+    --shadow: 0 1px 3px rgba(0, 0, 0, .4);
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: var(--fs)/1.75 -apple-system, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+}
+
+/* ---- 顶栏 ---- */
+.top {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; gap: .25rem;
+  padding: .55rem .7rem;
+  padding-top: calc(.55rem + env(safe-area-inset-top));
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+}
+.top .title {
+  flex: 1; min-width: 0;
+  font-size: 1rem; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.top .title.brand { text-align: left; padding-left: .35rem; }
+.top .count { font-size: .78rem; color: var(--muted); white-space: nowrap; }
+.icon-btn {
+  flex: none;
+  border: none; background: none; color: var(--brand);
+  font-size: 1.02rem; line-height: 1;
+  padding: .42rem .55rem; border-radius: .55rem;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.icon-btn:active { background: var(--brand-weak); }
+.icon-btn.back { font-size: 1.5rem; padding: .2rem .6rem .35rem .3rem; }
+.icon-btn.fs { font-size: .88rem; font-weight: 600; }
+
+/* ---- 首页列表 ---- */
+.list { max-width: 40rem; margin: 0 auto; padding: 1rem .9rem 2rem; }
+.card {
+  display: block;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: .95rem 1.1rem;
+  margin-bottom: .8rem;
+  box-shadow: var(--shadow);
+  color: inherit; text-decoration: none;
+}
+.card:active { background: var(--brand-weak); }
+.card h2 { margin: 0 0 .35rem; font-size: 1.02rem; line-height: 1.5; }
+.card .meta { font-size: .78rem; color: var(--muted); }
+.empty {
+  text-align: center; color: var(--muted);
+  padding: 3.5rem 1rem; font-size: .92rem; line-height: 2;
+}
+.foot {
+  max-width: 40rem; margin: 0 auto;
+  padding: 0 1rem calc(1.5rem + env(safe-area-inset-bottom));
+  text-align: center; font-size: .72rem; color: var(--muted);
+}
+
+/* ---- 阅读页 ---- */
+main > .doc, main > article {
+  max-width: 44rem; margin: 0 auto;
+  padding: 1.15rem 1.1rem calc(4rem + env(safe-area-inset-bottom));
+}
+.doc h1 { font-size: 1.42em; line-height: 1.4; margin: .2em 0 .8em; }
+.doc h2 {
+  font-size: 1.22em; line-height: 1.45;
+  margin: 1.9em 0 .7em; padding-bottom: .3em;
+  border-bottom: 1px solid var(--line);
+}
+.doc h3 { font-size: 1.08em; margin: 1.5em 0 .5em; }
+.doc h4 { font-size: 1em; margin: 1.3em 0 .4em; }
+.doc p { margin: .8em 0; }
+.doc ul, .doc ol { padding-left: 1.5em; margin: .8em 0; }
+.doc li { margin: .3em 0; }
+.doc li > p { margin: .3em 0; }
+.doc a { color: var(--brand); }
+.doc hr { border: none; border-top: 1px solid var(--line); margin: 2em 0; }
+.doc img { max-width: 100%; height: auto; border-radius: 10px; }
+.doc blockquote {
+  margin: 1em 0; padding: .55em 1em;
+  border-left: 4px solid var(--brand);
+  background: var(--card); border-radius: 0 10px 10px 0;
+  color: var(--muted);
+}
+.doc blockquote p { margin: .35em 0; }
+
+/* 表格：容器内横向滚动，不撑破页面 */
+.table-wrap {
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  margin: 1em 0;
+  border: 1px solid var(--line); border-radius: 10px;
+  background: var(--card);
+}
+.doc table { border-collapse: collapse; font-size: .86em; line-height: 1.55; }
+.doc th, .doc td {
+  padding: .5em .75em;
+  border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  text-align: left; vertical-align: top;
+  min-width: 6em; /* 防止窄列被压成一字一行（中文短词 4 字需 ~5.5em） */
+}
+.doc th { white-space: nowrap; background: var(--brand-weak); font-weight: 600; }
+.doc tr:last-child td { border-bottom: none; }
+
+/* 代码块 */
+.doc pre {
+  background: var(--code-bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: .8em .95em;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  font-size: .8em; line-height: 1.65;
+}
+.doc code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  background: var(--code-bg);
+  padding: .12em .35em; border-radius: 5px;
+  font-size: .88em;
+}
+.doc pre code { background: none; padding: 0; font-size: 1em; }
+.codehilite { background: var(--code-bg); border-radius: 10px; }
+.codehilite pre { border: none; margin: 0; background: none; }
+
+/* ---- 目录抽屉 ---- */
+.toc-backdrop {
+  position: fixed; inset: 0; z-index: 19;
+  background: rgba(0, 0, 0, .38);
+  opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+body.toc-open .toc-backdrop { opacity: 1; pointer-events: auto; }
+.toc-panel {
+  position: fixed; top: 0; bottom: 0; left: 0; z-index: 20;
+  width: min(82vw, 21rem);
+  background: var(--card);
+  border-right: 1px solid var(--line);
+  transform: translateX(-102%);
+  transition: transform .22s ease;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: calc(1rem + env(safe-area-inset-top)) .45rem 2.5rem;
+}
+body.toc-open .toc-panel { transform: none; }
+.toc-head {
+  font-size: .82rem; color: var(--muted); font-weight: 600;
+  padding: .2rem .9rem .55rem;
+  border-bottom: 1px solid var(--line); margin-bottom: .4rem;
+}
+.toc-panel a {
+  display: block;
+  padding: .45em .9em;
+  color: var(--text); text-decoration: none;
+  font-size: .86em; line-height: 1.5;
+  border-radius: 8px;
+}
+.toc-panel a:active { background: var(--brand-weak); }
+.toc-panel a.lv3 { padding-left: 2em; color: var(--muted); font-size: .8em; }
+.toc-none { padding: 1em .9rem; color: var(--muted); font-size: .85em; }
+
+/* ---- 单文件版追加 ---- */
+/* 正文 article 不在 main 内，需自带栏宽与内边距（等价于阅读页的 main > article） */
+.single-doc {
+  max-width: 44rem;
+  margin: 2.2rem auto 0;
+  border-top: 1px solid var(--line);
+  padding: 1.5rem 1.1rem calc(3rem + env(safe-area-inset-bottom));
+}
+.doc-head { padding: 0 0 .9rem; }
+.backtop {
+  display: inline-block;
+  font-size: .82rem; color: var(--brand); text-decoration: none;
+  padding: .32rem .85rem;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--card);
+}
+.doctoc { margin: 0 auto .9rem; }
+.doctoc summary {
+  cursor: pointer; list-style: none;
+  color: var(--brand); font-size: .88rem; font-weight: 600;
+  padding: .5em .95em;
+  background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+}
+.doctoc summary::-webkit-details-marker { display: none; }
+.doctoc[open] summary { border-radius: 10px 10px 0 0; }
+.doctoc nav {
+  border: 1px solid var(--line); border-top: none;
+  border-radius: 0 0 10px 10px;
+  background: var(--card);
+  padding: .35rem .2rem;
+  max-height: 42vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+}
+.doctoc a {
+  display: block;
+  padding: .42em .9em;
+  color: var(--text); text-decoration: none;
+  font-size: .85em; line-height: 1.5; border-radius: 8px;
+}
+.doctoc a:active { background: var(--brand-weak); }
+.doctoc a.lv3 { padding-left: 2em; color: var(--muted); font-size: .8em; }
+</style>
+</head>
+<body id="top">
+<header class="top">
+  <div class="title brand">📚 文档库</div>
+  <span class="count">共 9 篇</span>
+  <button class="icon-btn fs" data-fs="-1" aria-label="缩小字号">A−</button>
+  <button class="icon-btn fs" data-fs="1" aria-label="放大字号">A+</button>
+</header>
+<main class="list">
+<a class="card" href="#doc-8666376edd"><h2>确认门测试</h2><div class="meta">更新于 2026-10-01 21:24 · 约 1 分钟</div></a>
+<a class="card" href="#doc-76a7821113"><h2>FDE 工作指南（Forward Deployed Engineer Work Guide）</h2><div class="meta">更新于 2026-10-01 11:19 · 约 61 分钟</div></a>
+<a class="card" href="#doc-8f07a8680e"><h2>GitHub Pages 全自动发布：绕开 git 端点、空仓库与排障假信号</h2><div class="meta">更新于 2026-10-01 11:19 · 约 4 分钟</div></a>
+<a class="card" href="#doc-a8e08c60a5"><h2>形态选型复盘：为什么没有早点想到 App</h2><div class="meta">更新于 2026-10-01 11:19 · 约 5 分钟</div></a>
+<a class="card" href="#doc-c880ec32f7"><h2>把 md 放到手机上：PWA 跨端与实践笔记</h2><div class="meta">更新于 2026-10-01 11:19 · 约 10 分钟</div></a>
+<a class="card" href="#doc-bc5441b46c"><h2>md2phone · 内容与构建约定（AGENTS.md）</h2><div class="meta">更新于 2026-10-01 11:19 · 约 4 分钟</div></a>
+<a class="card" href="#doc-04c6e90faa"><h2>md2phone · 把 Markdown 放进手机</h2><div class="meta">更新于 2026-10-01 11:19 · 约 8 分钟</div></a>
+<a class="card" href="#doc-ea877eb60d"><h2>交付记录 · md2phone（2026-09-30）</h2><div class="meta">更新于 2026-10-01 11:19 · 约 9 分钟</div></a>
+<a class="card" href="#doc-899b96eadf"><h2>需求与验收 · md 文档手机阅读（2026-09-30）</h2><div class="meta">更新于 2026-10-01 11:19 · 约 8 分钟</div></a>
+</main>
+<article class="doc single-doc" id="doc-8666376edd"><div class="doc-head"><a class="backtop" href="#top">↑ 文档列表</a></div><h1 id="8666376edd-_1">确认门测试</h1>
+<p>标记 GATE-1 基线。</p></article>
+<article class="doc single-doc" id="doc-76a7821113"><div class="doc-head"><a class="backtop" href="#top">↑ 文档列表</a></div><details class="doctoc"><summary>目录</summary><nav><a class="lv2" href="#76a7821113-_1">本版验证状态（先读）</a>
+<a class="lv2" href="#76a7821113-_2">目录</a>
+<a class="lv2" href="#76a7821113-0">0. 角色与公理</a>
+<a class="lv3" href="#76a7821113-01-fde">0.1 FDE 是什么</a>
+<a class="lv3" href="#76a7821113-02">0.2 三条公理（一切裁剪的推导起点）</a>
+<a class="lv3" href="#76a7821113-03">0.3 职责槽位（用「槽位」而非「职位」，由人填充）</a>
+<a class="lv3" href="#76a7821113-04">0.4 职业红线（违反任何一条，交付质量再高也不合格）</a>
+<a class="lv3" href="#76a7821113-05">0.5 正在转型的人怎么用这份指南</a>
+<a class="lv2" href="#76a7821113-1">1. 交付全程总览</a>
+<a class="lv2" href="#76a7821113-2-g0">2. 接洽前：项目评估（门 G0）</a>
+<a class="lv2" href="#76a7821113-3-discovery">3. 阶段一：理解（Discovery）——全周期最重的阶段</a>
+<a class="lv3" href="#76a7821113-31">3.1 干系人访谈提纲（标准）</a>
+<a class="lv3" href="#76a7821113-32">3.2 环境评估清单（标准）</a>
+<a class="lv3" href="#76a7821113-33">3.3 问题定义（一页，模板）</a>
+<a class="lv3" href="#76a7821113-34">3.4 方案概要（一页，模板）</a>
+<a class="lv2" href="#76a7821113-4">4. 阶段二：定义</a>
+<a class="lv3" href="#76a7821113-41-ai">4.1 澄清回路（AI 反问 + 人确认）</a>
+<a class="lv3" href="#76a7821113-42">4.2 故事模板</a>
+<a class="lv3" href="#76a7821113-43-dor">4.3 DoR 检查表（全过才开工）</a>
+<a class="lv3" href="#76a7821113-44-dod">4.4 DoD 检查表（全过才算完成）</a>
+<a class="lv3" href="#76a7821113-45">4.5 设计工件（按触发器展开，不默认全做）</a>
+<a class="lv3" href="#76a7821113-46">4.6 优先级与排序〔标记：待验证〕</a>
+<a class="lv2" href="#76a7821113-5">5. 阶段三：构建</a>
+<a class="lv3" href="#76a7821113-51">5.1 验证先行</a>
+<a class="lv3" href="#76a7821113-52-ai">5.2 AI 辅助实现原则（工具无关）</a>
+<a class="lv3" href="#76a7821113-53">5.3 自测硬门（任何产品形态不减项）</a>
+<a class="lv3" href="#76a7821113-54">5.4 审查门（按风险分级）</a>
+<a class="lv3" href="#76a7821113-55-ai">5.5 当产出不是确定性的（AI / 模型 / 生成式功能）〔标记：假设〕</a>
+<a class="lv3" href="#76a7821113-56-p0-04-1-04-2">5.6 P0 数据与隐私操作清单（红线 0.4-1 / 0.4-2 的可操作版）</a>
+<a class="lv2" href="#76a7821113-6">6. 阶段四：交付</a>
+<a class="lv3" href="#76a7821113-61">6.1 演示节奏</a>
+<a class="lv3" href="#76a7821113-62">6.2 发布门（五步，任何产品形态都不省略）</a>
+<a class="lv3" href="#76a7821113-63">6.3 观测</a>
+<a class="lv3" href="#76a7821113-64">6.4 需求变更管理</a>
+<a class="lv2" href="#76a7821113-7-g5">7. 收尾与沉淀（门 G5）</a>
+<a class="lv2" href="#76a7821113-8">8. 工件体系（存在什么、何时加重）</a>
+<a class="lv3" href="#76a7821113-81">8.1 默认最小集（随交付必然产生，不能省）</a>
+<a class="lv3" href="#76a7821113-82">8.2 触发式工件（触发才做，否则不做）</a>
+<a class="lv3" href="#76a7821113-83">8.3 管理原则</a>
+<a class="lv2" href="#76a7821113-9">9. 适配层（进新项目/新公司先跑一遍）</a>
+<a class="lv2" href="#76a7821113-10-fde">10. 能力模型（流程各阶段与 FDE 能力的刻意练习映射）</a>
+<a class="lv2" href="#76a7821113-11">11. 与公司内部的协作</a>
+<a class="lv2" href="#76a7821113-12">12. 常见困境与应对</a>
+<a class="lv2" href="#76a7821113-a">附录 A：示例（虚构项目，用于校准「写到多细」）</a>
+<a class="lv3" href="#76a7821113-a1">A.1 问题定义（填充后）</a>
+<a class="lv3" href="#76a7821113-a2">A.2 方案概要（填充后，节选）</a>
+<a class="lv3" href="#76a7821113-a3">A.3 一条故事（填充后）</a>
+<a class="lv3" href="#76a7821113-a4">A.4 读法</a>
+<a class="lv2" href="#76a7821113-b">附录 B：术语表</a>
+<a class="lv2" href="#76a7821113-c">附录 C：实践验证记录</a>
+<a class="lv2" href="#76a7821113-_3">资料来源与时效</a>
+<a class="lv2" href="#76a7821113-_4">变更记录</a></nav></details><h1 id="76a7821113-fde-forward-deployed-engineer-work-guide">FDE 工作指南（Forward Deployed Engineer Work Guide）</h1>
+<blockquote>
+<p>版本：v0.7 · 日期：2026-10-01
+定位：面向「前置部署工程师（FDE）」角色的通用交付流程框架。独立于任何具体产品、技术栈、AI 工具与硬件环境。
+使用方式：本文档是骨架与公理的唯一定义处。所有裁剪（流程轻重、工件增减、工具选择）都从公理与适配层推导，不修改本文档；修改本文档 = 版本升级（见文末变更记录）。</p>
+</blockquote>
+<h2 id="76a7821113-_1">本版验证状态（先读）</h2>
+<p>这份文档的规则分三种可信度，混着读会误判：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>标记</th>
+<th>判据（按「这条规则的依据来自哪里」判断）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>已实践</code></td>
+<td>本项目的真实交付或演练验证过它</td>
+</tr>
+<tr>
+<td><code>待验证</code></td>
+<td>本框架自己推导出来的规则：逻辑自洽，但还没人试过</td>
+</tr>
+<tr>
+<td><code>假设</code></td>
+<td>依赖外部事实或他人经验推导，且本版没有可核对的来源</td>
+</tr>
+</tbody>
+</table></div>
+<p>看到 <code>待验证</code>，可以放心按它做，做不通就改它；看到 <code>假设</code>，先找证据再用。</p>
+<p><strong>v0.7 的真实状态：除特别标注外，全篇仍为 <code>待验证</code>。</strong> 本指南已经过七轮模拟演练与复盘（2026-09-30 ~ 10-01，客户角色由扮演者承担，见附录 C），尚未经过真实客户交付检验。它自己必须遵守红线 0.4-3（不把「没验证」包装成「已验证」），所以：</p>
+<ul>
+<li>不要把它当成已验证的最佳实践去向客户或同事背书；</li>
+<li>第一个项目（或第一次演练）走完后，逐条回填状态，记录写进附录 C。</li>
+</ul>
+<p>哪些内容你自己能验证、哪些必须有真实干系人才能验证，直接决定演练能覆盖多少：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>内容</th>
+<th>能否自演练验证</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3.2 环境评估清单</td>
+<td>可以</td>
+<td>用真实或模拟项目逐项过一遍</td>
+</tr>
+<tr>
+<td>3.1 访谈提纲与纪律</td>
+<td>可以（模拟）</td>
+<td>找 3 个人做模拟访谈，写纪要请对方确认</td>
+</tr>
+<tr>
+<td>3.3 / 3.4 两张一页纸</td>
+<td>可以</td>
+<td>与附录 A 对照校准深度</td>
+</tr>
+<tr>
+<td>4.x 故事 / AC / DoR / DoD / 优先级</td>
+<td>可以</td>
+<td>关键是让不了解实现的人能依 AC 判定</td>
+</tr>
+<tr>
+<td>5.1–5.3 验证先行 / 自测硬门</td>
+<td>可以</td>
+<td>完整做一遍「先写测试 → 看它变红 → 实现到绿」</td>
+</tr>
+<tr>
+<td>5.4 审查门 / 5.6 P0 清单</td>
+<td>可以（自审或他人扮演审查者）</td>
+<td>P0 人审不能由实现者自己签字</td>
+</tr>
+<tr>
+<td>5.5 非确定性产出验证</td>
+<td>部分</td>
+<td>需要一个真实的模型/LLM 产出场景</td>
+</tr>
+<tr>
+<td>6.2 发布门</td>
+<td>可以</td>
+<td>含一次回滚演练</td>
+</tr>
+<tr>
+<td>6.1 演示节奏</td>
+<td>部分</td>
+<td>彩排可自练，面对真实决策人的演示不能</td>
+</tr>
+<tr>
+<td>7 交接与能力转移</td>
+<td>部分</td>
+<td>让接手方照文档独立跑一次发布，卡住处即遗漏处</td>
+</tr>
+<tr>
+<td>G0 边界契约 / G1 签认 / G4 验收</td>
+<td>不能，需真实干系人</td>
+<td>用角色扮演或纸面推演顶一下，并在附录 C 标注「未真实验证」</td>
+</tr>
+<tr>
+<td>6.3 观测 / 6.4 变更管理</td>
+<td>不能，需真实客户</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>11 公司内部协作 / 12 常见困境</td>
+<td>不能，需在职环境</td>
+<td>同上</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>每完成一轮实战或演练，往附录 C 记一行</strong>——那是这份文档唯一的迭代输入。</p>
+<hr />
+<h2 id="76a7821113-_2">目录</h2>
+<ul>
+<li>
+<ol start="0">
+<li>角色与公理（FDE 是什么 / 三条公理 / 职责槽位 / 职业红线 / 转型者入口）</li>
+</ol>
+</li>
+<li>
+<ol>
+<li>交付全程总览（阶段、门、时间配比）</li>
+</ol>
+</li>
+<li>
+<ol start="2">
+<li>接洽前：项目评估（门 G0）</li>
+</ol>
+</li>
+<li>
+<ol start="3">
+<li>阶段一：理解（Discovery）｜出口门 G1</li>
+</ol>
+</li>
+<li>
+<ol start="4">
+<li>阶段二：定义｜出口门 G2</li>
+</ol>
+</li>
+<li>
+<ol start="5">
+<li>阶段三：构建｜出口门 G3</li>
+</ol>
+</li>
+<li>
+<ol start="6">
+<li>阶段四：交付｜出口门 G4</li>
+</ol>
+</li>
+<li>
+<ol start="7">
+<li>收尾与沉淀（门 G5）</li>
+</ol>
+</li>
+<li>
+<ol start="8">
+<li>工件体系（存在什么、何时加重）</li>
+</ol>
+</li>
+<li>
+<ol start="9">
+<li>适配层（进新项目/新公司先跑一遍）</li>
+</ol>
+</li>
+<li>
+<ol start="10">
+<li>能力模型（刻意练习映射）</li>
+</ol>
+</li>
+<li>
+<ol start="11">
+<li>与公司内部的协作</li>
+</ol>
+</li>
+<li>
+<ol start="12">
+<li>常见困境与应对</li>
+</ol>
+</li>
+<li>附录 A：示例（虚构项目，用于校准「写到多细」）</li>
+<li>附录 B：术语表</li>
+<li>附录 C：实践验证记录</li>
+<li>资料来源与时效</li>
+<li>变更记录</li>
+</ul>
+<hr />
+<h2 id="76a7821113-0">0. 角色与公理</h2>
+<h3 id="76a7821113-01-fde">0.1 FDE 是什么</h3>
+<p>前置部署工程师是「工程师 + 半个咨询」的混合体：深入客户现场，把公司的产品/技术变成在客户业务里真正跑起来的东西——从理解业务、方案设计、动手构建、部署交付到验收交接全弧段负责，并把客户侧的发现反哺给产品线。</p>
+<p><strong>行业现状（2026 年）</strong>：FDE 已从 Palantir 式的小众岗位，变成增速最快的工程岗位之一，且资本投入在 2026 年集中兑现——OpenAI Deployment Company（约 40 亿美元，2026 年 5 月成立，含收购 Tomoro 带来的约 150 名 FDE）、Microsoft Frontier Company（约 25 亿美元、约 6,000 名嵌入式专家）、AWS（约 10 亿美元，2026 年 6 月）、Anthropic（约 15 亿美元）相继落地。</p>
+<p>岗位数量<strong>随统计口径差异极大，引用时必须带口径</strong>：Indeed 口径 2026 年 4 月约 5,330 个（2025 年 4 月为 643 个，同比 +729%）；严格标题匹配口径约 990–1,450 个（JoinPlank 普查：991 个；InterviewStack 2026-06：1,444 个）。美国市场 FDE 存量约 1.7 万人，其中工程硬功与业务沟通能力兼备的约 2,000 人。</p>
+<p>薪资方差同样极大：美国 base 中位数约 18.5–19.3 万美元；资深约 30–55 万美元；前沿实验室 60–120 万美元且以股权为主（占 55–70%）。<strong>注意不存在「FDE 普遍比同级后端/ML 工程师高 30–50%」这种规律</strong>——高端数字被实验室溢价与股权放大，低位区间与普通工程师持平甚至更低。</p>
+<p>市场同时已从「AI 热情」进入「ROI 审查期」：客户只为可证明的结果付溢价。国内方面，腾讯云于 2026-09-10 发布行业首个 FDE 认证（面向其合作伙伴的 ADP 产品认证，非通用职业资格）；脉脉口径下，2026 年上半年 FDE 相关岗位同比 +21 倍。</p>
+<blockquote>
+<p>本节全部数字是<strong>行业发展背景</strong>，不指导你的具体动作；且均引自公开摘要与二手报道，引用前请核对原始报告（来源清单见文末）。</p>
+</blockquote>
+<p>与相邻角色的区别：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>角色</th>
+<th>首要目标</th>
+<th>与 FDE 的区别</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>业务系统软件工程师</td>
+<td>按既定需求交付功能</td>
+<td>FDE 直接对客户的业务结果负责，大部分时间与客户在一起</td>
+</tr>
+<tr>
+<td>咨询顾问</td>
+<td>交付方案与报告</td>
+<td>FDE 交付生产级代码，对运行结果负责</td>
+</tr>
+<tr>
+<td>售前/售后技术支持</td>
+<td>促成与维系交易</td>
+<td>FDE 负责真实实现与交付，不只是讲解</td>
+</tr>
+<tr>
+<td>产品线工程师</td>
+<td>构建可复用的产品能力</td>
+<td>FDE 先解决单个客户的问题，再把可复用的部分交回产品线</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="76a7821113-02">0.2 三条公理（一切裁剪的推导起点）</h3>
+<ul>
+<li><strong>A1 验证深度与爆炸半径成正比。</strong> 爆炸半径 = 出错时最坏的后果（数据损毁、资金、个人隐私 &gt; 核心业务可用性 &gt; 体验与文案）。访谈深度、测试深度、审查轻重都由这条推导。</li>
+<li><strong>A2 每个工件必须有读者、服务一个决策。</strong> 没有读者的工件是官僚主义——要么压到最小形态，要么不产出。</li>
+<li><strong>A3 能机器验证的绝不靠人自觉，人只守机器守不住的门。</strong> 人的时间有限，只投在意图、边界、数据安全和决策签认上。</li>
+</ul>
+<h3 id="76a7821113-03">0.3 职责槽位（用「槽位」而非「职位」，由人填充）</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>槽位</th>
+<th>职责</th>
+<th>常见填充者</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>需求源 / 业务专家</td>
+<td>讲清业务，提供领域知识</td>
+<td>客户方业务负责人、领域专家</td>
+</tr>
+<tr>
+<td>方案与验收决策人</td>
+<td>签认问题定义与方案，做最终验收</td>
+<td>客户方项目决策人</td>
+</tr>
+<tr>
+<td>产品/交互设计</td>
+<td>定义长什么样、交互逻辑</td>
+<td>FDE 或客户方产品人员</td>
+</tr>
+<tr>
+<td>实现 + 自动化验证</td>
+<td>写实现，写并运行自动化验证</td>
+<td>实现者（AI 编码代理或人）+ FDE</td>
+</tr>
+<tr>
+<td>独立审查</td>
+<td>审查 P0 改动、确认测试可信；不得由实现者本人担任</td>
+<td>同级工程师、公司侧交付负责人、外部复核</td>
+</tr>
+<tr>
+<td>交付责任人</td>
+<td>对最终结果负全责，守人审门</td>
+<td>FDE（唯一不可让渡的槽位）</td>
+</tr>
+</tbody>
+</table></div>
+<p>第三类参与者：<strong>真实用户</strong>。验收人不等于使用者，演示与观测要尽量触达真实用户。</p>
+<h3 id="76a7821113-04">0.4 职业红线（违反任何一条，交付质量再高也不合格）</h3>
+<ol>
+<li><strong>客户生产数据不是试验台。</strong> 任何需要触碰数据的验证，用隔离环境或脱敏数据；任何破坏性操作，先备份、获书面授权、显式指定对象（禁止按条件批量操作）。可操作版清单见 5.6。</li>
+<li><strong>凭据不进文档。</strong> 真实账号、密码、密钥不出现在任何进入交付物、版本库、报告的文件里；发现泄露：先作废轮换，再清理文件，再复核历史。可操作版清单见 5.6。</li>
+<li><strong>诚实声明验证边界。</strong> 不把「没验证」包装成「已验证」；每次交付附「已验证 / 未验证及原因」清单。</li>
+<li><strong>范围与权属边界。</strong> 在客户现场写的代码、产生的数据与模型的权属，事先书面约定。</li>
+<li><strong>不代公司做承诺。</strong> 时间、范围、价格的承诺走公司侧的签约/交付负责人，或获得明确授权。</li>
+</ol>
+<h3 id="76a7821113-05">0.5 正在转型的人怎么用这份指南</h3>
+<p><strong>先读 0、9、10 与开篇的「本版验证状态」</strong>：第 0 章给你角色与红线；第 9 章是进新项目第一个要跑的动作；第 10 章对照能力映射，判断短板在工程段还是业务段；开篇的覆盖表告诉你哪些能自己练、哪些必须等真实干系人。</p>
+<ul>
+<li><strong>工程底子出身</strong>：最常见的短板是「理解」与「交付」两章——访谈纪律（3.1）和演示节奏（6.1）要刻意练。建议找一个真实的小项目（内部项目也行）从头走一遍 G0→G5，把每个门的产出物真做一遍。</li>
+<li><strong>业务/咨询出身</strong>：最容易轻视的是「定义」与「构建」两章的验证纪律——AC 可测、测试演示失败、自测硬门不是官僚步骤，是 AI 时代工程可信度的最低配置。同时要接受一件事：在这份工作里你要靠测试和证据说话，而不是靠表达和文档。</li>
+<li><strong>先补哪些硬功</strong>（按优先级）：① SQL 与数据核对——拿不到、读不懂、对不齐数据，后面全白做；② 接口与集成——API、鉴权、重试、幂等、文件交换；③ 调试与排障——能定位「是谁的错」，而不是重启试试；④ 云与部署基本功——环境、日志、发布、回滚；⑤ 把一门语言用到「能写测试、能被别人维护」的程度，不是算法竞赛的深度。</li>
+<li><strong>第一个项目怎么起步</strong>：拿第 9 章适配层当检查清单跑一遍，把 0.3 六个槽位的名字填出来——填不出名字的槽位，就是你要主动推动补位的事。</li>
+<li><strong>演练覆盖不到的部分</strong>：G0 边界契约、G1 签认、G4 验收、6.4 变更管理、11/12 章都需要真实干系人。自演练时用角色扮演或纸面推演顶一下，并在附录 C 明确标注「未真实验证」——拿到假信心比没验证更危险。</li>
+<li><strong>时间线</strong>：不要给自己设「多久必须转过去」的硬期限，但要分清两类短板——<strong>能补的</strong>（工程基本功、工具链，几个月能摸到边）和<strong>只能靠真实项目长的</strong>（业务理解、干系人管理、现场判断力）。后者的唯一解法是尽早进入真实项目，哪怕从小项目开始。</li>
+<li><strong>求职防坑</strong>：市场上大量「FDE」头衔实为换皮售前/咨询岗。面试时问清六件事：</li>
+</ul>
+<ol>
+<li><strong>时间怎么分配</strong>——客户侧协作 vs 远程实现，各占多少；</li>
+<li><strong>交付物是什么</strong>——生产代码 vs 方案书/PPT；</li>
+<li><strong>按什么验收</strong>——运行结果 vs 报告交付；</li>
+<li><strong>公司自有产品在你的日常工作中占什么位置</strong>；</li>
+<li><strong>差旅与驻场的真实强度</strong>——行业常见差旅区间是 20–50%，但要问清是「偶尔出差」还是「常驻客户现场」；</li>
+<li><strong>这个岗位往哪走</strong>——产品线、售前、还是现场负责人。答不上来的团队，通常也没想清楚这个岗位的定位。</li>
+</ol>
+<p>六个答案里有两个以上指向「不写代码、不碰生产、不背运行结果」，那是售前或咨询，不是 FDE。</p>
+<hr />
+<h2 id="76a7821113-1">1. 交付全程总览</h2>
+<pre><code>接洽前评估 → ① 理解 → ② 定义 → ③ 构建 → ④ 交付 → 收尾沉淀
+   (门 G0)     (G1)     (G2)     (G3)     (G4)      (G5)
+       ↑____________反馈回路：观测 / 验收差异 / 事故 → 回到需求池（Backlog）____________|
+</code></pre>
+<ul>
+<li><strong>章节对应关系</strong>：接洽前 = 第 2 章；① 理解 = 第 3 章；② 定义 = 第 4 章；③ 构建 = 第 5 章；④ 交付 = 第 6 章；收尾沉淀 = 第 7 章。</li>
+<li>每个阶段有且只有一个出口门；门不过不进下一阶段。最重的两道门是 G1（签认）与 G4（验收）。</li>
+<li><strong>时间配比参考</strong>（各来源口径不同、结论不完全一致，见文末来源）：Perspective AI 2026 年对 1,500 名 FDE 的调查显示，客户侧工作与写代码在总时间中各约占 <strong>31%</strong>（也就是这两类工作内部大致对半开）；PostHog 描述其 FDE 差旅占 <strong>20–50%</strong>。可用的结论是：<strong>客户侧与实现大致各占一半，且随公司形态（现场驻场型 / 远程交付型）大幅波动。</strong> 项目早期实现占大头是正常且健康的；但若长期几乎不见客户、不参与验收，就不是 FDE 的工作方式。求职时把这条问清楚（0.5）。</li>
+</ul>
+<hr />
+<h2 id="76a7821113-2-g0">2. 接洽前：项目评估（门 G0）</h2>
+<p>在职 FDE 通常从公司销售/客户成功侧接手项目。接手前评估四件事：</p>
+<ol>
+<li><strong>业务匹配</strong>：客户的系统与问题，是否属于我们交付过或公司产品覆盖的类型（选相似的客户、从小做起，最大化学习）。</li>
+<li><strong>目标归属</strong>：本次项目的目标与产品方向是否一致；若属纯定制，明确确认并明确记账方式。</li>
+<li><strong>边界契约（书面）</strong>：我方交付什么；客户提供什么（数据访问、环境、领域专家的可约时间、验收时间）；客户提供项中客户无法自理时的代办/引导方式与授权口径；双方职责冲突时的升级路径。</li>
+<li><strong>退出预期</strong>：项目结束时（沉淀回产品 / 交接给客户团队 / 合同终止），事先写明，避免「临时维护」无限滚雪球。</li>
+</ol>
+<blockquote>
+<p><strong>常见说法（本版未验证）</strong>：交付延期最大的原因很少是技术，而是客户侧承诺未兑现（数据没给权限、环境没就绪、验收没人到场）。边界契约就是把这个风险前置暴露的工具。</p>
+</blockquote>
+<p><strong>G0 过门标准</strong>：四项评估完成并形成书面结论——接/不接有明确决定；边界契约已成文并获双方确认；退出预期已写入。</p>
+<hr />
+<h2 id="76a7821113-3-discovery">3. 阶段一：理解（Discovery）——全周期最重的阶段</h2>
+<p><strong>入口</strong>：项目通过 G0。<strong>出口门 G1</strong>：决策人书面签认「问题定义」与「方案概要」。未签认不动手——后续所有返工成本都从这里扩散出去。</p>
+<h3 id="76a7821113-31">3.1 干系人访谈提纲（标准）</h3>
+<p><strong>访谈设置</strong>：每场 30–60 分钟；需求源、决策人、代表性用户分开访谈（同一问题不同人答案不同，差异本身是发现）；经对方同意后记录。</p>
+<p><strong>两类人必须刻意加入访谈名单</strong>：没有主动提需求的最终用户（他们忍受问题最久，也最少被问到）；怀疑者/反对者——他们的反对理由往往是最真实的风险清单。</p>
+<p><strong>观察法</strong>：除访谈外，至少安排一次现场跟随观察——坐在用户旁边看他实际干一小时活。口头描述的工作流与真实工作流几乎总有差异，差异处就是需求所在。</p>
+<p><strong>五个问题模块</strong>（附设计意图）：</p>
+<p><strong>M1 业务与现状</strong>——拿到真实的工作流，而不是理想化的
+- 请把这项业务从头到尾走一遍：每一步谁做什么、用什么工具？
+- 哪些环节最耗时、最容易出错？
+- 请讲最近一次印象深刻的出错：怎么发现的、怎么处理的、代价是什么？</p>
+<p><strong>M2 目标与成功</strong>——把成功度量锚在可测的东西上
+- 为什么是现在做这件事？触发事件是什么？
+- 做成了的话，你会看到什么变化？（要可观察的行为，不要抽象形容词）
+- 有什么数字能衡量这个变化？谁那里有、多久出一次？现在的基线是多少？</p>
+<p><strong>M3 约束与红线</strong>——环境评估的输入
+- 哪些系统、数据是绝对不能碰的？有合规/安全/隐私红线吗？
+- 时间预期是什么？有硬截止（审计、窗口期、上线日）吗？</p>
+<p><strong>M4 决策链与干系人</strong>——填干系人地图
+- 谁在用？谁验收？谁能一票否决？项目开始前还必须把谁拉进来？</p>
+<p><strong>M5 边界与收尾</strong>——范围收敛、找 MVP
+- 如果只能先做一件事，是哪件？
+- 哪些是明确不做的？
+- 有没有我没问到、但很重要的事？（必问的收尾题）</p>
+<p><strong>访谈纪律</strong>：
+- 要故事不要观点：问「上一次」「那一次」，不问「一般来说」。〔已实践 2026-09：演练中客户首句需求与访谈补述后的真实需求差距显著，见附录 C〕
+- 访谈中不给方案。过早给方案会让客户迁就你的方案，信息随即失真。
+- <strong>书面闭环</strong>：访谈后 24 小时内发书面纪要给对方确认。理解的第一轮纠偏在这里发生，同时为 G1 签认积累书面依据。</p>
+<h3 id="76a7821113-32">3.2 环境评估清单（标准）</h3>
+<p>G1 之前完成；产出写进问题定义的「约束」与方案概要的「风险」。<strong>红旗列命中任意一条，先向公司侧交付负责人报告再继续。</strong></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>项</th>
+<th>关键问题</th>
+<th>产出去向</th>
+<th>红旗</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>数据</td>
+<td>需要哪些数据？在哪、谁能授权？有无沙箱/脱敏机制？<strong>质量如何——缺失率、口径是否一致、有无历史脏数据事故？</strong></td>
+<td>问题定义·约束</td>
+<td>拿不到数据 / 只允许用生产数据 / 数据质量无法在合理成本内修复</td>
+</tr>
+<tr>
+<td>系统</td>
+<td>要对接哪些既有系统？接口形态（API/文件/人工）？文档质量？</td>
+<td>方案概要·技术路线</td>
+<td>无任何接口，只能人工录入</td>
+</tr>
+<tr>
+<td>既有资产</td>
+<td>客户与现场有没有同类既往交付、参考实现、可复用的管线/工具链/账号（哪怕叫别的名字、放在别处）？</td>
+<td>方案概要·技术路线</td>
+<td>—</td>
+</tr>
+<tr>
+<td>外部服务依赖</td>
+<td>交付链路依赖哪些第三方服务（托管/API/网关）？账号授权在谁手里、是否现成？配额、延迟、地域可达性如何逐项验证？不可达时的替代路径是什么？</td>
+<td>方案概要·风险；交付日志</td>
+<td>依赖的第三方在关键路径上且无降级路径</td>
+</tr>
+<tr>
+<td>环境</td>
+<td>有无测试环境？谁管、能否重置？部署审批链？发布窗口？</td>
+<td>方案概要·里程碑</td>
+<td>无测试环境，只能直改生产上线</td>
+</tr>
+<tr>
+<td>用户端</td>
+<td>最终用户用什么设备、操作系统、浏览器与入口（系统浏览器/第三方 App 内嵌）使用？需覆盖与验收的双端矩阵？网络与离线诉求？</td>
+<td>问题定义·约束；方案概要·验收矩阵</td>
+<td>目标用户的使用环境无人说得清，也无保守默认可选</td>
+</tr>
+<tr>
+<td>AI 工具</td>
+<td>客户是否允许外部 AI 工具（数据出域、代码权属）？分别允许用于什么？是否要求私有化部署？</td>
+<td>适配层</td>
+<td>全面禁用 → 实现方式降级，验证纪律不降级</td>
+</tr>
+<tr>
+<td>组织</td>
+<td>什么决策要谁批？安全合规部门的要求？是否要接入客户既有的项目/验收流程？</td>
+<td>适配层·边界契约</td>
+<td>审批链长于项目周期</td>
+</tr>
+<tr>
+<td>降级</td>
+<td>以上任一不满足时的降级路径？最低可交付条件是什么？</td>
+<td>方案概要·风险</td>
+<td>无降级路径 = 高风险，重新评估是否接洽</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="76a7821113-33">3.3 问题定义（一页，模板）</h3>
+<pre><code>背景与触发：业务背景一句话；触发事件一句话
+问题陈述：现状 − 目标 = 差距（现状是什么 / 期望是什么 / 差距造成什么代价）
+成功度量：基线 → 目标；基线来源（谁那里有、什么系统、多长时间的数据）；
+         测量方式；测量频率；测量时间点
+         （度量与基线来源必须对得上：电话量要来自话务记录，不会出现在纸质台账里。
+          没有基线数字的，先想办法拿到基线——这是 G1 之前必须解决的问题之一）
+约束与红线：数据 / 系统 / 环境 / 合规 / 时间（自 3.2 汇入）
+非目标：明确不做什么（决策人已确认）
+干系人地图：需求源 / 决策人 / 用户 / 验收人 / 否决权人（每人一行：人、角色、关注点）
+</code></pre>
+<h3 id="76a7821113-34">3.4 方案概要（一页，模板）</h3>
+<pre><code>MVP 切法：第一版只含能演示、能开始收集成功度量的最小切片；明确列出「不进第一版」
+技术路线：关键选择及理由；前三技术风险与对策（不超一页）
+里程碑与演示节奏：每个里程碑演示什么；演示间隔不超过两周
+责任矩阵：我方交付 × 项；客户提供 × 项；逐项对应到人
+风险与依赖：红旗项 + 客户侧依赖 TOP 风险
+运行成本与延迟：单位成本与 P95 延迟，及其可接受阈值（交付含模型/外部服务时必填）
+估算：人力/时间及依据，写明置信区间与投入前提（几人、是否全职）
+</code></pre>
+<p><strong>G1 操作</strong>：带问题定义 + 方案概要与决策人开会，会认结果三选一：签认（进②）/ 修改后再提 / 终止。签认形式依客户文化（邮件回复、会议纪要确认、流程审批均可），关键是<strong>书面、有名有姓</strong>。</p>
+<hr />
+<h2 id="76a7821113-4">4. 阶段二：定义</h2>
+<p><strong>入口</strong>：G1 签认。<strong>出口门 G2</strong>：首批故事通过 DoR，且该批次按 4.5 触发器要求的设计工件已产出。</p>
+<h3 id="76a7821113-41-ai">4.1 澄清回路（AI 反问 + 人确认）</h3>
+<p>把业务需求转成可实现的故事。这一步的三项真实产出（故事文档只是载体）：</p>
+<ol>
+<li><strong>上下文转移</strong>：业务专家脑中的领域知识、隐含假设、行业惯例显性化成文——这是 AI 实现者赖以工作的知识底座；</li>
+<li><strong>验收契约（AC）</strong>：每条故事带可测的验收标准。它是后续一切验证与验收的唯一依据；AC 不可测，「偏离」就无法判定；</li>
+<li><strong>范围收敛</strong>：非目标与边界写进故事，防过度交付与需求蔓延。</li>
+</ol>
+<p>澄清深度遵循 A1：改一处文案可以零澄清；触碰核心业务数据的故事要当面对 walkthrough。</p>
+<h3 id="76a7821113-42">4.2 故事模板</h3>
+<pre><code>标题：动词 + 宾语，一行
+价值陈述：作为 &lt;谁&gt;，达成 &lt;什么价值&gt;
+验收标准 AC：编号列出，每条可测（given/when/then 或清单式）
+非目标：本故事明确不做的
+风险分级：按爆炸半径——P0 数据/资金/隐私 · P1 核心业务可用性 · P2 体验/文案
+依赖：客户侧 / 环境 / 其他故事依赖
+</code></pre>
+<h3 id="76a7821113-43-dor">4.3 DoR 检查表（全过才开工）</h3>
+<p>DoR（Definition of Ready，就绪定义）——一条故事满足以下全部条目，才算「可以开工」：</p>
+<ul>
+<li>[ ] AC 可测：不了解实现的人也能依 AC 判定通过与否</li>
+<li>[ ] 风险分级完成（决定下游验证与审查强度）</li>
+<li>[ ] 优先级已定（排序规则见 4.6）</li>
+<li>[ ] 非目标已写明</li>
+<li>[ ] 依赖确认（人/环境/数据就位或有日期）</li>
+<li>[ ] 大小 ≤ 一个可评审的交付单元（否则拆）</li>
+<li>[ ] 歧义清零：AI 挑战 + 需求源确认，所有提问有书面回答</li>
+</ul>
+<h3 id="76a7821113-44-dod">4.4 DoD 检查表（全过才算完成）</h3>
+<p>DoD（Definition of Done，完成定义）——对「增量」的判定：一条故事要么满足全部条目，要么没有完成，<strong>不存在「完成 80%」</strong>：</p>
+<ul>
+<li>[ ] 每条 AC 已被验证：自动化测试通过，或挂有显式证据（截图/日志）〔非确定性产出见 5.5〕</li>
+<li>[ ] 测试可信：AC→测试映射经人确认，且每个测试演示过会失败</li>
+<li>[ ] 风险分级对应的审查已清零（见 5.4）</li>
+<li>[ ] 自测硬门三项完成：隔离环境、证据留痕、验证边界声明（见 5.3）</li>
+<li>[ ] 故事外改动为零（实现中的范围蔓延已回退或转为新故事）</li>
+<li>[ ] 文档同步：用户可见行为或数据结构的对应文档已更新</li>
+<li>[ ] 〔仅非确定性产出〕评测集已跑并达到约定阈值；人评抽样按约定比例执行且留痕（见 5.5）</li>
+</ul>
+<h3 id="76a7821113-45">4.5 设计工件（按触发器展开，不默认全做）</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>工件</th>
+<th>触发条件</th>
+<th>深度要求</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PRD</td>
+<td>多干系人 / 需求源≠验收人 / 跨团队依赖</td>
+<td>一页足够</td>
+</tr>
+<tr>
+<td>交互设计</td>
+<td>UI 密集或交互链复杂</td>
+<td>消除「长什么样」的歧义即可，低保真可</td>
+</tr>
+<tr>
+<td>技术方案设计</td>
+<td>P0 或新架构决策</td>
+<td>关键选择 + 前三风险，不要求全量设计文档</td>
+</tr>
+<tr>
+<td>数据模型/接口契约</td>
+<td>触碰数据模型或外部接口</td>
+<td>字段级，含兼容与迁移策略</td>
+</tr>
+<tr>
+<td>评测集与评分标准</td>
+<td>交付含非确定性产出（模型/生成式功能）</td>
+<td>覆盖典型、边界与已知失败案例，含通过阈值（5.5）</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="76a7821113-46">4.6 优先级与排序〔标记：待验证〕</h3>
+<p>需求池是「有序清单」，但排序规则必须写出来，否则顺序由嗓门最大的干系人决定。默认规则（按序比较，前一条胜过后一条）：</p>
+<ol>
+<li><strong>先按爆炸半径</strong>：P0（数据/资金/隐私）优先于 P1，P1 优先于 P2。这条不能被「业务方着急」推翻，只能被「决策人书面同意承担风险」推翻。</li>
+<li><strong>再按能否解锁验证</strong>：能让成功度量开始被观测的故事优先——没有度量数据的迭代是在自封进度（6.3）。</li>
+<li><strong>最后按范围归属</strong>（对照边界契约）：落在当前 MVP 切片内的（3.4）优先；属原范围但不在当前切片内的，排入后续版本并按本规则排序——<strong>不需要变更请求</strong>；属原范围之外的，走变更流程（6.4），不插队。</li>
+</ol>
+<p>反模式：按「谁先提」排、按「哪个好做」排、把 P2 的界面调整插到 P0 的数据修复前面。</p>
+<p><strong>这条规则是本框架自己推导的，未经实践检验</strong>（它管的是全局节奏，不在 A1 的单点风险范围内）。第一次演练后请回来修正它——尤其是「业务方着急」与「爆炸半径」真实冲突时的处理方式。</p>
+<hr />
+<h2 id="76a7821113-5">5. 阶段三：构建</h2>
+<p><strong>入口</strong>：G2 通过。<strong>出口门 G3</strong>：全部 AC 被自动化验证或显式证据覆盖，审查清零。</p>
+<h3 id="76a7821113-51">5.1 验证先行</h3>
+<ul>
+<li>每条故事：先按 AC 写测试（此时是红的），再实现到全绿。验证先行不是仪式，而是 AI 辅助实现的转向机制——让实现对着失败的测试收敛，远比对着自然语言描述收敛可靠。</li>
+<li><strong>每个测试必须演示过失败</strong>：故意改坏实现，看测试变红，再复原。从未红过的测试证明不了任何事。</li>
+<li>测试分层由产品形态选择（单元 / 集成 / 契约 / 端到端 / 视觉快照）；不变的是：<strong>每条 AC 至少挂一种可重复的自动化验证</strong>。若产出本身是非确定性的（模型/生成式功能），先读 5.5。</li>
+<li><strong>唯一的例外</strong>：自动化成本明显高于收益的 AC（一次性数据迁移、依赖硬件或现场条件、第三方界面行为）可以用显式证据（截图/日志/人工核对记录）替代，但必须写明替代理由，并经交付责任人确认才算过门。<strong>例外不是默认选项。</strong></li>
+</ul>
+<h3 id="76a7821113-52-ai">5.2 AI 辅助实现原则（工具无关）</h3>
+<ul>
+<li>规格清晰度是瓶颈：实现便宜，方向错误会被快速放大。实现的输入是故事 + AC + 设计工件，不让 AI 猜需求。</li>
+<li>AI 的执行边界 = 明确指令 + A1 允许的爆炸半径；实现中的范围蔓延（改动故事之外的东西）必须回退或转为新故事。</li>
+<li>同一个 AI 既写实现又写测试，等于自考自考。对策：AC→测试映射由人确认；测试演示过失败（5.1）；关键逻辑可引入第二个独立上下文做挑战（另起一个会话、换一个模型，或让另一个人审——重点是避免同一个上下文既出题又判卷）。</li>
+<li>复用参考实现/最佳实践时，<strong>逐层（内容、界面、更新、分发）对照已确认的需求与 AC</strong>：参考的默认流程不等于客户的流程；不一致处按 AC 修正，并在方案概要写明偏离点。〔待验证〕</li>
+</ul>
+<h3 id="76a7821113-53">5.3 自测硬门（任何产品形态不减项）</h3>
+<ol>
+<li><strong>隔离环境</strong>：自测一律在隔离环境进行；客户生产环境永不作为试验台（红线 0.4-1）。</li>
+<li><strong>证据化</strong>：截图 / 断言 / 日志留痕；「没报错」不算通过。</li>
+<li><strong>边界声明</strong>：交付物附「已验证 / 未验证及原因」清单；本地设备验证不了的目标（其他平台、真机、第三方集成等）显式列出。</li>
+</ol>
+<h3 id="76a7821113-54">5.4 审查门（按风险分级）</h3>
+<ul>
+<li><strong>P0（数据/资金/隐私）</strong>：必须人审，且不能由实现者本人签字。审：意图是否与 AC 一致、边界与异常、数据安全、以及 <strong>AI 执行是否越界</strong>（改动故事之外的文件、新增依赖、凭据处理方式）。操作清单见 5.6。</li>
+<li><strong>单人/小团队怎么办</strong>：审查者优先找同级工程师或公司侧交付负责人（0.3 的「独立审查」槽位）；确实无人时，换一个独立上下文复核（另起会话、换模型、隔天再审）并把审查清单与证据留档，明确标注「未经独立人审」，随交付物一起上报。<strong>「自己审自己」不算通过。</strong></li>
+<li><strong>P1</strong>：关键改动人审 + 自动化门。关键改动 = 触碰数据流、外部接口契约、并发或权限逻辑、或影响核心链路可用性的改动；拿不准时按关键处理。</li>
+<li><strong>P2</strong>：自动化门。</li>
+<li>审查要义：AI 产出的常见失败模式是「风格干净但语义不可靠」（幻觉接口、边界遗漏、迎合性偏差）；表面越规范，人越容易松懈。人审 AI 代码审「做的是不是对的事」，不审「写的是不是整齐」。</li>
+</ul>
+<h3 id="76a7821113-55-ai">5.5 当产出不是确定性的（AI / 模型 / 生成式功能）〔标记：假设〕</h3>
+<blockquote>
+<p><strong>本节标记为「假设」</strong>：依据 2026 年行业公开实践推导，尚未经本项目验证；请在实践中修正。</p>
+</blockquote>
+<p>如果交付里有 LLM / 模型 / 生成式功能，5.1 的「每条 AC 挂一种可重复的自动化验证」不够用——同样的输入可能得到不同的输出，二分断言会失效。最小补充如下：</p>
+<ol>
+<li><strong>AC 改写成「评测契约」</strong>：把「输出正确」拆成两层——(a) 硬约束（格式、字段、引用来源、拒答条件），可断言，进自动化测试；(b) 质量维度（准确性、完整性、有用性），进评测集。</li>
+<li><strong>建评测集</strong>：用真实（脱敏）输入构造 20–100 条样本，覆盖典型场景 + 边界 + 已知失败案例，人工给出参考答案或评分标准（rubric）。评测集是资产：每次改动都跑，只增不减。</li>
+<li><strong>用阈值而非「全过」</strong>：质量维度定通过阈值（如 ≥90% 样本达标）与回归容忍度；阈值属于验收标准的一部分，<strong>由客户侧决策人确认，不能由实现者自定</strong>。</li>
+<li><strong>人评抽样</strong>：自动化评分只做筛子；每次交付前对 P0/P1 场景做人工抽样复核并留痕（5.3）。抽样比例写进 DoD。</li>
+<li><strong>把不确定性告诉用户</strong>：不确定时的降级行为（转人工、显式拒答、标注置信度）要和 AC 一起定义，而不是留给用户自己撞上。</li>
+<li><strong>盯住模型漂移</strong>：供应商升级模型/接口会改变你的系统行为。记录当前模型版本与评测集基线分数；供应商版本变更后重跑评测集，分数下滑视为回归。</li>
+<li><strong>把成本与延迟当交付指标</strong>：token/调用成本、P95 延迟写进方案概要（3.4），并在观测阶段（6.3）跟踪。</li>
+</ol>
+<h3 id="76a7821113-56-p0-04-1-04-2">5.6 P0 数据与隐私操作清单（红线 0.4-1 / 0.4-2 的可操作版）</h3>
+<p><strong>触发</strong>：故事风险分级为 P0（数据 / 资金 / 隐私）。清单随交付物一起交给有名有姓的人确认（5.4 的 P0 人审）。</p>
+<ul>
+<li><strong>权限最小化</strong>：只用完成这件事必需的账号与数据权限；临时提权用完即收。</li>
+<li><strong>数据最小化</strong>：能只用字段子集就不取全表；能脱敏就不用原始值；能用合成数据就不碰真实数据。测试一律用脱敏/合成数据（红线 0.4-1）。</li>
+<li><strong>可逆性</strong>：破坏性操作前先备份，并演练一次恢复；生产变更必须能回滚（6.2 第 4 步）。</li>
+<li><strong>可追溯</strong>：谁在什么时候对哪些数据做了什么，留审计日志；写操作显式指定对象，禁止「按条件批量更新/删除」。</li>
+<li><strong>凭据</strong>：密钥走密钥管理，不进代码、文档、聊天、日志；发现泄露按红线 0.4-2 的顺序处理（先轮换、再清理、再复核历史）。</li>
+<li><strong>越权测试</strong>：显式验证「没有权限的人做不成这件事」——不只是验证有权限的人能做成。这是最常被漏掉的一条。</li>
+<li><strong>最小惊讶</strong>：默认安全选项（默认拒绝、默认不发送、默认不删除）；需要破例时由人显式开启，并记录谁开的。</li>
+</ul>
+<hr />
+<h2 id="76a7821113-6">6. 阶段四：交付</h2>
+<p><strong>入口</strong>：G3 通过。<strong>出口门 G4</strong>：客户验收通过（对照 AC，有名有姓的书面记录），且发布门五步（6.2）已执行并留痕。</p>
+<h3 id="76a7821113-61">6.1 演示节奏</h3>
+<ul>
+<li>定期（间隔不超过两周）向决策人与代表性用户演示可运行的软件。这是 FDE 的标志性动作：怀疑型决策者信真实运行与真实数据，不信文档与承诺。</li>
+<li>每次演示收割差异（客户反应与 AC 的 ≠）；差异全部转入需求池（Backlog）——这是全流程最有价值的反馈回路。</li>
+</ul>
+<h3 id="76a7821113-62">6.2 发布门（五步，任何产品形态都不省略）</h3>
+<ol>
+<li><strong>产物校验</strong>：待发布产物的版本号 / 制品哈希 / 构建来源正确（签名、校验和、内置元数据按其形态取用）；</li>
+<li><strong>发布</strong>：按适配层确认的通道执行；</li>
+<li><strong>发布后校验</strong>：<strong>发布成功 ≠ 用户用得上</strong>（分发通道各有滞后与缓存：应用商店、CDN、客户端更新机制、浏览器缓存等），必须从用户侧视角确认新版本已生效；</li>
+<li><strong>回滚预案</strong>：回退锚点与操作步骤在发布<strong>之前</strong>写好，出事按预案走，不现场发明；</li>
+<li><strong>记录</strong>：往交付日志里记一行（版本、时间、内容、执行人、发布后校验结果）——追溯与事故复盘都靠它（8.1）。</li>
+</ol>
+<h3 id="76a7821113-63">6.3 观测</h3>
+<ul>
+<li><strong>客户只为可证明的结果付溢价</strong>（判断与来源见 0.1 的「ROI 审查期」）。所以成功度量不是「好实践」，是项目续期与扩展的生存项——没有度量数据，下一次合作没有依据。</li>
+<li><strong>最小观测动作</strong>（谁看、看什么、多久看、向谁报）：</li>
+<li>谁看：FDE 与客户侧对接人一起看，不指望「有人会看」；</li>
+<li>看什么：3.3 定义的成功度量，加上 5.5 的成本与延迟指标（交付含模型/外部服务时）；</li>
+<li>多久看：上线首周每日，稳定后每周；每次里程碑演示前必看一次；</li>
+<li>阈值与动作：跌破约定阈值即按事故处理（先止损、再复盘）；</li>
+<li>向谁报：按客户约定节奏，给决策人一页变化汇报（基线 → 当前 → 差异与原因）。</li>
+<li>事故处理次序：先止损（下线/回滚），再复盘；复盘产出包含对检查表或本指南的修订建议。</li>
+</ul>
+<h3 id="76a7821113-64">6.4 需求变更管理</h3>
+<p>交付中途客户提出新需求是常态，不是意外。没有变更机制，「非目标」挡不住真实世界：</p>
+<ol>
+<li><strong>记录</strong>：任何新需求一律进需求池，不当场答应、也不当场拒绝；</li>
+<li><strong>对照边界契约判定归属</strong>：属于原范围 → 按 4.6 排序排入迭代（其中不在当前 MVP 切片内的排入后续版本，<strong>不需变更请求</strong>）；属于新范围 → 走变更请求；</li>
+<li><strong>变更请求</strong>：写明内容、影响（工作量/时间/风险）与代价，由双方约定的决策人批准后，作为新故事从 4.1 起走完整流程；</li>
+<li><strong>口头需求不生效</strong>：演示会上客户说「能不能顺便……」，标准回应是「记下来，明天给你变更评估」。这既是范围保护，也是专业信任的来源——客户很快会学会相信你的估算。</li>
+</ol>
+<hr />
+<h2 id="76a7821113-7-g5">7. 收尾与沉淀（门 G5）</h2>
+<ul>
+<li><strong>交接</strong>：文档化到「别人能接管」的深度——环境说明、运维手册（部署/回滚/常见故障）、数据字典、故事归档。交接完成 = 接手方可独立完成一次发布。</li>
+<li><strong>能力转移</strong>：交接的目标不止是系统移交。让客户团队自己能运转、能提需求、能做日常运维——业界越来越强调 FDE 最终交付的是「能力」而非「成品」（行业判断，本版未验证），客户团队自身的运作方式会因为你的交付而改变。</li>
+<li><strong>产品化判断</strong>：两个问题——这次交付里哪些部分下次可直接复用（沉淀入可复用资产）；这个客户遇到的问题哪些其他客户也会遇到（反哺产品线）。Palantir 的经典比喻：FDE 在客户现场修的是解决单一客户问题的「砂石路」，产品团队把这些经验铺成可复用的「高速路」——持续为高速路提供砂石路样本，是 FDE 区别于外包开发的本质价值。</li>
+<li><strong>反馈回路</strong>：把客户侧的一手发现回传公司产品团队——传一手记录，不传二手转述，避免信息逐层失真。</li>
+<li><strong>复盘</strong>：每个项目收尾复盘：哪些做多了、哪些漏了、检查表要加哪条。本指南的<strong>常规</strong>修订发生在这里；外部复核（如资深 FDE 审查）同样可以触发修订。两条路径的修订都记入附录 C 与文末变更记录。</li>
+</ul>
+<p><strong>G5 过门标准</strong>：交接完成（接手方可独立完成一次发布）；能力转移有承接方确认；可复用资产已沉淀归档；复盘完成且检查表/指南的修订项已登记。</p>
+<hr />
+<h2 id="76a7821113-8">8. 工件体系（存在什么、何时加重）</h2>
+<h3 id="76a7821113-81">8.1 默认最小集（随交付必然产生，不能省）</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>工件</th>
+<th>形态</th>
+<th>服务的读者/决策</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>边界契约</td>
+<td>一页，G0 产出</td>
+<td>双方对「交付什么 / 提供什么 / 冲突如何升级」的共识（第 2 章）</td>
+</tr>
+<tr>
+<td>环境评估</td>
+<td>一页清单，3.2 产出</td>
+<td>约束、红旗与降级路径的输入（3.2）</td>
+</tr>
+<tr>
+<td>签认与验收记录</td>
+<td>邮件/纪要/审批留档</td>
+<td>G1 签认与 G4 验收的书面依据（3.4 / 6）</td>
+</tr>
+<tr>
+<td>问题定义 + 方案概要</td>
+<td>各一页</td>
+<td>决策人签认（G1）</td>
+</tr>
+<tr>
+<td>故事 + AC</td>
+<td>工单内</td>
+<td>验证与验收的依据</td>
+</tr>
+<tr>
+<td>DoR / DoD 检查表</td>
+<td>工单内一页</td>
+<td>开工/完成判定（4.3 / 4.4）</td>
+</tr>
+<tr>
+<td>测试（AC 映射）</td>
+<td>代码库内</td>
+<td>回归保障；向审查者证明测试可信（5.1）</td>
+</tr>
+<tr>
+<td>交付日志</td>
+<td>每次发布一行</td>
+<td>发布追溯与事故复盘（6.2 第 5 步）</td>
+</tr>
+<tr>
+<td>已验证/未验证清单</td>
+<td>随交付附</td>
+<td>验证边界的诚实声明（5.3）</td>
+</tr>
+<tr>
+<td>用户文档</td>
+<td>随功能交付</td>
+<td>客户团队自助使用（完成判据：目标用户照文档能独立完成首次使用）；DoD「文档同步」项的落点（4.4）</td>
+</tr>
+<tr>
+<td>运维手册（Runbook）</td>
+<td>随交接交付，G5 产出</td>
+<td>接手方做部署/回滚/常见故障处理（第 7 章）</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="76a7821113-82">8.2 触发式工件（触发才做，否则不做）</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>工件</th>
+<th>触发条件</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PRD</td>
+<td>多干系人 / 需求源≠验收人 / 跨团队依赖</td>
+<td>一页足够</td>
+</tr>
+<tr>
+<td>交互设计</td>
+<td>UI 密集或交互链复杂</td>
+<td>低保真即可</td>
+</tr>
+<tr>
+<td>技术方案设计（含 ADR）</td>
+<td>P0 或新架构决策</td>
+<td>关键选择 + 前三风险</td>
+</tr>
+<tr>
+<td>评测集与评分标准</td>
+<td>交付含非确定性产出</td>
+<td>见 5.5</td>
+</tr>
+<tr>
+<td>测试报告</td>
+<td>客户合规要求 / 事故回归</td>
+<td>通常压缩为自动化运行记录</td>
+</tr>
+<tr>
+<td>事故复盘</td>
+<td>事故触发</td>
+<td>产出含检查表修订</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="76a7821113-83">8.3 管理原则</h3>
+<p>故事级工件内联在工单里，不散落成文件；跨故事工件（问题定义、环境评估、运维手册、架构决策记录）独立成档并随版本演进；每个工件回答「谁在什么时候读它、服务什么决策」（A2）。工单、代码托管、自动化流水线、文档工具用客户/公司既有的，框架不绑定工具。</p>
+<hr />
+<h2 id="76a7821113-9">9. 适配层（进新项目/新公司先跑一遍）</h2>
+<p>每一步都有产出物——跑完应该拿到五样东西，而不是「心里有数」：</p>
+<ol>
+<li><strong>环境评估</strong>：逐项过 3.2，红旗项先向公司侧交付负责人报告。→ 产出：填好的 3.2 清单 + 红旗项清单。</li>
+<li><strong>裁剪</strong>：按 A1 为每类工作定验证、审查、工件的强度。→ 产出：一张强度对照表：</li>
+</ol>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>爆炸半径</th>
+<th>验证深度</th>
+<th>审查</th>
+<th>必备工件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P0 数据/资金/隐私</td>
+<td>自动化 + 边界/异常/越权专项 + 人评抽样</td>
+<td>必须人审，且非实现者签字（5.4）</td>
+<td>技术方案设计 + 数据模型/接口契约 + 5.6 清单</td>
+</tr>
+<tr>
+<td>P1 核心业务可用性</td>
+<td>自动化覆盖 AC + 关键路径集成</td>
+<td>关键改动人审 + 自动化门（5.4）</td>
+<td>按 4.5 触发器</td>
+</tr>
+<tr>
+<td>P2 体验/文案</td>
+<td>自动化 + 视觉/文案确认</td>
+<td>自动化门</td>
+<td>无额外工件</td>
+</tr>
+</tbody>
+</table></div>
+<ol start="3">
+<li><strong>槽位映射</strong>：把 0.3 的六个槽位映射到客户/公司侧的具体人。→ 产出：一张人名表 + 没有名字的槽位清单（这是风险清单，尤其「验收决策人」与「独立审查」）。</li>
+<li><strong>工具替换</strong>：工具全用对方现有的；框架不依赖具体工具。→ 产出：工具清单与替代方案（工单、代码托管、自动化流水线、文档各用什么）。AI 工具受限时，实现降级为人工，但 5.1 验证先行与 5.3 自测硬门不豁免。</li>
+<li><strong>流程嫁接</strong>：客户有固定的项目管理/验收流程时，把本框架的门嫁接到对方流程的节点上，不强推并行体系。→ 产出：一张节点对照表（G0–G5 各挂在客户流程的哪个节点、谁签、什么时候开）。</li>
+</ol>
+<hr />
+<h2 id="76a7821113-10-fde">10. 能力模型（流程各阶段与 FDE 能力的刻意练习映射）</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>练的能力</th>
+<th>及格线</th>
+<th>优秀线</th>
+<th>怎么练</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>接洽/理解</td>
+<td>业务理解、领域速学</td>
+<td>访谈纪要被客户确认</td>
+<td>发现客户没说出口的问题</td>
+<td>找 3 个不同行业的人，各做一次 30 分钟访谈并写纪要请对方确认；全程刻意用「上一次/那一次」提问（3.1）</td>
+</tr>
+<tr>
+<td>定义</td>
+<td>需求工程、范围裁剪</td>
+<td>AC 可测</td>
+<td>MVP 切得又小又能验证价值</td>
+<td>拿附录 A.3 的故事自己重写一遍 AC，请不懂技术的人判定；反向练：把一句模糊需求写成 3 条可测 AC</td>
+</tr>
+<tr>
+<td>构建</td>
+<td>AI 辅助工程</td>
+<td>交付不翻车</td>
+<td>一人产出近小团队，质量可控</td>
+<td>完整走一遍 5.1/5.2：每条 AC 先写测试 → 故意改坏实现看它变红 → 让 AI 实现到全绿</td>
+</tr>
+<tr>
+<td>交付</td>
+<td>干系人管理、信任建立</td>
+<td>演示有节奏、验收无意外</td>
+<td>客户主动扩大合作</td>
+<td>每次演示前计时彩排并录屏自查；把一次「变更请求」做完整的纸面推演（6.4）</td>
+</tr>
+<tr>
+<td>收尾</td>
+<td>产品化判断</td>
+<td>交接不丢信息</td>
+<td>沉淀可复用资产、反哺产品线</td>
+<td>找个人照你的交接文档独立跑一次发布，卡住的地方就是漏的（7）</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="76a7821113-11">11. 与公司内部的协作</h2>
+<p>在职 FDE 有相当一部分精力（新手最容易低估的一部分）花在自己公司内部，有三条要主动经营的关系线：</p>
+<ul>
+<li><strong>与产品线</strong>：每个里程碑后，把客户问题的一手记录（而非二手转述）整理成一页「客户发现记录」，写明接收人再交出去；产品缺口走产品侧的需求流程，<strong>不在客户现场私自承诺「下个版本就有」</strong>（红线 0.4-5）。</li>
+<li><strong>与核心工程</strong>：故障归属要清晰——产品缺陷升级给核心工程修复，现场集成问题自己扛。升级时给全上下文（复现步骤、影响面、客户业务代价），做「带完整背景的升级」，不做传话筒。</li>
+<li><strong>与销售/客户成功</strong>：边界契约之外的商誉性小忙可以有，但要记账（投入的时间可见），让服务的真实成本被组织看见；续约与扩展由对口角色主导，FDE 提供技术证据（成功度量数据）。</li>
+</ul>
+<hr />
+<h2 id="76a7821113-12">12. 常见困境与应对</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>困境</th>
+<th>应对</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>客户拖着不验收</td>
+<td>验收标准已在 G1 的方案概要与 G2 的 AC 中书面化；把「未验收」的后果（上线窗口、后续里程碑）摆到桌面；仍不动，走边界契约里的升级路径</td>
+</tr>
+<tr>
+<td>关键干系人离职/换人</td>
+<td>新干系人一到任，立即做一次 G1 级别的对齐会，重新签认问题定义——项目不能随人走</td>
+</tr>
+<tr>
+<td>演示当场翻车</td>
+<td>平时演示前彩排；翻车时先定位「演示环境问题还是产品问题」并给出修复时间表，不辩解；24 小时内给书面跟进</td>
+</tr>
+<tr>
+<td>客户要求明显超出范围</td>
+<td>「记下来，走变更评估」（6.4）；把代价讲清楚，让决策人自己选，不当场答应也不硬顶</td>
+</tr>
+<tr>
+<td>数据/环境迟迟不到位</td>
+<td>边界契约里有客户承诺项与升级路径；重新评估里程碑并<strong>书面</strong>告知，不默默等待或悄悄垫付</td>
+</tr>
+<tr>
+<td>被客户团队视为「来抢活的」</td>
+<td>项目早期就拉核心对接人做分工对齐：什么走你、什么走他们、什么回流产品线（见 11）</td>
+</tr>
+<tr>
+<td>客户内部对方案有分歧，两边都找你站队</td>
+<td>把分歧显性化：两方诉求与各自代价写成对照表，交决策人裁定（G1 的决策人就是干这个用的）；不私下站队、不私下承诺</td>
+</tr>
+<tr>
+<td>客户要求「先跑起来再补合同/流程」</td>
+<td>能做的先做并留下书面记录；涉及资金、数据、越权的不因「紧急」破例（红线 0.4-1 / 0.4-2）</td>
+</tr>
+<tr>
+<td>同时服务多个客户，进度互相挤</td>
+<td>每个客户各有一份里程碑与演示节奏（3.4）；冲突时按「承诺时间 × 爆炸半径」排序，并把冲突显式告知相关决策人，不默默延期</td>
+</tr>
+<tr>
+<td>AI 产出看似正确实则错误</td>
+<td>AC→测试映射人确认 + 测试演示过失败 + P0 必人审（5.2/5.4）；不因代码「看着干净」跳过审查</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="76a7821113-a">附录 A：示例（虚构项目，用于校准「写到多细」）</h2>
+<blockquote>
+<p>场景：连锁口腔诊所集团（30 家门店）× 一家门店管理 SaaS 公司的 FDE。只展示两个最易走形的工件和一条故事。</p>
+</blockquote>
+<h3 id="76a7821113-a1">A.1 问题定义（填充后）</h3>
+<pre><code>背景与触发：新任运营总监上任；Q2 全集团爽约率 18%，前台日均接约电话 40 通/店
+问题陈述：现状——预约靠电话与纸质台账，各门店信息不互通；期望——患者线上
+         自助预约/改期，系统自动提醒；差距——爽约直接损失营收，前台被电话占满
+成功度量：爽约率 18% → 10% 以内
+           基线来源：纸质台账月度汇总（已有 6 个月数据）；上线后每周自动统计
+         预约电话量下降 30%
+           基线来源：话务系统通话记录（已有 6 个月数据）；上线后每月统计
+         —— 每条度量都写明基线来源；来源与度量必须对得上
+约束与红线：患者数据不出域（合规负责人一票否决）；部分门店网络不稳定；
+           集团要求 3 个月内试点上线
+非目标：不做会员营销；不替换现有 HIS（医院信息系统）；不做爽约罚金扣费
+干系人地图：需求源=运营总监（关注爽约率）；决策人=COO；用户=门店前台
+           （关注操作负担）；验收人=运营总监；否决权=合规负责人
+</code></pre>
+<h3 id="76a7821113-a2">A.2 方案概要（填充后，节选）</h3>
+<pre><code>MVP 切法：3 家试点门店——线上预约 + 到诊前自动提醒 + 台账数字化统计。
+         不进第一版：多品牌支持、积分、改期规则自定义
+技术路线：在现有 SaaS 内新增预约模块，提醒走客户已采购的短信网关。
+         前三风险——门店弱网（对策：关键操作离线缓存）；前台习惯迁移
+         （对策：上线周驻场陪伴）；合规评审时长不可控（对策：提前提交评审，
+         试点先用脱敏数据联调）
+里程碑与演示节奏：M1（6 周）试点上线演示；M2（12 周）推广至 30 家；
+         每两周向 COO 与运营总监演示一次
+责任矩阵：我方——模块开发、部署、培训；客户——短信网关账号、试点门店名单、
+         前台排班配合、合规评审提交
+估算：6 人周（= 1 名 FDE 全职 6 周，与 M1 的 6 周对齐），置信区间 ±30%
+     （依据：同构模块的两次交付记录）
+</code></pre>
+<h3 id="76a7821113-a3">A.3 一条故事（填充后）</h3>
+<pre><code>标题：患者取消预约后自动触发候补递补
+价值陈述：作为门店前台，我希望取消的号被自动递补，减少空号损失与手工通知
+验收标准 AC：
+  1. given 门店开启候补且候补名单非空，when 患者取消预约，
+     then 系统在 5 分钟内按候补顺序向首位候补患者发送一次邀请，
+     并记录该次发送（时间戳 + 模板版本）
+     —— 只承诺「系统完成发送」；患者是否收到取决于运营商通道，
+     作为观测指标（送达回执率）跟踪，不写进验收项
+  2. given 候补名单为空，when 患者取消预约，
+     then 槽位标记为可约并在 1 分钟内出现在患者端
+  3. given 候补患者 30 分钟内未响应邀请，when 超时，
+     then 邀请顺延至下一位候补，原候补标记为已过期且不再重复发送
+非目标：不做爽约罚金扣费（涉及资金，P0 级，另立项目）
+风险分级：P0 —— 向患者发送短信即触碰个人联系方式与就医信息，属隐私范畴
+         （0.2 A1 / 4.2 的分级定义）
+依赖：短信网关联调环境（客户提供，M1 前两周就绪）；
+     联调与测试一律使用脱敏患者数据（红线 0.4-1）
+</code></pre>
+<h3 id="76a7821113-a4">A.4 读法</h3>
+<p>问题定义一页讲完、成功度量<strong>带可核对的基线来源</strong>、非目标明确挡住了「钱」相关的范围；AC 每条都能被不了解实现的人判定通过与否。</p>
+<p>特别注意 AC1 的写法：把「系统承诺什么」（5 分钟内完成发送）与「第三方通道造成的波动」（患者是否收到）分开，后者转成观测指标——否则测试环境里根本无法判定，AC 就废了。风险分级按爆炸半径定：碰到患者隐私就是 P0，不因为「只是发个提醒」而降级。</p>
+<p>这四点是这个附录最值得模仿的地方。</p>
+<hr />
+<h2 id="76a7821113-b">附录 B：术语表</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>术语</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AC（Acceptance Criteria）</td>
+<td>验收标准：判定一条故事是否满足要求的可测条目</td>
+</tr>
+<tr>
+<td>DoR（Definition of Ready）</td>
+<td>就绪定义：故事开工前必须满足的条件（4.3）</td>
+</tr>
+<tr>
+<td>DoD（Definition of Done）</td>
+<td>完成定义：故事完成必须满足的条件（4.4）</td>
+</tr>
+<tr>
+<td>MVP</td>
+<td>最小可行产品：能演示、能开始验证价值的最小切片</td>
+</tr>
+<tr>
+<td>PRD</td>
+<td>产品需求文档：记录需求全貌的文档（按 4.5 触发器决定是否写）</td>
+</tr>
+<tr>
+<td>ADR（Architecture Decision Record）</td>
+<td>架构决策记录：记录关键技术选择及理由的短文档</td>
+</tr>
+<tr>
+<td>基线（Baseline）</td>
+<td>改动前的度量值，用来证明「改了之后变好了」</td>
+</tr>
+<tr>
+<td>爆炸半径</td>
+<td>出错时最坏的后果范围，决定验证与审查强度（公理 A1）</td>
+</tr>
+<tr>
+<td>需求池（Backlog）</td>
+<td>所有已知需求/差异/事故的有序清单，是唯一的工作来源</td>
+</tr>
+<tr>
+<td>槽位</td>
+<td>0.3 定义的职责位置，由具体的人填充，不等于职位</td>
+</tr>
+<tr>
+<td>门（G0–G5）</td>
+<td>阶段出口判定点：过门才进下一阶段（见 1）</td>
+</tr>
+<tr>
+<td>适配层</td>
+<td>第 9 章：进新项目/新公司时，把本框架嫁接到对方既有环境与流程的那一步</td>
+</tr>
+<tr>
+<td>边界契约</td>
+<td>G0 产出的书面约定：我方交付什么、客户提供什么、冲突时如何升级（第 2 章）</td>
+</tr>
+<tr>
+<td>红旗</td>
+<td>环境评估（3.2）中「命中即需先向公司侧交付负责人报告」的条件</td>
+</tr>
+<tr>
+<td>需求源</td>
+<td>讲清业务、提供领域知识的槽位（0.3）</td>
+</tr>
+<tr>
+<td>决策人</td>
+<td>签认问题定义与方案、做最终验收的人；没有名字是最大风险点（0.3 / 9）</td>
+</tr>
+<tr>
+<td>工单</td>
+<td>承载故事、AC、DoR/DoD 与讨论的工作项载体；用客户/公司既有工具</td>
+</tr>
+<tr>
+<td>优先级</td>
+<td>需求池的排序规则（4.6）</td>
+</tr>
+<tr>
+<td>评测集 / 评分标准（Rubric）</td>
+<td>非确定性产出（如 LLM）的验证依据：成套样本 + 人工评分准则（5.5）</td>
+</tr>
+<tr>
+<td>模型漂移</td>
+<td>供应商升级模型/接口导致你的系统行为发生变化的现象（5.5）</td>
+</tr>
+<tr>
+<td>P95 延迟</td>
+<td>95% 的请求在此耗时内完成的指标，比平均值更能反映真实体验（5.5 / 6.3）</td>
+</tr>
+<tr>
+<td>制品哈希</td>
+<td>发布物内容的指纹，用来确认「发出去的确实是这一版」（6.2）</td>
+</tr>
+<tr>
+<td>回归（Regression）</td>
+<td>原本正常的功能因新改动而失效；自动化测试与评测集的主要作用就是拦住它</td>
+</tr>
+<tr>
+<td>抽样比例</td>
+<td>从产出中抽多少人评/复核的比例；非确定性产出必填（5.5）</td>
+</tr>
+<tr>
+<td>PoC</td>
+<td>概念验证：为验证可行性而做的最小实验</td>
+</tr>
+<tr>
+<td>运维手册（Runbook）</td>
+<td>部署/回滚/常见故障处理步骤的操作文档（7）</td>
+</tr>
+<tr>
+<td>Walkthrough</td>
+<td>走查：边操作边讲解、逐环节过一遍（4.1）</td>
+</tr>
+<tr>
+<td>FDSE</td>
+<td>Palantir 对同一类角色的称法（Forward Deployed Software Engineer）</td>
+</tr>
+<tr>
+<td>HIS</td>
+<td>医院信息系统（Hospital Information System）——见附录 A 示例</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="76a7821113-c">附录 C：实践验证记录</h2>
+<p><strong>本文档唯一的迭代输入。</strong> 每完成一次演练或真实项目，逐条填写；打不上勾的规则，就是下一次要修正或删除的候选。</p>
+<p><strong>填写规则</strong>：一次一行，只记「能改变文档写法」的信息——哪条规则被证明有效、哪条多余、哪条缺失、哪一步卡住。不记流水账。结论列只填四个值之一（有效 / 多余 / 缺失 / 卡住）；处置列写清改哪条、改到哪一版。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>日期</th>
+<th>演练/项目</th>
+<th>涉及章节或门</th>
+<th>结论</th>
+<th>处置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2026-10-05（示例）</td>
+<td>内部小工具自演练</td>
+<td>4.6 优先级</td>
+<td>缺失：插队被批准后，代价（时间/风险）如何记账、如何告知被挤掉需求的干系人，规则没写</td>
+<td>补一条：插队须记录代价并同步受影响干系人 → v0.4</td>
+</tr>
+<tr>
+<td>2026-09-30</td>
+<td>FDE 实战练习①（md 文档手机阅读）</td>
+<td>2 / 3.1 / 5.1</td>
+<td>缺失：客户非技术背景时，「托管账号等客户提供项」如何代办或引导，边界契约没有对应条目；本次以 README 三选一缓解。同时验证有效：对一句话需求先跑 3.1 三问（使用方式/数据红线/规模），第一句需求与真实需求（桌面图标+自动同步+字号可调）差距很大，直接按字面交付会做成格式转换</td>
+<td>处置：第 2 章边界契约补「客户提供项的代办/引导方式」→ v0.4；3.1「要故事不要观点」标注 <code>已实践</code> → v0.4</td>
+</tr>
+<tr>
+<td>2026-09-30</td>
+<td>FDE 实战练习②（跨端环境与上手引导）</td>
+<td>2 / 3.2 / 8.1</td>
+<td>缺失：环境评估没有「用户端」维度——客户问「要不要关心 iOS/安卓通用」时，3.2 无处安放这类范围问题；用户文档（8.1）存在，但「目标用户照做能成功」的完成判据未写，客户「不知道怎么放到手机用」正落在其上</td>
+<td>处置：3.2 新增「用户端」行；8.1 补完成判据「目标用户照文档能独立完成首次使用」→ v0.4；PWA 跨端差异等具体技术结论沉淀于独立实践笔记，不进指南</td>
+</tr>
+<tr>
+<td>2026-09-30</td>
+<td>FDE 实战练习⑤（安卓 App 选型复查）</td>
+<td>5.2</td>
+<td>缺失：照搬本机成熟参考实现时，把参考的更新流程（重打 APK 重装）一并带进来，与客户已确认的「手动导入」相抵触，被客户「参考项目是最佳的吗」问出；架构层复用（内容/阅读/壳）判断正确，未返工</td>
+<td>处置：5.2 新增「复用参考实现时逐层对照已确认 AC」条目 → v0.5；具体照搬清单与教训沉淀于实践笔记</td>
+</tr>
+<tr>
+<td>2026-09-30</td>
+<td>FDE 实战练习⑥（形态选型复盘）</td>
+<td>3.1 / 3.2</td>
+<td>缺失：环境评估无「既有资产/既往交付」维度——客户桌面本就有同类交付（interview-prep，含可复用构建链），六轮中的第五轮才由客户点名，此前每轮都在被动扩展形态选项；同时暴露 3.1 M5「必问收尾题：有没有我没问到但重要的事」未执行，该题最可能提前带出参考实现（规则已有、纯执行问题，不改文档）</td>
+<td>处置：3.2 新增「既有资产」行 → v0.6；另两条教训（首round未给形态选项空间对照表、M5 执行缺失）记入实践笔记 002</td>
+</tr>
+<tr>
+<td>2026-10-01</td>
+<td>FDE 实战练习⑦（全自动同步，客户不在场、要求自主完成）</td>
+<td>3.2 / 5.3</td>
+<td>有效：对第三方可用性逐项探测（认证/端点可达性/端到端/外部视角）直接改变了方案——git 推送端点不可达 → 全 API 发布替代，探测动作本身产生了设计；缺失：3.2 无「外部服务依赖」维度，客户要求「对第三方可用性做充分验证」时无条款对应；另：验证假信号（CDN 缓存、测试环境文件视图隔离）浪费多轮排障，验收必须走与真实使用同构的链路</td>
+<td>处置：3.2 新增「外部服务依赖」行 → v0.7；假信号清单与时延账本记入实践笔记 003</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>约定</strong>：每条「处置」完成后，同步更新对应章节 + 文末变更记录；若该条原本标了 <code>假设</code> 或 <code>待验证</code>，把标注更新为 <code>已实践</code>（若选择保留 <code>待验证</code>，在变更记录里写明原因）。</p>
+<hr />
+<h2 id="76a7821113-_3">资料来源与时效</h2>
+<p>本指南的角色定义与行业判断依据 2025–2026 年公开行业材料。<strong>以下均为二手来源（公开摘要与行业报道），引用数字前请核对原始报告</strong>（红线 0.4-3 对本指南同样适用）。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>主题</th>
+<th>来源</th>
+<th>时间</th>
+<th>口径/备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FDE 岗位定义与「最热岗位」判断</td>
+<td>a16z《Trading Margin for Moat: Why the Forward Deployed Engineer Is the Hottest Job in Startups》</td>
+<td>2025-06</td>
+<td>概念来源</td>
+</tr>
+<tr>
+<td>服务即软件市场与 FDE 的定位</td>
+<td>Foundation Capital《The $4.6T Services-as-Software opportunity》（Ashu Garg / Jaya Gupta）及 2026 年后续篇</td>
+<td>2025–2026</td>
+<td>市场空间论证</td>
+</tr>
+<tr>
+<td>FDE 日常工作形态、差旅 20–50%</td>
+<td>PostHog《WTF is a forward deployed engineer?》，https://posthog.com/blog/forward-deployed-engineer</td>
+<td>2025–2026</td>
+<td>从业者自述</td>
+</tr>
+<tr>
+<td>从业者调查（1,500 人）：客户侧工作与写代码各约 31% 等</td>
+<td>Perspective AI《State of Forward Deployed Engineering 2026》</td>
+<td>2026</td>
+<td>厂商发布，工具偏好部分带倾向性</td>
+</tr>
+<tr>
+<td>岗位数量（口径一，最宽）</td>
+<td>Indeed 数据，经 Business Insider 报道：2026-04 约 5,330 个（2025-04 为 643，同比 +729%）</td>
+<td>2026-04</td>
+<td>含标题变体</td>
+</tr>
+<tr>
+<td>岗位数量（口径二/三，最窄）</td>
+<td>InterviewStack.io：2026-06-25 共 1,444 个 FDE 标题岗位；JoinPlank FDE 普查：991 个在招岗位</td>
+<td>2026-06</td>
+<td>严格标题匹配</td>
+</tr>
+<tr>
+<td>人才缺口</td>
+<td>Christian &amp; Timbers 研究（250+ 猎头/高管访谈、180 家公司）：美国存量约 1.7 万 FDE，合格者约 2,000</td>
+<td>2026-01~06</td>
+<td>存量口径，非在招量</td>
+</tr>
+<tr>
+<td>2026 年资本投入</td>
+<td>OpenAI Deployment Company（约 40 亿美元，2026-05，含收购 Tomoro 带来的约 150 名 FDE）、AWS（约 10 亿美元，2026-06）、Microsoft Frontier Company（约 25 亿美元，约 6,000 名嵌入式专家）、Anthropic（约 15 亿美元）</td>
+<td>2026-05~07</td>
+<td>二手报道，金额为约数</td>
+</tr>
+<tr>
+<td>薪资</td>
+<td>上述各来源的薪资区间汇总（base 中位约 18.5–19.3 万美元；资深 30–55 万；前沿实验室 60–120 万，其中 55–70% 为股权）</td>
+<td>2026</td>
+<td>方差极大，勿作单一预期</td>
+</tr>
+<tr>
+<td>国内动向</td>
+<td>腾讯云 ADP 前沿部署工程师（FDE）认证：2026-09-10 于厦门峰会发布，行业首个，面向合作伙伴；脉脉数据：2026 H1 FDE 相关岗位同比 +21 倍</td>
+<td>2026</td>
+<td>厂商产品认证，非通用职业资格</td>
+</tr>
+<tr>
+<td>Palantir「砂石路 → 高速路」比喻</td>
+<td>多家第三方对 Palantir FDE→产品反馈机制的转述</td>
+<td>2025–2026</td>
+<td>转述，非官方原文</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>校准规则</strong>：本节数据每年校准一次（与年度复盘合并）。指南正文刻意不绑定具体工具与厂商，正文内容不随行业热点漂移；漂移只发生在本节的证据数字上。<strong>v0.3 未逐条核对原始报告</strong>，校准时请补原始链接并标注核对结论。</p>
+<hr />
+<h2 id="76a7821113-_4">变更记录</h2>
+<ul>
+<li>v0.7（2026-10-01）：练习⑦（全自动同步）触发的修订，见附录 C。</li>
+<li>3.2 环境评估清单新增「外部服务依赖」行：第三方服务的账号授权归属、配额/延迟/可达性的逐项验证、不可达时的替代路径是必答项（<code>待验证</code>；本轮实践中「git 端点不可达 → 全 API 发布替代」正是该条的实证）。</li>
+<li>v0.6（2026-09-30）：练习⑥（形态选型复盘）触发的修订，见附录 C。</li>
+<li>3.2 环境评估清单新增「既有资产」行：客户与现场的同类既往交付、参考实现、可复用管线是必盘点项，方案概要的技术路线必须建立在盘点结果之上（<code>待验证</code>）。</li>
+<li>复盘同时暴露 3.1 M5「必问收尾题」执行缺失（规则已有、未执行，不改文档，记入附录 C）。</li>
+<li>v0.5（2026-09-30）：练习⑤（安卓 App 选型复查）触发的修订，见附录 C。</li>
+<li>5.2 新增「复用参考实现时逐层对照已确认 AC」条目：参考的默认流程（如更新/分发方式）不等于客户的流程（<code>待验证</code>）。</li>
+<li>附录 C 新增练习⑤一行；开篇验证状态更新为五轮演练。</li>
+<li>v0.4（2026-09-30）：两轮模拟演练（练习①②，客户角色由扮演者承担）触发的首次修订，证据见附录 C。</li>
+<li>3.2 环境评估清单新增「用户端」行：最终用户的设备/浏览器/入口矩阵是环境评估必答项，验收矩阵由此推导（新增规则，<code>待验证</code>）。</li>
+<li>第 2 章边界契约补「客户提供项无法自理时的代办/引导方式与授权口径」（<code>待验证</code>）。</li>
+<li>8.1 用户文档行补完成判据「目标用户照文档能独立完成首次使用」（<code>待验证</code>）。</li>
+<li>3.1 访谈纪律「要故事不要观点」回填为 <code>已实践</code>（首次有演练证据：首句需求与访谈补述后的真实需求差距显著）。</li>
+<li>附录 C 新增练习①②两行。跨端技术差异等实践层内容不进指南，沉淀于独立实践笔记。</li>
+<li>v0.3（2026-09-30）：<strong>外部复核（资深 FDE 视角）触发的修订</strong>。</li>
+<li>事实层：岗位数量与薪资改为「带口径 + 区间 + 来源」的写法，删除不可核验的单一追踪来源；补 2026 年资本投入与国内动向；删除无来源的「薪资高于同级 30–50%」与「60–80% 时间在客户侧」，改为有来源的区间与「各约占一半」的结论。</li>
+<li>示范层（附录 A 是校准样板，优先修正）：候补故事的风险分级由 P1 改为 P0（患者隐私）；AC1 由不可测的「10 分钟内到达」改为「系统 5 分钟内完成发送」，送达率转为观测指标；成功度量补齐基线来源并使其与度量匹配；估算补明「1 人全职 6 周」前提；HIS 首次出现处展开。</li>
+<li>结构层：新增 4.6 优先级与排序、5.5 非确定性产出验证〔假设〕、5.6 P0 数据与隐私操作清单；G2 补入设计工件条件；DoR 增加「优先级已定」；发布门由四步扩为五步（补记录）并中性化产物校验措辞；工件体系补「用户文档」与交付日志的读者；第 9 章与 8.2 同步；第 10 章补「怎么练」列；第 12 章补 3 条困境（站队、先跑后补流程、多客户互挤）。</li>
+<li>可读层：新增目录、开篇「本版验证状态」、附录 C 实践验证记录；术语表补 11 条（适配层、边界契约、红旗、需求源、决策人、工单、优先级、评测集、模型漂移、FDSE、HIS）；角色对比表合并重复行；拆掉「塌缩」等生造表述；删除重复的行业判断表述。</li>
+<li>规则层：第 7 章「修订只发生在复盘」放宽为「常规修订在复盘，外部复核亦可触发」。</li>
+<li>复核层（独立上下文对抗性复核后修正）：统一 4.6 与 6.4 的范围判据（消除环状引用）；8.1 补入边界契约/环境评估/签认与验收记录/运维手册，8.2 与 4.5 的触发条件对齐；5.1 补「显式证据替代自动化」的唯一例外口径；把非确定性产出的落点补全（4.4 抽样项、4.5 评测集触发器、3.4 成本与延迟字段）；0.3 增设「独立审查」槽位并给出单人场景的审查解法（5.4）；5.4 定义「关键改动」；6.3 补最小观测动作清单；第 9 章补每步产出物与强度对照表；G4 纳入发布门；术语表补 P95/制品哈希/回归/抽样比例；清除「实践教训」「行业的新共识」「2026 年的市场现实」等暗示已验证或脱离来源保护的表述；修正岗位数量区间（991 不在 1,000–1,500 内）与附录 C 示例行。</li>
+<li>v0.2（2026-09-30）：资深 FDE 视角全面审查后修订——补齐 DoD 检查表（4.4）与 G0/G5 过门标准，门控体系闭环；新增需求变更管理（6.4）、内部协作（11）、常见困境（12）；环境评估补数据质量维度；时间配比等绝对化表述改为参考值；新增转型者入口（0.5，含求职防坑）、访谈观察法与怀疑者名单（3.1）；新增附录 A 示例、附录 B 术语表；行业证据更新至 2026 年并新增「资料来源与时效」小节。</li>
+<li>v0.1（2026-09-30）：初稿。四阶段骨架 + 三公理 + 职责槽位 + 理解阶段标准化（访谈提纲/环境评估/两张一页纸）+ 工件触发器 + 适配层 + 能力映射。</li>
+</ul></article>
+<article class="doc single-doc" id="doc-8f07a8680e"><div class="doc-head"><a class="backtop" href="#top">↑ 文档列表</a></div><details class="doctoc"><summary>目录</summary><nav><a class="lv2" href="#8f07a8680e-git-github-pages">一、方案：不经过 git 的 GitHub Pages 发布</a>
+<a class="lv2" href="#8f07a8680e-_1">二、三个真实的坑（都花过排障时间）</a>
+<a class="lv2" href="#8f07a8680e-_2">三、最大的教训：测试环境的进程视图 ≠ 真实环境</a>
+<a class="lv2" href="#8f07a8680e-_3">四、时延账本（客户预期管理）</a></nav></details><h1 id="8f07a8680e-github-pages-git">GitHub Pages 全自动发布：绕开 git 端点、空仓库与排障假信号</h1>
+<blockquote>
+<p>定位：练习⑦（全自动同步）的实践层沉淀。规则层结论在指南 v0.7（3.2「外部服务依赖」行）。</p>
+</blockquote>
+<h2 id="8f07a8680e-git-github-pages">一、方案：不经过 git 的 GitHub Pages 发布</h2>
+<p>客户要求：可依赖第三方，但必须充分验证可用性，且尽量自主完成。能力探测发现本机 gh CLI 已登录（token 含 repo scope）——授权现成；但网络探测显示 <strong>github.com 主站（git push 端点）超时，api.github.com 却稳定</strong>。于是发布链路完全绕开 git：</p>
+<pre><code>build.py（构建 site/）
+  → publish_github.py：Git Data API（blob ×N → tree → commit → ref）
+      全部经 gh api 子进程（只碰 api.github.com）
+  → GitHub Pages 自动构建（30–60s）→ https://{owner}.github.io/{repo}/
+</code></pre>
+<p>要点：
+- <strong>token 不经手</strong>：HTTP 层全部走 <code>gh api</code> 子进程，gh 自管鉴权与 TLS——顺带解决了本机 python.org 版 3.9 缺 CA 证书（urllib SSL 验证失败）的问题，未动系统配置；
+- <strong>提交作者用 noreply 邮箱</strong>（<code>{id}+{login}@users.noreply.github.com</code>），不暴露真实邮箱；
+- <strong>幂等</strong>：仓库/Pages 不存在则自动创建（public 是免费 Pages 的前提）；内容哈希未变则跳过发布，避免 Pages 构建抖动；
+- <strong>noindex</strong>：robots.txt + meta robots，个人文档库不被搜索引擎收录。</p>
+<h2 id="8f07a8680e-_1">二、三个真实的坑（都花过排障时间）</h2>
+<ol>
+<li><strong>空仓库不能用 Git Data API</strong>：新建仓库（无提交）建 blob 直接 409 "Git Repository is empty"。解法：创建仓库时 <code>auto_init: true</code>；对已存在的空仓库用 Contents API 先引导一个提交。</li>
+<li><strong>gh api 的错误解析有两套格式</strong>：<code>-i</code> 时响应头在 stdout（<code>HTTP/2.0 409</code>），而 gh 的错误摘要在 stderr（<code>gh: xxx (HTTP 409)</code>）——只匹配一种就会把真实状态码显示成 0，排障方向全错。</li>
+<li><strong>Pages 的发布时延构成</strong>：API 发布 10–30s + Pages 构建 30–60s + <strong>CDN 缓存 max-age=600（不可配置）</strong>。验证同步是否生效必须给 URL 加缓存穿透参数（<code>?cb=随机数</code>），否则轮询读到的一直是旧缓存——本次排障被这个假信号误导了两轮。</li>
+</ol>
+<h2 id="8f07a8680e-_2">三、最大的教训：测试环境的进程视图 ≠ 真实环境</h2>
+<p>排障后期出现灵异现象：watch 明明活着、文件确实写入了，watch 却「看不见」新增文件；而删除又能感知。最后定位是<strong>测试工具的沙箱在跨调用/同调用后台进程之间存在文件视图隔离</strong>——不是产品 bug。最终用「自包含编排脚本」（watch 子进程与文件写入同进程树，等同客户在 Terminal 双击运行的真实拓扑）重跑，端到端一次通过：新增 63s、删除 73s。</p>
+<p>带走的规则：<strong>验收链路的进程拓扑必须与真实使用同构</strong>——「功能代码对了」和「在真实运行形态下验证过」是两回事；跨进程/跨沙箱的验证结果不能当作产品的判决证据。</p>
+<h2 id="8f07a8680e-_3">四、时延账本（客户预期管理）</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>环节</th>
+<th>耗时</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>watch 检测 + 构建</td>
+<td>2–5s</td>
+</tr>
+<tr>
+<td>API 发布（≈30 个请求）</td>
+<td>10–30s（随网络波动）</td>
+</tr>
+<tr>
+<td>Pages 构建</td>
+<td>30–60s</td>
+</tr>
+<tr>
+<td>CDN 缓存余量</td>
+<td>0–600s（最坏情况）</td>
+</tr>
+<tr>
+<td><strong>合计（典型 / 最坏）</strong></td>
+<td><strong>约 1–2 分钟 / 10 分钟内</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>对时效极敏感的场景（改完 10 秒内必须看到）：用 App 内导入（发 文档库.html），秒级。</p></article>
+<article class="doc single-doc" id="doc-a8e08c60a5"><div class="doc-head"><a class="backtop" href="#top">↑ 文档列表</a></div><details class="doctoc"><summary>目录</summary><nav><a class="lv2" href="#a8e08c60a5-_1">一、时间线还原（谁在什么时候知道什么）</a>
+<a class="lv2" href="#a8e08c60a5-_2">二、客观归因</a>
+<a class="lv2" href="#a8e08c60a5-_3">三、参考项目到底解锁了什么</a>
+<a class="lv2" href="#a8e08c60a5-_4">四、一个对称的事实（避免复盘变成单方面检讨）</a>
+<a class="lv2" href="#a8e08c60a5-fde">五、给 FDE 的三条带走的动作</a></nav></details><h1 id="a8e08c60a5-app">形态选型复盘：为什么没有早点想到 App</h1>
+<blockquote>
+<p>定位：FDE 演练「md 文档手机阅读」练习⑥的复盘笔记。客户问了一句「没让你参考前，你的结论一直是需要依赖第三方——是我表达不清晰，还是你认知不够？」本文是该问题的客观拆解。
+规则层结论已收进《FDE 工作指南》v0.6（3.2「既有资产」行）；本文是完整过程与细节。</p>
+</blockquote>
+<h2 id="a8e08c60a5-_1">一、时间线还原（谁在什么时候知道什么）</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>轮次</th>
+<th>客户输入</th>
+<th>FDE 交付</th>
+<th>当时缺了什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>①</td>
+<td>「放到手机桌面图标，<strong>APP 或什么形式无所谓</strong>，最好自动同步」</td>
+<td>PWA 托管文档站（唯一方案）</td>
+<td>没有给形态选项空间对照表；「APP」二字出现过但被轻放；未盘点既有资产；未问 M5 收尾题</td>
+</tr>
+<tr>
+<td>②</td>
+<td>问双端通用、问怎么用</td>
+<td>跨端差异表 + 上手引导</td>
+<td>—</td>
+</tr>
+<tr>
+<td>③</td>
+<td>「暂不同步、不依赖第三方」</td>
+<td>单文件 HTML + 三形态对比表（含零第三方局域网形态）</td>
+<td>响应快，但选项扩展仍是被动的</td>
+</tr>
+<tr>
+<td>④</td>
+<td>「要图标：点进去是列表」</td>
+<td>局域网版（零第三方图标）</td>
+<td>—</td>
+</tr>
+<tr>
+<td>⑤</td>
+<td>「限制太多，直接做一个APP」→ 确认时点名「参考桌面 interview-prep」</td>
+<td>选项清单里本就有「安卓真App」；参考后一个回合实现 APK</td>
+<td>复查又救回更新层偏差</td>
+</tr>
+<tr>
+<td>⑥</td>
+<td>「是表达不清还是认知不够？」</td>
+<td>本文复盘</td>
+<td>—</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="a8e08c60a5-_2">二、客观归因</h2>
+<p><strong>不是客户表达不清晰。</strong> 首轮「APP 或什么形式无所谓」在访谈语境里是合规的——客户让渡形态选择权给 FDE 天经地义。但这意味着「选对形态」的责任 100% 落在 FDE 侧。同理，「参考项目」客户从一开始就知道它存在，但客户没有义务知道什么信息与需求相关——把相关事实挖出来正是 Discovery 的定义。</p>
+<p><strong>也不是「不会做 App」的技术认知问题。</strong> 反证：⑤轮在客户点名参考之前，FDE 给出的路线选项里就有「安卓真App（.apk 直接安装）」——能力和方案空间都在，最终实现也只花了一个回合。</p>
+<p><strong>真正的缺口是三处流程执行，且全部有指南条款对应：</strong></p>
+<ol>
+<li><strong>首轮没给形态选项空间对照表</strong>。3.4 方案概要要求「技术路线：关键选择及理由」，第 12 章的精神是把分歧与代价写成对照表交决策人裁定。正确动作是第一轮就摆出：托管 PWA / 单文件 / 局域网 / 安卓 App（WebView 壳）/ 现成 App，各自的成本、限制、依赖，让客户一次选。实际是选项被客户一轮一轮逼出来，多花了四轮对话。</li>
+<li><strong>没盘点既有资产</strong>。interview-prep（同类交付：md→html→APK，且本机构建链已被验证）在客户桌面放了很久。G0「业务匹配：是否属于我们交付过的类型」和 3.2 环境评估若真执行，「现场有没有同类交付/参考实现/可复用管线」这一问必然带出它。→ 已固化为指南 3.2「既有资产」行（v0.6）。</li>
+<li><strong>M5「必问收尾题」没问</strong>。3.1 访谈提纲最后一条：「有没有我没问到、但很重要的事？」——这条就是为 interview-prep 这类「客户没想到要主动提的相关事实」设计的，执行时被跳过。规则已有、未执行，不改文档，只记教训。</li>
+</ol>
+<h2 id="a8e08c60a5-_3">三、参考项目到底解锁了什么</h2>
+<p>不是能力（选项⑤轮已有），是三样更值钱的东西：</p>
+<ol>
+<li><strong>确定性</strong>：本机 Android 构建链（SDK/JDK21/gradle 缓存/aliyun 源）已被 interview-prep 验证过——免掉了环境试错的最大风险；</li>
+<li><strong>信任</strong>：客户用过那个 App，模式已被接受；</li>
+<li><strong>约定</strong>：AGENTS.md 管线、debug 签名策略、目录结构可直接沿用，交接成本近乎为零。</li>
+</ol>
+<p>所以「参考之后一个回合就做出来」的真相是：<strong>技术能力一直在，被解锁的是风险与信任，而发现这两样本不需要客户点名。</strong></p>
+<h2 id="a8e08c60a5-_4">四、一个对称的事实（避免复盘变成单方面检讨）</h2>
+<p>「需要依赖第三方」的结论在特定需求组合下至今成立：<strong>「自动同步 + 随时随地 + iPhone」至今只有托管 PWA 能同时满足</strong>（App 版用的也是客户确认的手动导入）。六轮里真正变化的是客户的需求权重：③放弃同步、③④放弃第三方、⑤要求 App 形态。FDE 的结论随需求配置演化本身没有错——错在<strong>演化发生在五轮对话里，而不是第一轮的选项表里</strong>。需求配置与可行形态的对照关系，应该一开始就摊开。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>需求配置</th>
+<th>可行形态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>自动同步 + 随时随地（不放弃）</td>
+<td>托管 PWA（唯一解，需免费第三方）</td>
+</tr>
+<tr>
+<td>不要第三方 + 接受手动更新</td>
+<td>单文件 / 安卓 App（导入式）</td>
+</tr>
+<tr>
+<td>不要第三方 + 要图标 + 电脑常开机</td>
+<td>局域网版</td>
+</tr>
+<tr>
+<td>要「真 App」+ 主力安卓</td>
+<td>WebView 壳 APK（本项目终态）</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="a8e08c60a5-fde">五、给 FDE 的三条带走的动作</h2>
+<ol>
+<li>方案概要永远给<strong>选项空间对照表</strong>，哪怕推荐倾向明显——决策人裁定的对象是选项，不是论证；</li>
+<li>环境评估必问<strong>既有资产</strong>（同类交付、参考实现、可复用管线，"哪怕叫别的名字、放在别处"）；</li>
+<li>M5 收尾题「有没有我没问到但重要的事」是防「interview-prep 情形」的唯一闸门，<strong>必问，不许省</strong>。</li>
+</ol></article>
+<article class="doc single-doc" id="doc-c880ec32f7"><div class="doc-head"><a class="backtop" href="#top">↑ 文档列表</a></div><details class="doctoc"><summary>目录</summary><nav><a class="lv2" href="#c880ec32f7-pwa">一、方案选型结论（为什么是 PWA 文档站）</a>
+<a class="lv3" href="#c880ec32f7-_1">三形态对比（同一构建器的三种交付形态）</a>
+<a class="lv3" href="#c880ec32f7-4">图标的技术本质（练习④：客户要「图标 → 列表 → 阅读」时）</a>
+<a class="lv2" href="#c880ec32f7-5">照搬参考实现的复查教训（练习⑤：客户问「参考项目是最佳的吗」）</a>
+<a class="lv2" href="#c880ec32f7-ios">二、跨端差异速查（「iOS/安卓通用」的客观边界）</a>
+<a class="lv2" href="#c880ec32f7-_2">三、客户上手引导脚本（非技术客户版）</a>
+<a class="lv2" href="#c880ec32f7-_3">四、踩坑记录（本次实做遇到并修掉的）</a>
+<a class="lv2" href="#c880ec32f7-_4">五、发布通道对比（内容不敏感场景）</a>
+<a class="lv2" href="#c880ec32f7-_5">六、遗留（下次实践补）</a></nav></details><h1 id="c880ec32f7-md-pwa">把 md 放到手机上：PWA 跨端与实践笔记</h1>
+<blockquote>
+<p>定位：FDE 演练「md 文档手机阅读」的<strong>实践层</strong>沉淀——技术差异、操作步骤、踩坑记录。
+规则层结论已收进《FDE 工作指南》v0.4（3.2「用户端」行、边界契约「代办/引导」条目）；本文档只放不进指南的具体与技术内容。副本已入文档库供手机阅读，以本文件（实践沉淀/）为正本。</p>
+</blockquote>
+<h2 id="c880ec32f7-pwa">一、方案选型结论（为什么是 PWA 文档站）</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>候选</th>
+<th>结论</th>
+<th>理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>转 PDF/图片发聊天</td>
+<td>否决</td>
+<td>无同步、无图标、字号不可调；每次更新都要重发</td>
+</tr>
+<tr>
+<td>原生 App</td>
+<td>否决</td>
+<td>双端各开发一次，成本与「看文档」的需求不匹配</td>
+</tr>
+<tr>
+<td>现成笔记云（语雀/Notion）</td>
+<td>备选</td>
+<td>客户要求 md 文件原地更新自动同步，导入式平台语义不符</td>
+</tr>
+<tr>
+<td><strong>静态 PWA 文档站</strong></td>
+<td><strong>采纳</strong></td>
+<td>一份代码双端通用；文件夹即内容源；免费托管即可</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p>补记（练习③）：客户决定第一版「不同步、不依赖第三方」后，MVP 重切为<strong>单文件形态</strong>——上表里被否决的是「转 PDF」，不是「发文件」这个动作：发一个<strong>交互式单文件 HTML</strong>，阅读体验（排版/字号/目录/离线）不打折，牺牲的只有自动同步与桌面图标，且升级回 PWA 时全部复用。</p>
+</blockquote>
+<h3 id="c880ec32f7-_1">三形态对比（同一构建器的三种交付形态）</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>形态</th>
+<th>外部依赖</th>
+<th>内容更新</th>
+<th>桌面图标</th>
+<th>离线</th>
+<th>适用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>单文件 HTML</strong>（文档库.html）</td>
+<td>无</td>
+<td>重建后重发文件</td>
+<td>基本不可用</td>
+<td>天然离线</td>
+<td>第一版；完全零依赖</td>
+</tr>
+<tr>
+<td>局域网访问</td>
+<td>无第三方，但电脑要开机、同 WiFi</td>
+<td>同 WiFi 内刷新即最新</td>
+<td>双端可放（iOS 全屏 / Android 快捷方式）</td>
+<td>离开家不可用</td>
+<td>家里/办公室固定场景</td>
+</tr>
+<tr>
+<td>PWA 托管</td>
+<td>免费托管（Netlify 等）</td>
+<td>全自动</td>
+<td>双端完整</td>
+<td>完整</td>
+<td>最终形态</td>
+</tr>
+</tbody>
+</table></div>
+<p>单文件版的实现要点：全部样式与脚本内联；每篇标题锚点加文档前缀（同页多篇共存防 id 冲突）；目录改用 <code>&lt;details&gt;</code> 内联折叠（单文件里没有全局抽屉）；Service Worker 不注册（file:// 下本就无效，脚本里按协议自动跳过）。产物约 105KB/5 篇，微信传输无压力。</p>
+<h3 id="c880ec32f7-4">图标的技术本质（练习④：客户要「图标 → 列表 → 阅读」时）</h3>
+<p>手机桌面图标 = <strong>指向一个稳定入口地址的快捷方式</strong>。单文件（file://）没有稳定地址，所以给不了图标——这是操作系统的限制，不是功能没写。给了地址，图标随之成立，三条路：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>路</th>
+<th>前提</th>
+<th>效果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>局域网版</strong>（<code>--serve --lan</code>）</td>
+<td>电脑开机 + 同 WiFi，零第三方</td>
+<td>iOS Safari 添加主屏后全屏 standalone（HTTP 即可）；Android Chrome 添加主屏成图标快捷方式（非 standalone，浏览器标签形态打开）</td>
+</tr>
+<tr>
+<td>iOS 快捷指令（民间变体）</td>
+<td>手动配置一次</td>
+<td>给本地文件做「打开」动作并添加到主屏幕，图标自选；仅 iOS，Android 无系统级等价物</td>
+</tr>
+<tr>
+<td>HTTPS 托管（PWA）</td>
+<td>免费托管</td>
+<td>双端完整：图标、全屏、离线、安装提示</td>
+</tr>
+</tbody>
+</table></div>
+<p>局域网版的实现几乎零成本：站点产物复用 PWA 版，只是把服务绑定从 127.0.0.1 换成 0.0.0.0，用 UDP connect-trick（连一个不存在的地址、不发包）取本机局域网 IP 打给客户。验证上，本机用「自己的局域网 IP」访问即可等效手机视角（服务器与产物层），真机添加主屏仍要留到未验证清单。另注意 macOS 首次监听外网卡会弹防火墙授权，要提前告诉客户点「允许」。</p>
+<h2 id="c880ec32f7-5">照搬参考实现的复查教训（练习⑤：客户问「参考项目是最佳的吗」）</h2>
+<p>给客户做安卓 App 时照搬了本机 interview-prep 工程的成熟模式（WebView 套壳 + 内容打包进 APK + debug 签名）。客户一句「参考项目是最佳最合适的吗」逼出一次复查，结论值得记：</p>
+<ul>
+<li><strong>80% 该照搬的</strong>：壳工程（50 行 Kotlin、零依赖）、构建链（gradle 本地缓存 + aliyun 源 + JDK21 配置，本机被验证过可离线构建）、debug 签名策略、AGENTS.md 管线约定——这些是「在这台机器上跑通过」的具体知识。</li>
+<li><strong>20% 抄过头的</strong>：参考项目的更新模式是「重打 APK → 重装」（作者=开发者场景）；而客户在访谈里已明确选了「手动导入」。<strong>参考的默认流程 ≠ 客户确认的流程</strong>——照搬时把「技术性复用」（壳/资产）与「流程性差异」（更新/分发）分开逐层对照 AC，就不会带进来。最终改为：App 内「导入文档库」菜单（SAF 文件选择器 → 拷入私有目录 → 切换加载），APK 仅功能升级时重打。</li>
+<li><strong>逐层推倒重选的结论</strong>：内容层/阅读层/壳层重来一次仍会这样选（资产复用是核心价值）；更新层是唯一该改的。「要不要趁此次换 Flutter/原生/TWA」——都是负收益（丢已验证资产、苹果门槛照旧、引入托管依赖）。</li>
+<li>客户在开工前叫停复查（「开始前与我确认」），这次门禁起了实际作用——变更请求级别的选型，确认一轮是对的。</li>
+</ul>
+<h2 id="c880ec32f7-ios">二、跨端差异速查（「iOS/安卓通用」的客观边界）</h2>
+<p>核心阅读体验（自适应排版、字号调整、目录、离线缓存）由标准 Web 技术实现，<strong>双端一致</strong>；差异集中在「安装到桌面」这一个环节：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>环节</th>
+<th>Android</th>
+<th>iOS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>安装入口</td>
+<td>Chrome/Edge 菜单「添加到主屏幕/安装应用」，可能弹安装提示</td>
+<td><strong>Safari</strong> 分享按钮 →「添加到主屏幕」（路径固定、无提示，必须手动）</td>
+</tr>
+<tr>
+<td>桌面图标启动</td>
+<td>standalone 全屏</td>
+<td>standalone 全屏（需 manifest + apple-touch-icon）</td>
+</tr>
+<tr>
+<td>离线缓存</td>
+<td>正常</td>
+<td>正常（Service Worker 自 iOS 11.3 起支持）</td>
+</tr>
+<tr>
+<td>微信/钉钉等内嵌打开</td>
+<td>可阅读，<strong>无安装入口</strong>（右上角菜单没有添加主屏）</td>
+<td>同左；需引导「右上角 → 在浏览器打开」</td>
+</tr>
+<tr>
+<td>安装的硬前提</td>
+<td>HTTPS</td>
+<td>HTTPS + 建议用 Safari 操作</td>
+</tr>
+</tbody>
+</table></div>
+<p>给客户的口径：<strong>双端通用成立，但「安装」这一步两端路径不同，微信里只能看不能装</strong>——这三句话提前说清，能省掉大部分交付后答疑。</p>
+<h2 id="c880ec32f7-_2">三、客户上手引导脚本（非技术客户版）</h2>
+<p>「复制粘贴」是不行的：复制 md 文本到手机只解决「看一篇」，解决不了图标、同步、字号记忆。正确路径是装一次「文档库」：</p>
+<ol>
+<li><strong>部署（一次性，FDE 代办或引导，约 5 分钟）</strong>：把构建产物 <code>site/</code> 放上免费托管（推荐 Netlify），得到一个 https 网址。客户不会操作的两种代办方式：客户注册账号后远程共享屏幕由 FDE 操作；或客户授权 FDE 用自己的托管账号（内容不敏感时可行，需在边界契约里记一笔）。</li>
+<li><strong>手机安装（一次性，1 分钟）</strong>：手机浏览器打开网址 → Android：菜单「添加到主屏幕」；iPhone：Safari 分享 →「添加到主屏幕」。桌面出现「文档库」图标。</li>
+<li><strong>日常（每次 10 秒）</strong>：电脑上把 md 放进 <code>docs/</code>（或改/删）→ 双击 <code>sync.command</code>（配置了自动发布则连这步都不用）→ 手机点开图标即是最新。</li>
+</ol>
+<p>引导技巧：第 2 步最容易卡住（iOS 用户找不到分享按钮），演示时直接拿客户手机操作一遍，胜过发图文教程。</p>
+<h2 id="c880ec32f7-_3">四、踩坑记录（本次实做遇到并修掉的）</h2>
+<ol>
+<li><strong>表格窄列竖排</strong>：长文本表格在 390px 下会把「已实践」这类短词压成一个字一行。修法：<code>td/th { min-width: 5em }</code>，配合表格外层 <code>overflow-x: auto</code> 容器。4.5em 是临界值会翻车，留余量。</li>
+<li><strong>「刷新即最新」靠 network-first</strong>：Service Worker 若用 cache-first，手机端会长期停留在旧版。全站 network-first、失败回退缓存，才能同时满足「同步及时」和「离线可读」。</li>
+<li><strong>缓存必须带构建版本号</strong>：每次构建把全部输入内容哈希成 BUILD_ID 注入 sw.js，换缓存名 + activate 清旧缓存；否则「电脑删了文档、手机还能看到」会变成真 bug。</li>
+<li><strong>Service Worker 只在 HTTPS 或 localhost 注册</strong>：本地预览必须走 <code>http://localhost</code>，用局域网 IP 手机直接访问是注册不了的——这常被误判为「功能坏了」，其实是浏览器安全策略。</li>
+<li><strong>中文文件名不要进 URL</strong>：文件名做 slug 会得到一长串百分号编码；改用「文件名哈希前 10 位」做页面文件名，标题放清单里，链接永远干净稳定。</li>
+<li>** <code>- [ ]</code> 任务列表语法**：python-markdown 标准扩展不渲染任务列表，会显示字面 <code>[ ]</code>；客户文档若常用 GFM 语法，构建器要预留扩展位。</li>
+<li><strong>单文件正文全出血（真实 bug，验收复跑才暴露）</strong>：单文件里正文 <code>&lt;article&gt;</code> 不在 <code>&lt;main&gt;</code> 内，阅读页的栏宽选择器 <code>main &gt; article</code> 静默失效——内容照常显示，连续两轮验证都「通过」，直到某篇出现长标题才以 5px 横向溢出暴露。教训：a) 复用样式时，选择器依赖的 DOM 结构必须在所有产物形态下成立；b) <strong>内容变化后必须重跑验收</strong>——「上一版通过」证明不了「这一版结构正确」。</li>
+</ol>
+<h2 id="c880ec32f7-_4">五、发布通道对比（内容不敏感场景）</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>通道</th>
+<th>上手成本</th>
+<th>全自动可行性</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Netlify</strong>（推荐）</td>
+<td>最低（CLI 或网页拖拽）</td>
+<td>高：<code>DEPLOY_CMD="netlify deploy --dir site --prod" --watch</code></td>
+<td>免费档够用；网页拖拽适合完全不用终端的客户</td>
+</tr>
+<tr>
+<td>GitHub Pages</td>
+<td>中（需 git 流程）</td>
+<td>中：提交即部署</td>
+<td>适合仓库本来就是文档源的团队</td>
+</tr>
+<tr>
+<td>Cloudflare Pages / Vercel</td>
+<td>中</td>
+<td>高：连 Git 仓库自动部署</td>
+<td>与 B 同型，选客户熟悉的生态</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="c880ec32f7-_5">六、遗留（下次实践补）</h2>
+<ul>
+<li>真机双端验收（安装、图标、standalone、微信内打开引导）——需真实 HTTPS 域名 + 真机。</li>
+<li>iOS 上第三方浏览器（Chrome for iOS）添加主屏的行为不统一，本次未验证，口径上只承诺 Safari。</li>
+<li><code>--watch</code> 循环内「修改文件」路径只被间接覆盖，未单独断言。</li>
+</ul></article>
+<article class="doc single-doc" id="doc-bc5441b46c"><div class="doc-head"><a class="backtop" href="#top">↑ 文档列表</a></div><details class="doctoc"><summary>目录</summary><nav><a class="lv2" href="#bc5441b46c-_1">这是什么</a>
+<a class="lv2" href="#bc5441b46c-_2">目录结构</a>
+<a class="lv2" href="#bc5441b46c-_3">日常内容更新（最常用路径）</a>
+<a class="lv2" href="#bc5441b46c-_4">正本与副本（防「改了正本忘了拷」）</a>
+<a class="lv2" href="#bc5441b46c-apkmac-android-sdk">重打 APK（仅功能升级时；Mac 本机执行，需 Android SDK）</a>
+<a class="lv2" href="#bc5441b46c-_5">验证纪律</a>
+<a class="lv2" href="#bc5441b46c-iphone">iPhone 说明</a></nav></details><h1 id="bc5441b46c-md2phone-agentsmd">md2phone · 内容与构建约定（AGENTS.md）</h1>
+<blockquote>
+<p><strong>任何会话在本目录工作前，先读本文件。</strong> 这是「手机文档库」的内容管线与构建约定，跨会话唯一的执行依据。（体例沿用 interview-prep 工程。）</p>
+</blockquote>
+<h2 id="bc5441b46c-_1">这是什么</h2>
+<p>Markdown 文档库，四种形态共用同一个内容源，最终形态是一个 Android App（WebView 套壳 + App 内导入更新）。</p>
+<p>内容链路（单向，勿反向手改）：</p>
+<pre><code>docs/*.md（源，唯一手改点）→ python3 build.py
+    ├→ site/                    （PWA 站点，供托管 / 局域网版）
+    ├→ 文档库.html              （单文件版，微信直接发手机）
+    └→ android-app/.../assets/web（APK 内置内容）
+        → ./gradlew assembleDebug → 文档库.apk
+</code></pre>
+<h2 id="bc5441b46c-_2">目录结构</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>路径</th>
+<th>作用</th>
+<th>是否手改</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>docs/</code></td>
+<td>唯一的源文件（md）</td>
+<td>✅ 只改这里</td>
+</tr>
+<tr>
+<td><code>build.py</code></td>
+<td>生成器（PWA + 单文件 + APK 资产同步）</td>
+<td>一般不改</td>
+</tr>
+<tr>
+<td><code>assets/</code></td>
+<td>网页模板与样式</td>
+<td>一般不改</td>
+</tr>
+<tr>
+<td><code>site/</code>、<code>文档库.html</code></td>
+<td>生成产物</td>
+<td>❌ 由脚本生成</td>
+</tr>
+<tr>
+<td><code>android-app/</code></td>
+<td>Kotlin WebView 壳工程（导入式更新，见 MainActivity.kt 头注释）</td>
+<td>一般不改</td>
+</tr>
+<tr>
+<td><code>文档库.apk</code></td>
+<td>打好的安装包</td>
+<td>❌ 由 gradle 产出</td>
+</tr>
+<tr>
+<td><code>verify_build.py</code> / <code>verify_single.py</code> / <code>verify_lan.py</code></td>
+<td>三个形态的可重复验收</td>
+<td>改动后必跑</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="bc5441b46c-_3">日常内容更新（最常用路径）</h2>
+<ol>
+<li><strong>改内容只改 <code>docs/*.md</code></strong>（会被下次构建覆盖的文件不要手改）；</li>
+<li><code>python3 build.py</code>；</li>
+<li>把 <code>文档库.html</code> 发到手机（微信/邮件）→ App 菜单「导入文档库」→ 完成（约 20 秒，不重装）。
+   ⚠️ 导入的永远是 <code>文档库.html</code> 整库快照，不是 .md 原文——App 不解析 md。</li>
+</ol>
+<h2 id="bc5441b46c-_4">正本与副本（防「改了正本忘了拷」）</h2>
+<p><code>docs/</code> 里有一部分文件是<strong>副本</strong>，正本在别处：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>docs/ 副本</th>
+<th>正本位置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FDE-工作指南.md</code></td>
+<td><code>~/Desktop/FDE-Playbook/FDE-工作指南.md</code></td>
+</tr>
+<tr>
+<td><code>需求与验收.md</code>、<code>交付记录.md</code>、<code>README.md</code>、<code>AGENTS.md</code></td>
+<td><code>md2phone/</code> 根目录同名文件</td>
+</tr>
+<tr>
+<td><code>001/002-*.md</code></td>
+<td><code>~/Desktop/FDE-Playbook/实践沉淀/</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>规则：改了正本，必须重新拷入 <code>docs/</code> 再构建</strong>，否则库里是旧版本（血泪：指南升到 v0.6，库里的副本还停在 v0.3，被客户一问才发现）。</p>
+<h2 id="bc5441b46c-apkmac-android-sdk">重打 APK（仅功能升级时；Mac 本机执行，需 Android SDK）</h2>
+<pre><code class="language-bash">cd android-app
+./gradlew assembleDebug
+cp app/build/outputs/apk/debug/app-debug.apk ../文档库.apk
+</code></pre>
+<ul>
+<li>debug 签名（自动签名可直接安装），个人用途足够，无需 release 签名；</li>
+<li><code>gradle.properties</code> 已把 Gradle 指向 Android Studio 内嵌 JDK 21，直接 <code>./gradlew</code> 即可，勿用系统 JDK 8；</li>
+<li>gradle 发行版与依赖走本地缓存 / aliyun 源（同 interview-prep），本机可离线构建。</li>
+</ul>
+<h2 id="bc5441b46c-_5">验证纪律</h2>
+<p>任何 <code>docs/</code>、<code>assets/</code>、<code>build.py</code> 改动后：<code>python3 verify_build.py &amp;&amp; python3 verify_single.py &amp;&amp; python3 verify_lan.py</code>。
+<strong>「上一版通过」不证明「这一版结构正确」</strong>（血泪：单文件版正文全出血 bug 连过两轮验证才暴露）。</p>
+<h2 id="bc5441b46c-iphone">iPhone 说明</h2>
+<p>苹果不允许直接装安装包；iPhone 走 site/ 托管 PWA（用法 B）、局域网版（A2）或单文件（A）。</p></article>
+<article class="doc single-doc" id="doc-04c6e90faa"><div class="doc-head"><a class="backtop" href="#top">↑ 文档列表</a></div><details class="doctoc"><summary>目录</summary><nav><a class="lv2" href="#04c6e90faa-_1">两种用法</a>
+<a class="lv3" href="#04c6e90faa-a">用法 A · 单文件版（第一版：不依赖任何第三方，今天就能用）</a>
+<a class="lv3" href="#04c6e90faa-a2">用法 A2 · 局域网版（不要第三方，但要「桌面图标」）</a>
+<a class="lv3" href="#04c6e90faa-a3-appapk-app">用法 A3 · 安卓 App（文档库.apk）：真 App 形态</a>
+<a class="lv3" href="#04c6e90faa-b-pwa">用法 B · PWA 托管版【已配置并实测 ✅】</a>
+<a class="lv2" href="#04c6e90faa-a2-b">手机端一次性设置（装到桌面，用法 A2 / B）</a>
+<a class="lv2" href="#04c6e90faa-b">第一次部署（用法 B 已完成 ✅，以下仅备查；三选一，都是免费档）</a>
+<a class="lv2" href="#04c6e90faa-vs">全自动 vs 半自动</a>
+<a class="lv2" href="#04c6e90faa-_2">常见问题</a>
+<a class="lv2" href="#04c6e90faa-_3">开发者</a></nav></details><h1 id="04c6e90faa-md2phone-markdown">md2phone · 把 Markdown 放进手机</h1>
+<p>电脑上的 <code>.md</code> 文档 → 手机桌面图标、App 般的阅读体验、内容随电脑同步更新。
+纯静态产物（一个 <code>site/</code> 文件夹），不依赖任何付费服务；文档不经过本工具之外的第三方处理（部署到你自己选的托管上）。</p>
+<h2 id="04c6e90faa-_1">两种用法</h2>
+<h3 id="04c6e90faa-a">用法 A · 单文件版（第一版：不依赖任何第三方，今天就能用）</h3>
+<pre><code>1. 把 .md 文件放进 docs/ 文件夹（删除 = 从文件夹移除）
+2. 双击 sync.command（或终端运行 python3 build.py）
+3. 把生成的「文档库.html」发到手机（微信 / 邮件 / 数据线都行）
+</code></pre>
+<p>手机上怎么打开：
+- <strong>iPhone</strong>：微信里点开文件可直接读；或长按 → 存到「文件」App → 点开即读
+- <strong>Android</strong>：微信里点开 → 右上角「…」→ 用浏览器打开（或文件管理器 → Chrome）</p>
+<p>文档更新了：重跑第 2 步，把新的「文档库.html」再发一次（旧的删掉即可）。</p>
+<p>特点：一个文件装下全部文档 + 目录 + 字号调整，<strong>不需要联网、不注册任何服务</strong>；代价是没有自动同步（更新 = 重发文件），桌面图标暂缺（想要时用 A2 或 B）。</p>
+<h3 id="04c6e90faa-a2">用法 A2 · 局域网版（不要第三方，但要「桌面图标」）</h3>
+<p>双击「局域网分享.command」（或终端运行 <code>python3 build.py --serve --lan</code>），终端会显示一个形如 <code>http://192.168.x.x:8787/</code> 的地址：</p>
+<ol>
+<li>手机连到<strong>和电脑同一个 WiFi</strong>，浏览器打开该地址 → 文档列表，点文档即读；</li>
+<li><strong>iPhone</strong>：Safari 打开 → 分享 → 「添加到主屏幕」→ 桌面图标，点开全屏；
+   <strong>Android</strong>：Chrome 菜单 → 「添加到主屏幕」；</li>
+<li>文档更新后：双击 sync.command 重建 → 手机刷新即见最新（同 WiFi 内近似自动同步）。</li>
+</ol>
+<p>前提与代价：电脑开机、手机同 WiFi，离开家打不开；macOS 首次运行若弹防火墙询问，点「允许」。</p>
+<h3 id="04c6e90faa-a3-appapk-app">用法 A3 · 安卓 App（<code>文档库.apk</code>）：真 App 形态</h3>
+<ol>
+<li><strong>安装（一次）</strong>：把 <code>文档库.apk</code> 传到手机点开安装（首次需允许「安装未知应用」）；桌面出现「文档库」图标，点开即文档列表，出厂已内置全部文档，离线可读；</li>
+<li><strong>日常更新（约 20 秒，不重装）</strong>：电脑改 <code>docs/</code> → <code>python3 build.py</code> → 把新的 <code>文档库.html</code> 发到手机 → App 右上角菜单「<strong>导入文档库</strong>」选中该文件即完成；
+   ⚠️ 导入的是 <strong><code>文档库.html</code> 这个整库文件</strong>（里面已打包全部文档的最新版本），不是 .md 原文——App 不解析 md；改了几篇都只需发这一个文件；</li>
+<li>「<strong>恢复内置</strong>」：菜单里一键回到出厂文档。</li>
+</ol>
+<p>iPhone 不在此用法内（苹果不允许直接装安装包），用 A / A2 / B。</p>
+<h3 id="04c6e90faa-b-pwa">用法 B · PWA 托管版【已配置并实测 ✅】</h3>
+<p>发布通道已全自动打通（2026-10-01 端到端验收：新增 63s / 删除 73s 反映到公网）：</p>
+<p><strong>文档库网址：https://zhouqs666.github.io/md2phone-docs/</strong></p>
+<ul>
+<li><strong>电脑侧</strong>：双击「自动同步.command」→ docs/ 文件一变 → 自动构建 → 自动发布（约 1 分钟后手机刷新即见最新）；</li>
+<li><strong>手机侧（一次性）</strong>：浏览器打开网址 → Android：Chrome 菜单「添加到主屏幕」；iPhone：Safari 分享「添加到主屏幕」→ 桌面图标，全屏 App 体验；</li>
+<li>托管为 GitHub Pages（仓库 <code>zhouqs666/md2phone-docs</code>，public——免费 Pages 的前提），已加 noindex 防搜索引擎收录；</li>
+<li>已知边界：GitHub Pages 有 ≤10 分钟 CDN 缓存（不可配置），对时效极敏感时用用法 A3 的「文档库.html 导入」（秒级）；停用：GitHub 网页进仓库 Settings → Delete。</li>
+</ul>
+<h2 id="04c6e90faa-a2-b">手机端一次性设置（装到桌面，用法 A2 / B）</h2>
+<ol>
+<li>手机浏览器打开文档库网址（<strong>必须 https:// 开头</strong>，安装图标和离线缓存都依赖它）；</li>
+<li><strong>Android（Chrome）</strong>：右上角菜单 → 「添加到主屏幕 / 安装应用」；
+   <strong>iPhone（Safari）</strong>：底部分享按钮 → 「添加到主屏幕」；</li>
+<li>桌面出现「文档库」图标，点开即全屏阅读，断网也能读看过的文档。</li>
+</ol>
+<p>阅读页顶部：<code>‹</code> 返回列表 · <code>A−/A+</code> 调整字号（手机会记住）· <code>☰</code> 目录（点击条目直接跳小节）。深色模式跟随系统。</p>
+<h2 id="04c6e90faa-b">第一次部署（用法 B 已完成 ✅，以下仅备查；三选一，都是免费档）</h2>
+<p><strong>当前已配置：GitHub Pages + <code>publish_github.py</code> 全 API 发布 + <code>自动同步.command</code> 全自动同步。</strong>
+备选方案（如需更换托管）：</p>
+<p>推荐 A，最省事且可全自动：</p>
+<p><strong>A. Netlify（推荐）</strong></p>
+<pre><code class="language-bash">npm install -g netlify-cli     # 需已安装 Node.js
+netlify login                  # 首次注册/登录
+# 之后每次同步自动发布（全自动：存盘 → 上线）：
+DEPLOY_CMD=&quot;netlify deploy --dir site --prod&quot; python3 build.py --watch
+</code></pre>
+<p>不想装命令行：打开 app.netlify.com/drop，把 <code>site/</code> 文件夹拖进去，得到网址（以后每次更新需手动再拖一次，半自动）。</p>
+<p><strong>B. GitHub Pages</strong>：建仓库，把 <code>site/</code> 内容推到 <code>gh-pages</code> 分支，仓库设置里开启 Pages。更新 = 把 site/ 重新提交推送。</p>
+<p><strong>C. Cloudflare Pages / Vercel</strong>：连接 GitHub 仓库自动部署，效果同 A。</p>
+<blockquote>
+<p>原理说明：<code>docs/</code> 是唯一内容来源。构建把 md 转成手机友好的静态页面（含 PWA 清单与 Service Worker）；托管只是把 <code>site/</code> 放上互联网。手机端每次打开都先取最新（network-first），取不到才用本地缓存，所以「电脑更新 → 重建 → 手机刷新即最新」。</p>
+</blockquote>
+<h2 id="04c6e90faa-vs">全自动 vs 半自动</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>方式</th>
+<th>操作</th>
+<th>适用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>半自动</td>
+<td>双击 <code>sync.command</code></td>
+<td>偶尔更新；未配置发布时用本地预览</td>
+</tr>
+<tr>
+<td>全自动</td>
+<td><code>DEPLOY_CMD="netlify deploy --dir site --prod" python3 build.py --watch</code></td>
+<td>挂在终端里，保存文档几秒后自动上线</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>build.py</code> 参数：<code>--watch</code> 监听 docs/ 与 assets/ 自动重建；<code>--serve</code> 本地预览 http://localhost:8787 （仅供电脑检查，手机安装需 HTTPS 托管）。</p>
+<h2 id="04c6e90faa-_2">常见问题</h2>
+<ul>
+<li><strong>手机上没出现「安装」提示？</strong> iPhone 需在 Safari 里用「分享 → 添加到主屏幕」手动添加；网址必须是 https。</li>
+<li><strong>删除的文档手机上还能看到？</strong> 列表刷新后即消失；已缓存的正文副本会在下次联网刷新后被清掉（Service Worker 按构建版本清理旧缓存）。</li>
+<li><strong>文档里表格太宽？</strong> 表格在手机上可左右滑动，不会撑破页面。</li>
+<li><strong>想换图标/名字？</strong> 改 <code>build.py</code> 里的 <code>manifest</code> 与 <code>make_icons()</code>，或直接替换 <code>site/assets/</code> 下的图标后重建。</li>
+</ul>
+<h2 id="04c6e90faa-_3">开发者</h2>
+<ul>
+<li><code>build.py</code> 生成器；<code>assets/</code> 模板与样式；<code>docs/</code> 内容源；<code>site/</code> 产物（可整目录重新生成，勿手改）。</li>
+<li>自测：<code>python3 verify_build.py</code>（增/改/删同步场景）；<code>python3 verify_ui.py</code>（需配合本地静态服务，见文件头注释）。</li>
+<li>需求、验收标准与验证边界见 <code>需求与验收.md</code> 与 <code>交付记录.md</code>。</li>
+</ul></article>
+<article class="doc single-doc" id="doc-ea877eb60d"><div class="doc-head"><a class="backtop" href="#top">↑ 文档列表</a></div><details class="doctoc"><summary>目录</summary><nav><a class="lv2" href="#ea877eb60d-_1">交付日志</a>
+<a class="lv2" href="#ea877eb60d-7">第三方可用性验证（练习⑦客户专项要求：依赖第三方但必须充分验证其可用性）</a>
+<a class="lv2" href="#ea877eb60d-04-3">已验证 / 未验证清单（红线 0.4-3：诚实声明验证边界）</a>
+<a class="lv3" href="#ea877eb60d-playwright-390844-tmpmd2phone_shots">已验证（本机，Playwright 390×844 手机视口 + 脚本断言，证据截图在 /tmp/md2phone_shots/）</a>
+<a class="lv3" href="#ea877eb60d-fde">未验证及原因（部署后由 FDE 在真机补验）</a>
+<a class="lv3" href="#ea877eb60d-51">验证替代理由（5.1 例外条款）</a>
+<a class="lv2" href="#ea877eb60d-backlog-46">风险与后续（Backlog，按 4.6 排序）</a>
+<a class="lv2" href="#ea877eb60d-c">演练复盘（回填附录 C）</a></nav></details><h1 id="ea877eb60d-md2phone2026-09-30">交付记录 · md2phone（2026-09-30）</h1>
+<h2 id="ea877eb60d-_1">交付日志</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>版本/时间</th>
+<th>内容</th>
+<th>执行人</th>
+<th>发布后校验</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v1.0 · 2026-09-30</td>
+<td>build.py 生成器 + PWA 站点 + 双击/监听同步 + 自测脚本；示例文档《FDE 工作指南》</td>
+<td>FDE（演练）</td>
+<td>本地验证通过（见下）；<strong>尚未部署到公网托管</strong>，部署后需按 README 在真机复验 AC2-2 / AC3-5</td>
+</tr>
+<tr>
+<td>v1.1 · 2026-09-30</td>
+<td>多文档入库（5 篇：中英混排、长短混排、宽表格）；双端通用范围写入需求约束；跨端差异与上手引导沉淀至《实践沉淀/001》</td>
+<td>FDE（演练）</td>
+<td>本地复验：5 篇全部 390px 无横向滚动；增/改/删回归通过；表格窄列加宽至 6em</td>
+</tr>
+<tr>
+<td>v1.2 · 2026-09-30</td>
+<td>客户重切 MVP（练习③）：新增单文件版（文档库.html，自包含、零第三方依赖）；同步与 HTTPS 桌面安装移出第一版；PWA 版（site/）保留为升级路径</td>
+<td>FDE（演练）</td>
+<td>file:// 零网络请求；列表/目录/字号/返回交互通过；5 篇 390px 无横向滚动；<strong>发现并修复正文全出血 bug</strong>（article 未被栏宽选择器命中，内容更新后才暴露）；增删改回归通过</td>
+</tr>
+<tr>
+<td>v1.3 · 2026-09-30</td>
+<td>客户需求回归（练习④）：桌面图标 → 列表 → 阅读。新增局域网版（--serve --lan / 局域网分享.command），零第三方实现图标入口；PWA 产物（manifest/图标）复用</td>
+<td>FDE（演练）</td>
+<td>经本机局域网 IP 等效验证：列表 5 卡片、点击进入阅读、manifest 与图标可达（verify_lan.py）；单文件版与增删改回归通过</td>
+</tr>
+<tr>
+<td>v1.4 · 2026-09-30</td>
+<td>练习⑤：安卓 App（壳照 interview-prep 模式；更新层经客户复查后由「照搬重打重装」修正为「App 内导入」，与练习③确认的「手动导入」对齐）。产出 文档库.apk：内置 5 篇、菜单导入/恢复内置</td>
+<td>FDE（演练）</td>
+<td>gradle assembleDebug 成功（本机缓存离线可构建）；APK 静态检查通过（assets 页面齐全、包名 com.mddocs、应用名「文档库」）；<strong>真机安装与导入手势未验证</strong>（无连接设备）</td>
+</tr>
+<tr>
+<td>v1.5 · 2026-10-01</td>
+<td>练习⑦：全自动同步。GitHub Pages 发布通道全自动打通（publish_github.py 全 API 发布 + 自动同步.command）；客户不在场，全程自主完成；第三方可用性按客户专项要求逐项验证（见下节）</td>
+<td>FDE（自主）</td>
+<td>E2E-RESULT: PASS——新增 63s / 删除 73s 反映到公网；外部独立视角（WebFetch）确认可访问；三套回归通过</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="ea877eb60d-7">第三方可用性验证（练习⑦客户专项要求：依赖第三方但必须充分验证其可用性）</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>验证项</th>
+<th>方法与结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>认证与授权</td>
+<td>本机 gh CLI 既有登录（zhouqs666，token 含 repo scope）；<strong>未新建账号、token 全程由 gh 管理、不落盘不进日志</strong>（红线 0.4-2）</td>
+</tr>
+<tr>
+<td>网络可达性</td>
+<td>api.github.com 200（0.35s）、zhouqs666.github.io 200（0.93s）；<strong>github.com 主站（git 推送端点）8s 超时</strong> → 发布改为全 API（Git Data API），把不可达项从关键路径上移除</td>
+</tr>
+<tr>
+<td>仓库与 Pages 配置</td>
+<td>自动创建 public 仓库并开启 Pages（gh-pages 分支），幂等可重入</td>
+</tr>
+<tr>
+<td>端到端闭环</td>
+<td>自包含编排脚本（watch 子进程同进程树，等同客户双击运行）：新增 → 公网 63s；删除 → 公网 73s；两个周期发布文件数正确（19/18）</td>
+</tr>
+<tr>
+<td>外部独立视角</td>
+<td>WebFetch（独立于本机网络栈）确认首页 200、文档卡片可见</td>
+</tr>
+<tr>
+<td>验证方法论教训</td>
+<td>排障中被两类假信号误导：①验证轮询撞上 Pages CDN 缓存（max-age=600）读旧数据；②测试环境进程间文件视图隔离导致 watch「看不见」新文件——最终以「与真实使用同构的进程拓扑」重跑才得真值。<strong>验收结果必须来自与真实使用同构的链路</strong></td>
+</tr>
+<tr>
+<td>已知边界</td>
+<td>Pages CDN 缓存 ≤10 分钟（不可配置，对时效极敏感场景用 App 导入秒级）；真机（手机网络对 github.io 可达性、添加主屏）仍属未验证清单</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="ea877eb60d-04-3">已验证 / 未验证清单（红线 0.4-3：诚实声明验证边界）</h2>
+<h3 id="ea877eb60d-playwright-390844-tmpmd2phone_shots">已验证（本机，Playwright 390×844 手机视口 + 脚本断言，证据截图在 /tmp/md2phone_shots/）</h3>
+<ul>
+<li>故事 1 AC1（390px 无横向滚动；表格/代码块容器内滚动，长文档《FDE 工作指南》14 表 7 代码块渲染正常）</li>
+<li>故事 1 AC2（A−/A+ 字号调整 17→19px，刷新后保持）</li>
+<li>故事 1 AC3（目录 52 条，展开/跳转/收起）</li>
+<li>故事 1 AC4（断网后已访问页面可读，Service Worker 缓存回退）</li>
+<li>故事 2 AC1（manifest 字段完整、4 个图标产物齐全、SW 注入 BUILD_ID）</li>
+<li>故事 3 AC1–AC3（新增/更新/删除 → 构建后首页与产物一致，<code>verify_build.py</code> 可重复执行）</li>
+<li>故事 3 AC4（--watch：docs/ 新增文件后 6 秒内自动重建；DEPLOY_CMD 钩子触发成功）</li>
+<li>暗色模式跟随系统；无控制台错误</li>
+<li>多文档场景（v1.1）：5 篇共存（中文文件名 slug 稳定、14 表宽表格、代码块），各页 390px 无横向滚动，首页列表/阅读页/目录均正常</li>
+<li>单文件版（v1.2）：file:// 直接打开、零网络请求、无外部资源引用；卡片跳转/返回/每篇目录/字号调整与记忆通过；19 个表格全部容器内滚动（<code>verify_single.py</code> 可重复执行）</li>
+<li>局域网版（v1.3）：服务绑定所有网卡，经本机局域网 IP（等效手机视角）打开文档列表、点击进入阅读页；manifest 有效、图标文件可达（<code>verify_lan.py</code> 可重复执行）</li>
+<li>安卓 App（v1.4）：gradle assembleDebug 成功（gradle 本地缓存 + aliyun 源，可离线构建）；APK 静态检查：assets 内 7 页齐全、包名 com.mddocs、应用名「文档库」、启动 Activity 正确、自适应图标就位；三套回归全过（验证脚本预期值改为按 docs.json 动态取数，文档数量变化不再误报）</li>
+</ul>
+<h3 id="ea877eb60d-fde">未验证及原因（部署后由 FDE 在真机补验）</h3>
+<ul>
+<li><strong>故事 2 AC2</strong>：真机上「添加到主屏幕」、图标启动、standalone 显示——需要真实 HTTPS 域名与真机，本地 localhost 只能验证 PWA 产物合规。</li>
+<li><strong>故事 3 AC5</strong>：手机端刷新见到最新列表——依赖上一条的部署环境。</li>
+<li><strong>iOS Safari 实际表现</strong>（safe-area、添加主屏流程、微信内置浏览器打开）——需要真机；微信内置浏览器对「添加到主屏幕」不支持，需引导用户用 Safari 打开（README 已写）。</li>
+<li><strong>iOS 第三方浏览器（Chrome for iOS）添加主屏行为不统一</strong>——验收口径只承诺 Safari（差异表见《实践沉淀/001》）。</li>
+<li><strong>单文件版的真机传输路径</strong>（v1.2）：微信传输后 iPhone QuickLook 预览、Android「用其他应用打开」各机型菜单差异——需真机；本地以 file:// 等效验证。</li>
+<li><strong>单文件版在部分安卓浏览器的字号记忆</strong>：content:// 源下 localStorage 可能不持久，字号调节本身可用，记忆降级为可选。</li>
+<li><strong>局域网版真机环节</strong>（v1.3）：真手机同 WiFi 访问、添加到主屏幕（iOS 全屏 / Android 图标形态）、macOS 防火墙弹窗处理——需真机与真实局域网环境。</li>
+<li><strong>Netlify/GitHub Pages 部署步骤本身</strong>——需客户账号；命令行流程来自托管方公开文档，未在本机实跑。</li>
+</ul>
+<h3 id="ea877eb60d-51">验证替代理由（5.1 例外条款）</h3>
+<p>AC2-2 / AC3-5 属「依赖第三方界面与硬件条件」的验证，自动化成本明显高于收益，以显式证据（产物校验 + 本地全链路模拟）替代，经交付责任人（本人，演练）确认；<strong>真实客户场景下应转为真机验收项</strong>。</p>
+<h2 id="ea877eb60d-backlog-46">风险与后续（Backlog，按 4.6 排序）</h2>
+<ol>
+<li>P2｜全文搜索（文档多了以后的第一个需求）</li>
+<li>P2｜手动深色/浅色切换（当前仅跟随系统）</li>
+<li>P2｜iOS 微信内打开体验引导页</li>
+<li>P3｜发布状态回执（当前 DEPLOY_CMD 失败仅打印，不重试通知）</li>
+</ol>
+<h2 id="ea877eb60d-c">演练复盘（回填附录 C）</h2>
+<ul>
+<li>有效：访谈三问（使用方式/红线/规模）直接决定了方案分叉，避免了直接给「转 PDF」的错误方案；客户补述的「桌面图标 + 自动同步 + 字号」把交付形态从「转换文件」修正为「PWA 文档站」——<strong>印证 3.1「要故事不要观点」：第一句需求与真实需求差距很大</strong>。</li>
+<li>有效：P2 分级 + 轻量验证（构建断言 + UI 截图）与爆炸半径匹配，全程无过度工件。</li>
+<li>缺失：指南没有「客户非技术背景时，部署步骤如何代办/引导」的规则；本次用 README 三选一缓解，真实场景应写入边界契约（客户提供项：托管账号）。</li>
+<li>待改进：--watch 的「修改后自动重建」仅由 verify_build 的独立更新场景间接覆盖，监听循环内的修改路径未单独断言。</li>
+</ul></article>
+<article class="doc single-doc" id="doc-899b96eadf"><div class="doc-head"><a class="backtop" href="#top">↑ 文档列表</a></div><details class="doctoc"><summary>目录</summary><nav><a class="lv2" href="#899b96eadf-_1">问题定义</a>
+<a class="lv2" href="#899b96eadf-_2">故事与验收标准</a>
+<a class="lv3" href="#899b96eadf-1-mdp2">故事 1｜在手机上舒服地读一份 md（P2）</a>
+<a class="lv3" href="#899b96eadf-2p2">故事 2｜安装到手机桌面（P2）</a>
+<a class="lv3" href="#899b96eadf-3p23">故事 3｜电脑侧更新同步到手机（P2）〔练习③起移出第一版，升级路径保留〕</a>
+<a class="lv3" href="#899b96eadf-4p23">故事 4｜单文件文档库（P2）〔练习③新增，第一版形态〕</a>
+<a class="lv3" href="#899b96eadf-5-p24">故事 5｜局域网版：图标 → 列表 → 阅读（P2）〔练习④新增，零第三方〕</a>
+<a class="lv3" href="#899b96eadf-6-app-p25interview-prep-app">故事 6｜安卓 App：图标 → 列表 → 阅读 + 导入更新（P2）〔练习⑤新增；客户确认：interview-prep 壳模式 + App 内导入〕</a></nav></details><h1 id="899b96eadf-md-2026-09-30">需求与验收 · md 文档手机阅读（2026-09-30）</h1>
+<blockquote>
+<p>来源：客户访谈（2026-09-30，书面纪要即本文档）。风险分级说明：全部故事均为 P2（体验类），不触碰资金/隐私/生产数据，验证深度按 A1 取轻。</p>
+</blockquote>
+<h2 id="899b96eadf-_1">问题定义</h2>
+<ul>
+<li><strong>背景与触发</strong>：客户在电脑上持续产生 Markdown 文档（如《FDE 工作指南》），只能在电脑上看。</li>
+<li><strong>问题陈述</strong>：现状——md 文件在手机上打不开、打开也是原始符号；期望——像 App 一样在手机上随时阅读，内容与电脑侧保持一致；差距——离开电脑就看不了，文档写了用不上。</li>
+<li><strong>成功度量</strong>：
+  1. <strong>同步动作</strong>：电脑侧文档增/改/删后，一次操作（双击或一条命令，≤1 分钟）内完成重建发布，手机端刷新即见结果。人工触发可接受，全自动更好。
+  2. <strong>阅读体验</strong>：390px 宽（iPhone 标准视口）下正文无需横向滚动；字号可调且记住选择。</li>
+<li><strong>约束与红线</strong>：内容不敏感，允许使用外部云服务与免费托管；规模未定（1 ~ 几十份都要成立）；客户侧自备一个免费托管账号。<strong>使用端（客户 2026-09-30 练习②补充）：Android 与 iOS 均需可用，无明确机型——验收矩阵取双端主流浏览器（Android Chrome / iOS Safari）；微信等内嵌浏览器只承诺可阅读，不承诺可安装</strong>；跨端差异细节见《实践沉淀/001》实践笔记。</li>
+<li><strong>第一版形态（客户 2026-09-30 练习③决定）</strong>：不依赖第三方托管、暂不做同步——交付<strong>单文件版</strong>（整个文档库自包含为一个 HTML，直接发送手机）；同步（故事 3）与 HTTPS 安装桌面（故事 2 AC2）移出第一版，作为升级路径保留，不删故事。</li>
+<li><strong>非目标</strong>（访谈中与客户确认的口径）：不做全文搜索；不做账号体系/多人协作；不做在线编辑；不替换客户已有知识库工具。</li>
+<li><strong>干系人</strong>：需求源 / 决策人 / 用户 = 客户本人（本次为演练，由扮演者承担）。</li>
+</ul>
+<h2 id="899b96eadf-_2">故事与验收标准</h2>
+<h3 id="899b96eadf-1-mdp2">故事 1｜在手机上舒服地读一份 md（P2）</h3>
+<p><strong>价值</strong>：作为文档读者，我希望 md 文档在手机上排版良好、字号可调，随时随地能看。</p>
+<p><strong>AC</strong>：
+1. 给定 docs/ 内一份含标题、表格、代码块、引用、列表的 md，当执行构建，then 生成对应阅读页；390px 视口下正文无需横向滚动；表格在自身容器内横向滚动、不撑破页面；代码块同样容器内滚动。
+2. 点击「A−/A+」正文字号改变一档（范围 14–24px），刷新后保持（localStorage）。
+3. 点击目录按钮展开全部二/三级标题；点击条目跳转至对应小节并收起目录。
+4. 断网后，曾经打开过的页面仍可阅读（Service Worker 缓存回退）。</p>
+<h3 id="899b96eadf-2p2">故事 2｜安装到手机桌面（P2）</h3>
+<p><strong>价值</strong>：作为文档读者，我希望像打开 App 一样从桌面图标进入文档库。</p>
+<p><strong>AC</strong>：
+1. 构建产物包含 manifest.webmanifest、192/512 图标与 apple-touch-icon，清单字段完整有效。
+2. 经 HTTPS 部署后，Android Chrome 菜单出现「添加到主屏幕」，iOS Safari 经「分享 → 添加到主屏幕」可安装，图标启动后以独立窗口（standalone）打开。
+   ——AC2 依赖真机与真实托管，本地只能验证 AC1；AC2 列入交付记录的未验证清单。〔练习③起 AC2 移出第一版；练习⑦起服务器侧已就绪：HTTPS 托管 https://zhouqs666.github.io/md2phone-docs/ 经公网验证，仅剩真机安装环节〕</p>
+<h3 id="899b96eadf-3p23">故事 3｜电脑侧更新同步到手机（P2）〔练习③起移出第一版，升级路径保留〕</h3>
+<p><strong>价值</strong>：作为文档作者，我把 md 放进文件夹、跑一次同步，手机端就能看到最新内容；删除亦然。</p>
+<p><strong>AC</strong>：
+1. 新增：docs/ 放入新 md → 构建 → 首页列表出现该文档，点开内容完整。
+2. 更新：修改已有 md → 构建 → 对应页面内容变为新版本，首页「更新时间」刷新。
+3. 删除：从 docs/ 移除 md → 构建 → 首页不再出现，产物中该页面文件消失。
+4. 自动化：<code>--watch</code> 模式下，docs/ 文件增改删后 5 秒内自动重建；若设置 DEPLOY_CMD，重建后自动执行发布命令。
+5. 同步链路：部署到 HTTPS 托管后，手机端刷新即见最新列表。——依赖故事 2 的托管环境，真机验证列入未验证清单。〔练习⑦：服务器侧端到端已实测通过——新增 63s / 删除 73s 反映到公网；真机刷新为最后一步〕</p>
+<p><strong>依赖</strong>：客户自备任一免费静态托管（Netlify / GitHub Pages / Cloudflare Pages，README 给出推荐与步骤）。</p>
+<h3 id="899b96eadf-4p23">故事 4｜单文件文档库（P2）〔练习③新增，第一版形态〕</h3>
+<p><strong>价值</strong>：作为文档读者，我希望拿到一个文件就能在手机上读全部文档——不注册、不安装、不联网、不依赖任何第三方服务。</p>
+<p><strong>AC</strong>：
+1. 构建产出单个自包含 HTML（<code>文档库.html</code>）：无外部样式/脚本/网络请求，双击即可在浏览器打开，断网可读。
+2. 390px 视口：文档列表与每篇正文均无横向滚动；表格在自身容器内滚动、不撑破页面。
+3. 点卡片跳到对应文档；每篇带「目录」可跳转小节；「↑ 文档列表」可返回。
+4. 字号 A−/A+ 生效；浏览器允许时刷新后保持。
+5. 传输路径：文件经微信/邮件/数据线到达手机后可直接打开阅读。——真机验证列入未验证清单，本地以 file:// 等效验证。</p>
+<p><strong>非目标（本版明确不做）</strong>：自动同步（更新 = 重发文件）；HTTPS 托管与桌面图标（升级路径，见故事 2/3）。</p>
+<h3 id="899b96eadf-5-p24">故事 5｜局域网版：图标 → 列表 → 阅读（P2）〔练习④新增，零第三方〕</h3>
+<p><strong>价值</strong>：作为文档读者，我希望从手机桌面图标点进文档库，看到列表、点开阅读——但不引入任何第三方服务。（练习④客户需求：需要一个图标，点进去能看到文档列表，点击文档打开阅读。）</p>
+<p><strong>AC</strong>：
+1. 电脑侧一条命令（双击 <code>局域网分享.command</code> 或 <code>python3 build.py --serve --lan</code>）启动服务，绑定所有网卡并显示出局域网访问地址。
+2. 同一 WiFi 下手机浏览器打开该地址：可见文档列表，点击任一文档进入阅读页。——本地以本机局域网 IP 访问等效验证；真机列未验证清单。
+3. 站点含 manifest 与图标文件；「添加到主屏幕」后以图标进入（预期：iOS 全屏 standalone、Android 图标快捷方式）——真机行为列未验证清单。
+4. 局域网范围内「准同步」：电脑重新构建后，手机刷新即见最新；与单文件版共用同一内容源（docs/）与构建器，互不冲突。</p>
+<p><strong>边界</strong>：电脑需开机且手机同 WiFi；离开该网络不可用（此为与托管版的本质差异，交付时向客户讲明）。</p>
+<h3 id="899b96eadf-6-app-p25interview-prep-app">故事 6｜安卓 App：图标 → 列表 → 阅读 + 导入更新（P2）〔练习⑤新增；客户确认：interview-prep 壳模式 + App 内导入〕</h3>
+<p><strong>价值</strong>：作为文档读者，我要装一个真正的 App：桌面图标点开就是文档库，离线可读，日常更新不需要重装、不依赖电脑构建链。</p>
+<p><strong>AC</strong>：
+1. 构建流水线产出 <code>文档库.apk</code>（debug 签名，可直接安装）：内置当前全部文档（assets），首次安装开箱即读，全程离线。
+2. 点桌面图标 → 文档列表 → 点击进入阅读页；返回键在页内历史回退；390px 视口下阅读体验与网页版一致（字号/目录/表格容器滚动）。
+3. App 菜单「导入文档库」：经系统文件选择器选择 文档库.html 后立即切换为所导内容（拷入应用私有目录，重启后仍生效）；菜单「恢复内置」一键回到出厂文档。
+4. 内容更新 = 电脑改 md → <code>python3 build.py</code> → 把新的 文档库.html 发到手机 → App 内导入（约 20 秒，不重装）；APK 仅功能升级时重打。</p>
+<p><strong>非目标</strong>：iOS App（苹果签名门槛，客户确认跟随参考模式结论，iPhone 走 PWA/单文件）；自动同步（局域网拉取列为后续可选）。</p>
+<p><strong>验证边界</strong>：AC1 静态检查（APK 结构、assets 页面、包名与应用名）与 AC3 代码路径本机可验；AC2/AC3 的真机安装与手势操作列未验证清单。</p></article>
+<footer class="foot">本文件自包含全部文档与样式，无需联网即可阅读<br>电脑侧 docs/ 为内容来源 · 重新生成后需重新发送本文件</footer>
+<script>
+(function () {
+  'use strict';
+
+  // 字号：14–24px，记住用户选择
+  var KEY = 'md2phone.fs';
+  var fs = 17;
+  try {
+    var saved = parseInt(localStorage.getItem(KEY) || '', 10);
+    if (saved >= 14 && saved <= 24) fs = saved;
+  } catch (e) { /* 隐私模式等场景下 localStorage 不可用，用默认字号 */ }
+
+  function applyFs() { document.documentElement.style.setProperty('--fs', fs + 'px'); }
+  applyFs();
+
+  document.querySelectorAll('[data-fs]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      fs = Math.min(24, Math.max(14, fs + parseInt(btn.dataset.fs, 10)));
+      applyFs();
+      try { localStorage.setItem(KEY, String(fs)); } catch (e) {}
+    });
+  });
+
+  // 目录抽屉
+  var body = document.body;
+  var tocBtn = document.getElementById('tocBtn');
+  var backdrop = document.querySelector('.toc-backdrop');
+  if (tocBtn) {
+    // 没有目录条目时隐藏按钮
+    if (!document.querySelector('.toc-panel a')) tocBtn.style.display = 'none';
+    tocBtn.addEventListener('click', function () { body.classList.toggle('toc-open'); });
+  }
+  if (backdrop) backdrop.addEventListener('click', function () { body.classList.remove('toc-open'); });
+  document.querySelectorAll('.toc-panel a').forEach(function (a) {
+    a.addEventListener('click', function () { body.classList.remove('toc-open'); });
+  });
+
+  // ---- 阅读位置记忆（按文档存手机本地，百分比定位：调字号/换设备仍落回同处）----
+  function docHeight() {
+    return document.documentElement.scrollHeight - window.innerHeight;
+  }
+  var isSingle = !!document.querySelector('.single-doc');   // 单文件整库形态
+  var isReader = !isSingle && !!document.querySelector('.doc'); // 多页阅读形态
+
+  function savePos() {
+    try {
+      if (isReader) {
+        var h = docHeight();
+        if (h <= 0) return;
+        var y = window.scrollY / h;
+        if (y <= 0.002 || y >= 0.998) y = 0;
+        localStorage.setItem('md2phone.pos:' + location.pathname, y.toFixed(4));
+      } else if (isSingle) {
+        var secs = document.querySelectorAll('.single-doc');
+        if (!secs.length) return;
+        var cur = secs[0];
+        for (var i = 0; i < secs.length; i++) {
+          if (secs[i].offsetTop <= window.scrollY + window.innerHeight * 0.35) cur = secs[i];
+        }
+        var rel = cur.offsetHeight > 0
+          ? (window.scrollY - cur.offsetTop) / cur.offsetHeight : 0;
+        localStorage.setItem('md2phone.pos:single',
+          JSON.stringify({ s: cur.id, r: +Math.max(0, Math.min(0.998, rel)).toFixed(4) }));
+      }
+    } catch (e) { /* localStorage 不可用则不记忆 */ }
+  }
+
+  function restorePos() {
+    try {
+      if (isReader) {
+        var saved = parseFloat(localStorage.getItem('md2phone.pos:' + location.pathname));
+        if (!(saved > 0.002 && saved < 0.998)) return;
+        setTimeout(function () {
+          if (window.scrollY > 0) return; // 用户已自行滚动，不打扰
+          var h = docHeight();
+          if (h > 0) window.scrollTo(0, saved * h);
+        }, 150);
+        window.addEventListener('load', function () {
+          if (window.scrollY > 0) return;
+          var h2 = docHeight();
+          if (h2 > 0) window.scrollTo(0, saved * h2);
+        });
+      } else if (isSingle) {
+        var raw = localStorage.getItem('md2phone.pos:single');
+        if (!raw) return;
+        var o = JSON.parse(raw);
+        var el = o.s && document.getElementById(o.s);
+        if (!el || !(o.r > 0.002 && o.r < 0.998)) return;
+        setTimeout(function () {
+          if (window.scrollY > 0) return;
+          window.scrollTo(0, el.offsetTop + o.r * el.offsetHeight);
+        }, 150);
+      }
+    } catch (e) {}
+  }
+  restorePos();
+
+  var saveTimer = null;
+  window.addEventListener('scroll', function () {
+    if (saveTimer) return;
+    saveTimer = setTimeout(function () { saveTimer = null; savePos(); }, 400);
+  }, { passive: true });
+  window.addEventListener('pagehide', savePos);
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') savePos();
+  });
+
+  // Service Worker：HTTPS（或 localhost）下注册；离线回退与更新由 sw.js 负责
+  var secure = location.protocol === 'https:' ||
+    location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  if ('serviceWorker' in navigator && secure) {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  }
+})();
+
+</script>
+</body>
+</html>
