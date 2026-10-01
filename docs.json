@@ -1,5 +1,29 @@
 [
   {
+    "slug": "bc5441b46c",
+    "title": "md2phone · 内容与构建约定（AGENTS.md）",
+    "minutes": 4,
+    "updated": "2026-10-01 21:38"
+  },
+  {
+    "slug": "04c6e90faa",
+    "title": "md2phone · 把 Markdown 放进手机",
+    "minutes": 8,
+    "updated": "2026-10-01 21:38"
+  },
+  {
+    "slug": "ea877eb60d",
+    "title": "交付记录 · md2phone（2026-09-30）",
+    "minutes": 9,
+    "updated": "2026-10-01 21:38"
+  },
+  {
+    "slug": "899b96eadf",
+    "title": "需求与验收 · md 文档手机阅读（2026-09-30）",
+    "minutes": 10,
+    "updated": "2026-10-01 21:38"
+  },
+  {
     "slug": "76a7821113",
     "title": "FDE 工作指南（Forward Deployed Engineer Work Guide）",
     "minutes": 61,
@@ -21,30 +45,6 @@
     "slug": "c880ec32f7",
     "title": "把 md 放到手机上：PWA 跨端与实践笔记",
     "minutes": 10,
-    "updated": "2026-10-01 11:19"
-  },
-  {
-    "slug": "bc5441b46c",
-    "title": "md2phone · 内容与构建约定（AGENTS.md）",
-    "minutes": 4,
-    "updated": "2026-10-01 11:19"
-  },
-  {
-    "slug": "04c6e90faa",
-    "title": "md2phone · 把 Markdown 放进手机",
-    "minutes": 8,
-    "updated": "2026-10-01 11:19"
-  },
-  {
-    "slug": "ea877eb60d",
-    "title": "交付记录 · md2phone（2026-09-30）",
-    "minutes": 9,
-    "updated": "2026-10-01 11:19"
-  },
-  {
-    "slug": "899b96eadf",
-    "title": "需求与验收 · md 文档手机阅读（2026-09-30）",
-    "minutes": 8,
     "updated": "2026-10-01 11:19"
   }
 ]

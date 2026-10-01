@@ -63,16 +63,18 @@
 <h3 id="a3-appapk-app">用法 A3 · 安卓 App（<code>文档库.apk</code>）：真 App 形态</h3>
 <ol>
 <li><strong>安装（一次）</strong>：把 <code>文档库.apk</code> 传到手机点开安装（首次需允许「安装未知应用」）；桌面出现「文档库」图标，点开即文档列表，出厂已内置全部文档，离线可读；</li>
-<li><strong>日常更新（约 20 秒，不重装）</strong>：电脑改 <code>docs/</code> → <code>python3 build.py</code> → 把新的 <code>文档库.html</code> 发到手机 → App 右上角菜单「<strong>导入文档库</strong>」选中该文件即完成；
+<li><strong>日常更新·方式一（联网，一键）</strong>：App 右上角菜单「<strong>从网站拉取最新</strong>」→ 自动比对版本 → 有更新即下载并加载（无更新提示「已是最新」）；前提：电脑侧已用「自动同步.command」确认发布上网站；</li>
+<li><strong>日常更新·方式二（离线可用，约 20 秒）</strong>：电脑 <code>python3 build.py</code> → 把新的 <code>文档库.html</code> 发到手机 → 菜单「<strong>导入文档库</strong>」选中该文件即完成；
    ⚠️ 导入的是 <strong><code>文档库.html</code> 这个整库文件</strong>（里面已打包全部文档的最新版本），不是 .md 原文——App 不解析 md；改了几篇都只需发这一个文件；</li>
-<li>「<strong>恢复内置</strong>」：菜单里一键回到出厂文档。</li>
+<li>「<strong>恢复内置</strong>」：菜单里一键回到出厂文档；</li>
+<li><strong>阅读位置记忆</strong>：每个文档自动记住读到的位置，重开即从上次处继续（存在手机本地，不跨设备）。</li>
 </ol>
 <p>iPhone 不在此用法内（苹果不允许直接装安装包），用 A / A2 / B。</p>
 <h3 id="b-pwa">用法 B · PWA 托管版【已配置并实测 ✅】</h3>
 <p>发布通道已全自动打通（2026-10-01 端到端验收：新增 63s / 删除 73s 反映到公网）：</p>
 <p><strong>文档库网址：https://zhouqs666.github.io/md2phone-docs/</strong></p>
 <ul>
-<li><strong>电脑侧</strong>：双击「自动同步.command」→ docs/ 文件一变 → 自动构建 → 自动发布（约 1 分钟后手机刷新即见最新）；</li>
+<li><strong>电脑侧</strong>：双击「自动同步.command」→ docs/ 文件一变 → 自动构建 → <strong>弹窗确认</strong>（发布 / 本次跳过 / 本会话不再询问）→ 约 1 分钟后手机刷新即见最新；</li>
 <li><strong>手机侧（一次性）</strong>：浏览器打开网址 → Android：Chrome 菜单「添加到主屏幕」；iPhone：Safari 分享「添加到主屏幕」→ 桌面图标，全屏 App 体验；</li>
 <li>托管为 GitHub Pages（仓库 <code>zhouqs666/md2phone-docs</code>，public——免费 Pages 的前提），已加 noindex 防搜索引擎收录；</li>
 <li>已知边界：GitHub Pages 有 ≤10 分钟 CDN 缓存（不可配置），对时效极敏感时用用法 A3 的「文档库.html 导入」（秒级）；停用：GitHub 网页进仓库 Settings → Delete。</li>
