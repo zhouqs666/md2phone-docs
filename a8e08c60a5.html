@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>形态选型复盘：为什么没有早点想到 App · 文档库</title>
 <meta name="theme-color" content="#2563eb">
+<meta name="theme-color" content="#0f1419" media="(prefers-color-scheme: dark)">
 <meta name="robots" content="noindex">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -17,14 +18,54 @@
 <body>
 <header class="top">
   <a class="icon-btn back" href="index.html" aria-label="返回列表">‹</a>
-  <div class="title">形态选型复盘：为什么没有早点想到 App</div>
-  <button class="icon-btn fs" data-fs="-1" aria-label="缩小字号">A−</button>
-  <button class="icon-btn fs" data-fs="1" aria-label="放大字号">A+</button>
-  <button class="icon-btn" id="tocBtn" aria-label="目录">☰</button>
+  <div class="title" id="docTitle">形态选型复盘：为什么没有早点想到 App</div>
 </header>
+<div class="fs-pop" id="fsPop" hidden>
+  <div class="fs-row">
+    <span class="fs-label">字号</span>
+    <div class="fs-seg" id="fsSeg">
+      <button type="button" data-fs-preset="14">小</button>
+      <button type="button" data-fs-preset="17">标准</button>
+      <button type="button" data-fs-preset="20">大</button>
+      <button type="button" data-fs-preset="23">特大</button>
+      <button type="button" data-fs-preset="26">超大</button>
+    </div>
+    <button type="button" class="fs-reset" id="fsReset">默认</button>
+  </div>
+  <div class="fs-row">
+    <span class="fs-label">外观</span>
+    <div class="fs-seg" id="themeSeg">
+      <button type="button" data-theme-set="auto">自动</button>
+      <button type="button" data-theme-set="light">浅色</button>
+      <button type="button" data-theme-set="dark">深色</button>
+    </div>
+  </div>
+  <div class="fs-row">
+    <span class="fs-label">代码</span>
+    <button type="button" class="fs-switch" id="prewrapBtn" role="switch" aria-checked="true">
+      <span class="sw-track"><span class="sw-dot"></span></span>
+      <span class="sw-text">长代码自动换行</span>
+    </button>
+  </div>
+  <div class="fs-ver">内容指纹 7573ae63103d · 来源 <span class="fs-src">—</span></div>
+</div>
+<button class="top-btn" id="topBtn" aria-label="回到顶部">↑</button>
+<nav class="readbar" aria-label="阅读工具">
+  <button type="button" class="readbar-btn" id="tocBtn" aria-label="目录"><span class="rb-ico">☰</span><span class="rb-txt">目录</span></button>
+  <button type="button" class="readbar-btn" id="fsBtn" aria-label="字号与外观"><span class="rb-ico">Aa</span><span class="rb-txt">字号</span></button>
+  <button type="button" class="readbar-btn" id="findBtn" aria-label="页内查找"><span class="rb-ico">🔍</span><span class="rb-txt">查找</span></button>
+</nav>
+<div class="find-bar" id="findBar" hidden>
+  <input id="findInput" type="search" placeholder="在本文中查找…" autocomplete="off">
+  <span class="f-count" id="findCount"></span>
+  <button class="icon-btn" id="findPrev" aria-label="上一个">↑</button>
+  <button class="icon-btn" id="findNext" aria-label="下一个">↓</button>
+  <button class="icon-btn" id="findClose" aria-label="关闭查找">×</button>
+</div>
+<div class="progress" id="progress"></div>
 <div class="toc-backdrop"></div>
 <nav class="toc-panel" aria-label="目录">
-  <div class="toc-head">目录</div>
+  <div class="toc-head"><span>目录</span><span class="toc-pct" id="tocPct"></span></div>
 <a class="lv2" href="#_1">一、时间线还原（谁在什么时候知道什么）</a>
 <a class="lv2" href="#_2">二、客观归因</a>
 <a class="lv2" href="#_3">三、参考项目到底解锁了什么</a>
@@ -32,11 +73,8 @@
 <a class="lv2" href="#fde">五、给 FDE 的三条带走的动作</a>
 </nav>
 <main><article class="doc">
-<h1 id="app">形态选型复盘：为什么没有早点想到 App</h1>
-<blockquote>
-<p>定位：FDE 演练「md 文档手机阅读」练习⑥的复盘笔记。客户问了一句「没让你参考前，你的结论一直是需要依赖第三方——是我表达不清晰，还是你认知不够？」本文是该问题的客观拆解。
-规则层结论已收进《FDE 工作指南》v0.6（3.2「既有资产」行）；本文是完整过程与细节。</p>
-</blockquote>
+<h1 id="app">形态选型复盘：为什么没有早点想到 App</h1><div class="doc-meta-line">更新于 2026-10-01 11:19 · 约 5 分钟 · 第 7/8 篇</div>
+<div class="doc-meta"><p>定位：FDE 演练「md 文档手机阅读」练习⑥的复盘笔记。客户问了一句「没让你参考前，你的结论一直是需要依赖第三方——是我表达不清晰，还是你认知不够？」本文是该问题的客观拆解。</p><p>规则层结论已收进《FDE 工作指南》v0.6（3.2「既有资产」行）；本文是完整过程与细节。</p></div>
 <h2 id="_1">一、时间线还原（谁在什么时候知道什么）</h2>
 <div class="table-wrap"><table>
 <thead>
@@ -137,6 +175,8 @@
 <li>环境评估必问<strong>既有资产</strong>（同类交付、参考实现、可复用管线，"哪怕叫别的名字、放在别处"）；</li>
 <li>M5 收尾题「有没有我没问到但重要的事」是防「interview-prep 情形」的唯一闸门，<strong>必问，不许省</strong>。</li>
 </ol>
+<nav class="doc-nav"><a class="prev" href="8f07a8680e.html"><span class="d-label">‹ 较新一篇</span><span class="d-title">GitHub Pages 全自动发布：绕开 git 端点、空仓库与排障假信号</span></a><a class="next" href="c880ec32f7.html"><span class="d-label">较早一篇 ›</span><span class="d-title">把 md 放到手机上：PWA 跨端与实践笔记</span></a></nav>
+<div class="build-id">文档库 内容指纹 7573ae63103d · 来源 <span class="fs-src">—</span></div>
 </article></main>
 <script src="app.js"></script>
 </body>

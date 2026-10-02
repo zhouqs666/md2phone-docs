@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>需求与验收 · md 文档手机阅读（2026-09-30） · 文档库</title>
 <meta name="theme-color" content="#2563eb">
+<meta name="theme-color" content="#0f1419" media="(prefers-color-scheme: dark)">
 <meta name="robots" content="noindex">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -17,14 +18,54 @@
 <body>
 <header class="top">
   <a class="icon-btn back" href="index.html" aria-label="返回列表">‹</a>
-  <div class="title">需求与验收 · md 文档手机阅读（2026-09-30）</div>
-  <button class="icon-btn fs" data-fs="-1" aria-label="缩小字号">A−</button>
-  <button class="icon-btn fs" data-fs="1" aria-label="放大字号">A+</button>
-  <button class="icon-btn" id="tocBtn" aria-label="目录">☰</button>
+  <div class="title" id="docTitle">需求与验收 · md 文档手机阅读（2026-09-30）</div>
 </header>
+<div class="fs-pop" id="fsPop" hidden>
+  <div class="fs-row">
+    <span class="fs-label">字号</span>
+    <div class="fs-seg" id="fsSeg">
+      <button type="button" data-fs-preset="14">小</button>
+      <button type="button" data-fs-preset="17">标准</button>
+      <button type="button" data-fs-preset="20">大</button>
+      <button type="button" data-fs-preset="23">特大</button>
+      <button type="button" data-fs-preset="26">超大</button>
+    </div>
+    <button type="button" class="fs-reset" id="fsReset">默认</button>
+  </div>
+  <div class="fs-row">
+    <span class="fs-label">外观</span>
+    <div class="fs-seg" id="themeSeg">
+      <button type="button" data-theme-set="auto">自动</button>
+      <button type="button" data-theme-set="light">浅色</button>
+      <button type="button" data-theme-set="dark">深色</button>
+    </div>
+  </div>
+  <div class="fs-row">
+    <span class="fs-label">代码</span>
+    <button type="button" class="fs-switch" id="prewrapBtn" role="switch" aria-checked="true">
+      <span class="sw-track"><span class="sw-dot"></span></span>
+      <span class="sw-text">长代码自动换行</span>
+    </button>
+  </div>
+  <div class="fs-ver">内容指纹 7573ae63103d · 来源 <span class="fs-src">—</span></div>
+</div>
+<button class="top-btn" id="topBtn" aria-label="回到顶部">↑</button>
+<nav class="readbar" aria-label="阅读工具">
+  <button type="button" class="readbar-btn" id="tocBtn" aria-label="目录"><span class="rb-ico">☰</span><span class="rb-txt">目录</span></button>
+  <button type="button" class="readbar-btn" id="fsBtn" aria-label="字号与外观"><span class="rb-ico">Aa</span><span class="rb-txt">字号</span></button>
+  <button type="button" class="readbar-btn" id="findBtn" aria-label="页内查找"><span class="rb-ico">🔍</span><span class="rb-txt">查找</span></button>
+</nav>
+<div class="find-bar" id="findBar" hidden>
+  <input id="findInput" type="search" placeholder="在本文中查找…" autocomplete="off">
+  <span class="f-count" id="findCount"></span>
+  <button class="icon-btn" id="findPrev" aria-label="上一个">↑</button>
+  <button class="icon-btn" id="findNext" aria-label="下一个">↓</button>
+  <button class="icon-btn" id="findClose" aria-label="关闭查找">×</button>
+</div>
+<div class="progress" id="progress"></div>
 <div class="toc-backdrop"></div>
 <nav class="toc-panel" aria-label="目录">
-  <div class="toc-head">目录</div>
+  <div class="toc-head"><span>目录</span><span class="toc-pct" id="tocPct"></span></div>
 <a class="lv2" href="#_1">问题定义</a>
 <a class="lv2" href="#_2">故事与验收标准</a>
 <a class="lv3" href="#1-mdp2">故事 1｜在手机上舒服地读一份 md（P2）</a>
@@ -34,9 +75,12 @@
 <a class="lv3" href="#5-p24">故事 5｜局域网版：图标 → 列表 → 阅读（P2）〔练习④新增，零第三方〕</a>
 <a class="lv3" href="#6-app-p25interview-prep-app">故事 6｜安卓 App：图标 → 列表 → 阅读 + 导入更新（P2）〔练习⑤新增；客户确认：interview-prep 壳模式 + App 内导入〕</a>
 <a class="lv3" href="#7-app-p28">故事 7｜确认式上传 + App 云端拉取 + 阅读位置记忆（P2）〔练习⑧，客户确认方案后实现〕</a>
+<a class="lv3" href="#8v17-p29">故事 8｜v1.7 体验升级：搜索、继续阅读、查找与内容形态补强（P2）〔练习⑨·体验复盘新增；访谈非目标中仅「不做全文搜索」一项由本轮复盘解除，账号/协作/在线编辑仍为非目标〕</a>
+<a class="lv3" href="#9v18-14-p29">故事 9｜v1.8 阅读体验整改：专家实读审查 14 项问题清零（P2）〔练习⑨二次复盘；以阅读体验专家身份对渲染页面逐屏实读后立项〕</a>
+<a class="lv3" href="#10v19-p2-6">故事 10｜v1.9 阅读体验整改二轮：宽内容自适应、随处可调的阅读控制层、目录统一（P2）〔客户实读反馈立项：宽表格/长代码要左右滑、字号与目录必须滚回篇首才能用、目录与内容结构怪；以阅读体验专家身份二次实读走查补充 6 项〕</a>
 </nav>
 <main><article class="doc">
-<h1 id="md-2026-09-30">需求与验收 · md 文档手机阅读（2026-09-30）</h1>
+<h1 id="md-2026-09-30">需求与验收 · md 文档手机阅读（2026-09-30）</h1><div class="doc-meta-line">更新于 2026-10-02 00:44 · 约 17 分钟 · 第 3/8 篇</div>
 <blockquote>
 <p>来源：客户访谈（2026-09-30，书面纪要即本文档）。风险分级说明：全部故事均为 P2（体验类），不触碰资金/隐私/生产数据，验证深度按 A1 取轻。</p>
 </blockquote>
@@ -55,61 +99,121 @@
 <h2 id="_2">故事与验收标准</h2>
 <h3 id="1-mdp2">故事 1｜在手机上舒服地读一份 md（P2）</h3>
 <p><strong>价值</strong>：作为文档读者，我希望 md 文档在手机上排版良好、字号可调，随时随地能看。</p>
-<p><strong>AC</strong>：
-1. 给定 docs/ 内一份含标题、表格、代码块、引用、列表的 md，当执行构建，then 生成对应阅读页；390px 视口下正文无需横向滚动；表格在自身容器内横向滚动、不撑破页面；代码块同样容器内滚动。
-2. 点击「A−/A+」正文字号改变一档（范围 14–24px），刷新后保持（localStorage）。
-3. 点击目录按钮展开全部二/三级标题；点击条目跳转至对应小节并收起目录。
-4. 断网后，曾经打开过的页面仍可阅读（Service Worker 缓存回退）。</p>
+<p><strong>AC</strong>：</p>
+<ol>
+<li>给定 docs/ 内一份含标题、表格、代码块、引用、列表的 md，当执行构建，then 生成对应阅读页；390px 视口下正文无需横向滚动；表格在自身容器内横向滚动、不撑破页面；代码块同样容器内滚动。</li>
+<li>点击「A−/A+」正文字号改变一档（范围 14–24px），刷新后保持（localStorage）。</li>
+<li>点击目录按钮展开全部二/三级标题；点击条目跳转至对应小节并收起目录。</li>
+<li>断网后，曾经打开过的页面仍可阅读（Service Worker 缓存回退）。</li>
+</ol>
 <h3 id="2p2">故事 2｜安装到手机桌面（P2）</h3>
 <p><strong>价值</strong>：作为文档读者，我希望像打开 App 一样从桌面图标进入文档库。</p>
-<p><strong>AC</strong>：
-1. 构建产物包含 manifest.webmanifest、192/512 图标与 apple-touch-icon，清单字段完整有效。
-2. 经 HTTPS 部署后，Android Chrome 菜单出现「添加到主屏幕」，iOS Safari 经「分享 → 添加到主屏幕」可安装，图标启动后以独立窗口（standalone）打开。
-   ——AC2 依赖真机与真实托管，本地只能验证 AC1；AC2 列入交付记录的未验证清单。〔练习③起 AC2 移出第一版；练习⑦起服务器侧已就绪：HTTPS 托管 https://zhouqs666.github.io/md2phone-docs/ 经公网验证，仅剩真机安装环节〕</p>
+<p><strong>AC</strong>：</p>
+<ol>
+<li>构建产物包含 manifest.webmanifest、192/512 图标与 apple-touch-icon，清单字段完整有效。</li>
+<li>经 HTTPS 部署后，Android Chrome 菜单出现「添加到主屏幕」，iOS Safari 经「分享 → 添加到主屏幕」可安装，图标启动后以独立窗口（standalone）打开。
+   ——AC2 依赖真机与真实托管，本地只能验证 AC1；AC2 列入交付记录的未验证清单。〔练习③起 AC2 移出第一版；练习⑦起服务器侧已就绪：HTTPS 托管 https://zhouqs666.github.io/md2phone-docs/ 经公网验证，仅剩真机安装环节〕</li>
+</ol>
 <h3 id="3p23">故事 3｜电脑侧更新同步到手机（P2）〔练习③起移出第一版，升级路径保留〕</h3>
 <p><strong>价值</strong>：作为文档作者，我把 md 放进文件夹、跑一次同步，手机端就能看到最新内容；删除亦然。</p>
-<p><strong>AC</strong>：
-1. 新增：docs/ 放入新 md → 构建 → 首页列表出现该文档，点开内容完整。
-2. 更新：修改已有 md → 构建 → 对应页面内容变为新版本，首页「更新时间」刷新。
-3. 删除：从 docs/ 移除 md → 构建 → 首页不再出现，产物中该页面文件消失。
-4. 自动化：<code>--watch</code> 模式下，docs/ 文件增改删后 5 秒内自动重建；若设置 DEPLOY_CMD，重建后自动执行发布命令。
-5. 同步链路：部署到 HTTPS 托管后，手机端刷新即见最新列表。——依赖故事 2 的托管环境，真机验证列入未验证清单。〔练习⑦：服务器侧端到端已实测通过——新增 63s / 删除 73s 反映到公网；真机刷新为最后一步〕</p>
+<p><strong>AC</strong>：</p>
+<ol>
+<li>新增：docs/ 放入新 md → 构建 → 首页列表出现该文档，点开内容完整。</li>
+<li>更新：修改已有 md → 构建 → 对应页面内容变为新版本，首页「更新时间」刷新。</li>
+<li>删除：从 docs/ 移除 md → 构建 → 首页不再出现，产物中该页面文件消失。</li>
+<li>自动化：<code>--watch</code> 模式下，docs/ 文件增改删后 5 秒内自动重建；若设置 DEPLOY_CMD，重建后自动执行发布命令。</li>
+<li>同步链路：部署到 HTTPS 托管后，手机端刷新即见最新列表。——依赖故事 2 的托管环境，真机验证列入未验证清单。〔练习⑦：服务器侧端到端已实测通过——新增 63s / 删除 73s 反映到公网；真机刷新为最后一步〕</li>
+</ol>
 <p><strong>依赖</strong>：客户自备任一免费静态托管（Netlify / GitHub Pages / Cloudflare Pages，README 给出推荐与步骤）。</p>
 <h3 id="4p23">故事 4｜单文件文档库（P2）〔练习③新增，第一版形态〕</h3>
 <p><strong>价值</strong>：作为文档读者，我希望拿到一个文件就能在手机上读全部文档——不注册、不安装、不联网、不依赖任何第三方服务。</p>
-<p><strong>AC</strong>：
-1. 构建产出单个自包含 HTML（<code>文档库.html</code>）：无外部样式/脚本/网络请求，双击即可在浏览器打开，断网可读。
-2. 390px 视口：文档列表与每篇正文均无横向滚动；表格在自身容器内滚动、不撑破页面。
-3. 点卡片跳到对应文档；每篇带「目录」可跳转小节；「↑ 文档列表」可返回。
-4. 字号 A−/A+ 生效；浏览器允许时刷新后保持。
-5. 传输路径：文件经微信/邮件/数据线到达手机后可直接打开阅读。——真机验证列入未验证清单，本地以 file:// 等效验证。</p>
+<p><strong>AC</strong>：</p>
+<ol>
+<li>构建产出单个自包含 HTML（<code>文档库.html</code>）：无外部样式/脚本/网络请求，双击即可在浏览器打开，断网可读。</li>
+<li>390px 视口：文档列表与每篇正文均无横向滚动；表格在自身容器内滚动、不撑破页面。</li>
+<li>点卡片跳到对应文档；每篇带「目录」可跳转小节；「↑ 文档列表」可返回。</li>
+<li>字号 A−/A+ 生效；浏览器允许时刷新后保持。</li>
+<li>传输路径：文件经微信/邮件/数据线到达手机后可直接打开阅读。——真机验证列入未验证清单，本地以 file:// 等效验证。</li>
+</ol>
 <p><strong>非目标（本版明确不做）</strong>：自动同步（更新 = 重发文件）；HTTPS 托管与桌面图标（升级路径，见故事 2/3）。</p>
 <h3 id="5-p24">故事 5｜局域网版：图标 → 列表 → 阅读（P2）〔练习④新增，零第三方〕</h3>
 <p><strong>价值</strong>：作为文档读者，我希望从手机桌面图标点进文档库，看到列表、点开阅读——但不引入任何第三方服务。（练习④客户需求：需要一个图标，点进去能看到文档列表，点击文档打开阅读。）</p>
-<p><strong>AC</strong>：
-1. 电脑侧一条命令（双击 <code>局域网分享.command</code> 或 <code>python3 build.py --serve --lan</code>）启动服务，绑定所有网卡并显示出局域网访问地址。
-2. 同一 WiFi 下手机浏览器打开该地址：可见文档列表，点击任一文档进入阅读页。——本地以本机局域网 IP 访问等效验证；真机列未验证清单。
-3. 站点含 manifest 与图标文件；「添加到主屏幕」后以图标进入（预期：iOS 全屏 standalone、Android 图标快捷方式）——真机行为列未验证清单。
-4. 局域网范围内「准同步」：电脑重新构建后，手机刷新即见最新；与单文件版共用同一内容源（docs/）与构建器，互不冲突。</p>
+<p><strong>AC</strong>：</p>
+<ol>
+<li>电脑侧一条命令（双击 <code>局域网分享.command</code> 或 <code>python3 build.py --serve --lan</code>）启动服务，绑定所有网卡并显示出局域网访问地址。</li>
+<li>同一 WiFi 下手机浏览器打开该地址：可见文档列表，点击任一文档进入阅读页。——本地以本机局域网 IP 访问等效验证；真机列未验证清单。</li>
+<li>站点含 manifest 与图标文件；「添加到主屏幕」后以图标进入（预期：iOS 全屏 standalone、Android 图标快捷方式）——真机行为列未验证清单。</li>
+<li>局域网范围内「准同步」：电脑重新构建后，手机刷新即见最新；与单文件版共用同一内容源（docs/）与构建器，互不冲突。</li>
+</ol>
 <p><strong>边界</strong>：电脑需开机且手机同 WiFi；离开该网络不可用（此为与托管版的本质差异，交付时向客户讲明）。</p>
 <h3 id="6-app-p25interview-prep-app">故事 6｜安卓 App：图标 → 列表 → 阅读 + 导入更新（P2）〔练习⑤新增；客户确认：interview-prep 壳模式 + App 内导入〕</h3>
 <p><strong>价值</strong>：作为文档读者，我要装一个真正的 App：桌面图标点开就是文档库，离线可读，日常更新不需要重装、不依赖电脑构建链。</p>
-<p><strong>AC</strong>：
-1. 构建流水线产出 <code>文档库.apk</code>（debug 签名，可直接安装）：内置当前全部文档（assets），首次安装开箱即读，全程离线。
-2. 点桌面图标 → 文档列表 → 点击进入阅读页；返回键在页内历史回退；390px 视口下阅读体验与网页版一致（字号/目录/表格容器滚动）。
-3. App 菜单「导入文档库」：经系统文件选择器选择 文档库.html 后立即切换为所导内容（拷入应用私有目录，重启后仍生效）；菜单「恢复内置」一键回到出厂文档。
-4. 内容更新 = 电脑改 md → <code>python3 build.py</code> → 把新的 文档库.html 发到手机 → App 内导入（约 20 秒，不重装）；APK 仅功能升级时重打。</p>
+<p><strong>AC</strong>：</p>
+<ol>
+<li>构建流水线产出 <code>文档库.apk</code>（debug 签名，可直接安装）：内置当前全部文档（assets），首次安装开箱即读，全程离线。</li>
+<li>点桌面图标 → 文档列表 → 点击进入阅读页；返回键在页内历史回退；390px 视口下阅读体验与网页版一致（字号/目录/表格容器滚动）。</li>
+<li>App 菜单「导入文档库」：经系统文件选择器选择 文档库.html 后立即切换为所导内容（拷入应用私有目录，重启后仍生效）；菜单「恢复内置」一键回到出厂文档。</li>
+<li>内容更新 = 电脑改 md → <code>python3 build.py</code> → 把新的 文档库.html 发到手机 → App 内导入（约 20 秒，不重装）；APK 仅功能升级时重打。</li>
+</ol>
 <p><strong>非目标</strong>：iOS App（苹果签名门槛，客户确认跟随参考模式结论，iPhone 走 PWA/单文件）；自动同步（局域网拉取列为后续可选）。</p>
 <p><strong>验证边界</strong>：AC1 静态检查（APK 结构、assets 页面、包名与应用名）与 AC3 代码路径本机可验；AC2/AC3 的真机安装与手势操作列未验证清单。</p>
 <h3 id="7-app-p28">故事 7｜确认式上传 + App 云端拉取 + 阅读位置记忆（P2）〔练习⑧，客户确认方案后实现〕</h3>
 <p><strong>价值</strong>：作为文档作者，我希望电脑上的更新经我确认后才上传网站；作为读者，我希望在 App 上一键拉取最新内容，并且每个文档都能从上次读到的地方继续。</p>
-<p><strong>AC</strong>：
-1. 确认门：自动通道检测到 docs/ 变化 → 弹出系统对话框【发布 / 本次跳过 / 本会话不再询问】；跳过 → 不发布且下次变化再次询问；确认 → 发布；「本会话不再询问」后本进程内不再弹窗。手动运行 publish_github.py 视为已确认，不弹窗。（跳过/确认两分支已自动化验证：F1-RESULT PASS；弹窗点击为人工验证项）
-2. 发布侧提供 <code>version.json</code>（内容指纹）与 <code>library.html</code>（整库快照），且站点构建产物确定性可复现（相同 docs → 相同产物 → 指纹一致，跳过守卫有效）。
-3. App 菜单「从网站拉取最新」：比对指纹 → 无更新提示「已是最新」；有更新 → 下载整库快照 → 大小与内容校验 → 原子替换本地副本 → 立即加载并提示大小；失败（无网络/校验不过）不影响本地已有内容。（协议与产物已公网验证；按钮手势真机验）
-4. 阅读位置记忆：多页阅读页按文档记忆滚动位置（百分比），重开恢复；单文件库按「文档 ID + 段内比例」记忆恢复；跨文档互不干扰；记忆仅存本机 localStorage。（Playwright 自动化验证；真机 WebView 手感待验）</p>
+<p><strong>AC</strong>：</p>
+<ol>
+<li>确认门：自动通道检测到 docs/ 变化 → 弹出系统对话框【发布 / 本次跳过 / 本会话不再询问】；跳过 → 不发布且下次变化再次询问；确认 → 发布；「本会话不再询问」后本进程内不再弹窗。手动运行 publish_github.py 视为已确认，不弹窗。（跳过/确认两分支已自动化验证：F1-RESULT PASS；弹窗点击为人工验证项）</li>
+<li>发布侧提供 <code>version.json</code>（内容指纹）与 <code>library.html</code>（整库快照），且站点构建产物确定性可复现（相同 docs → 相同产物 → 指纹一致，跳过守卫有效）。</li>
+<li>App 菜单「从网站拉取最新」：比对指纹 → 无更新提示「已是最新」；有更新 → 下载整库快照 → 大小与内容校验 → 原子替换本地副本 → 立即加载并提示大小；失败（无网络/校验不过）不影响本地已有内容。（协议与产物已公网验证；按钮手势真机验）</li>
+<li>阅读位置记忆：多页阅读页按文档记忆滚动位置（百分比），重开恢复；单文件库按「文档 ID + 段内比例」记忆恢复；跨文档互不干扰；记忆仅存本机 localStorage。（Playwright 自动化验证；真机 WebView 手感待验）</li>
+</ol>
 <p><strong>非目标</strong>：App 后台自动拉取（仅按钮手动）；跨设备位置漫游。</p>
 <p><strong>验证结果</strong>：F1-RESULT PASS（分支A 跳过/分支B 确认）；F2 协议模拟 PASS（公网端点+校验+落盘+渲染）；F3 见 verify_memory.py 输出。</p>
+<h3 id="8v17-p29">故事 8｜v1.7 体验升级：搜索、继续阅读、查找与内容形态补强（P2）〔练习⑨·体验复盘新增；访谈非目标中仅「不做全文搜索」一项由本轮复盘解除，账号/协作/在线编辑仍为非目标〕</h3>
+<p><strong>价值</strong>：作为文档读者，我希望文档多了也能快速定位内容、随时接着上次继续读，阅读器具备完整的手感与离线秒开体验。</p>
+<p><strong>AC</strong>：</p>
+<ol>
+<li>列表搜索：首页搜索框输入关键词 → 按标题/正文过滤卡片，正文命中显示高亮片段与「命中 n/共 m 篇」；清空恢复。索引构建时内联进首页（file:// 与离线可用）。单文件版从 DOM 建索引，Enter 跳到第一篇命中文档并闪烁标记。</li>
+<li>继续阅读：读过某篇（非顶部/结尾）后回列表 → 顶部出现「继续阅读」横幅（最近在读一篇 + 上次位置百分比），点击直达该位置；列表页返回后滚动位置保持，不回顶。</li>
+<li>页内查找：阅读页 ⌕ 打开查找条 → 命中处高亮、显示 n/m、↑↓ 循环定位、× 或 Esc 清除；单文件版作用于全部文档（上限 500 处防卡顿）。</li>
+<li>阅读辅助：目录随滚动高亮当前小节；顶部阅读进度条；代码块一键复制（按钮固定于滚动容器右上角）；正文图片点击灯箱放大；底部「上一篇/下一篇」（单文件版为篇内锚点）。</li>
+<li>外观与字号：◐ 三档（跟随系统/浅色/深色）即时生效且刷新保持；A−/A+ 之间显示当前档位，点击恢复默认 17。</li>
+<li>秒开与更新感知：静态壳（样式/脚本/图标/清单）cache-first，打开不被网络阻塞（HTML 仍 network-first 保证内容最新）；SW 换代激活后向已打开页面广播「内容已更新」提示条（首次安装不弹）。</li>
+<li>图片打包：docs/ 内 md 引用的本地图片，构建后 PWA 版拷入 site/assets/docs/<slug>/ 并改写相对路径；单文件版内嵌 data URI（字节级一致）；随 APK 资产同步。找不到的图片保留原引用并构建时告警。</li>
+<li>安卓 App：文档内外链（http/https/mailto/tel/sms）调起系统应用，App 内仅保留 file:// 导航；「从网站拉取最新」全程进度对话框（连接→下载），可取消且取消不落盘；「导入文档库」校验文件（≥2KB 且含整库标记），选错提示不加载；启动时静默比对版本指纹，不一致才弹窗询问（不自动下载）；夜间主题（values-night）跟随系统，标题栏/状态栏与暗色内容一致。</li>
+</ol>
+<p><strong>验证结果</strong>：verify_extras.py 34 项 PASS（新增可重复脚本，覆盖 AC1–7）；六套回归全过（build/single/lan/memory/ui/extras）；AC8 为代码路径本机验证 + APK 重打成功，真机手势列未验证清单。</p>
+<h3 id="9v18-14-p29">故事 9｜v1.8 阅读体验整改：专家实读审查 14 项问题清零（P2）〔练习⑨二次复盘；以阅读体验专家身份对渲染页面逐屏实读后立项〕</h3>
+<p><strong>价值</strong>：作为文档读者，我希望长文档在手机上"读得进去"——内容不被静默裁切、界面不喧宾夺主、长滚动有节奏有去向。</p>
+<p><strong>AC</strong>：</p>
+<ol>
+<li>宽内容可发现：表格与代码块两缘在可滑动方向显示渐隐提示；表头允许换行——「可信度图例表」恢复首屏完整可读，流程图裁切处有滑动暗示。</li>
+<li>复制按钮置于代码块上方预留工具位（几何断言：按钮底边 ≤ 代码块顶边），不遮挡任何正文。</li>
+<li>开篇 blockquote 升级为「文档头卡」：从源文本逐行还原字段结构（修复 markdown 软合并导致的粘连），正常字色；仅当正文开头（允许 h1 在前）即该引用块时触发，不误伤普通 callout。</li>
+<li>行内 code 标记加描边，浅色下「已实践/待验证/假设」可信度标记肉眼可辨。</li>
+<li>阅读页顶栏收敛为 <code>‹ 标题 Aa 🔍 ☰</code>：字号（A−/档位/A+，点档位恢复默认 17）与外观三档收进 Aa 弹出层（点外部/Esc 收起）。</li>
+<li>顶栏下滑隐退、上滑唤出（弹出层/抽屉打开时保持可见）；深滚动时顶栏标题自动切换为当前小节名，回到篇首恢复文档标题。</li>
+<li>长文档辅助：h1 下元信息行（更新时间 · 时长 · 序号/总篇数）；右下角「↑ 回到顶部」深滚动出现；「目录」标题下自带列表压缩渲染；「变更记录」小节折叠为「展开变更记录（N 条）」。</li>
+<li>层级与节奏：h3 带品牌色左侧竖条、h4 加粗；列表条目间距加大、bullet 与文本间距收紧。</li>
+<li>交互修补：目录遮罩层级降至顶栏之下（☰ 可再次点击关闭）；Esc 依次关闭灯箱/查找条/弹出层/抽屉；底部导航语义改为「‹ 较新一篇 / 较早一篇 ›」。</li>
+<li>暗色正文亮度微调（#e6e9ee → #d5dbe3）；首页卡片摘要收紧为单行。</li>
+<li>源格式修复：《需求与验收》8 处「<strong>AC</strong>：」后缺空行导致 AC 列表被吞成段落墙——补空行后 36 条 AC 恢复列表形态（渲染断言：ol 条目数 = 36）。</li>
+</ol>
+<p><strong>验证结果</strong>：verify_extras.py 扩至 46 项 PASS；六套回归全过；第二轮 390×844 实读复检（/tmp/ux_review2/，18 张截图逐张审读）确认各项生效且无新问题；APK 重打。</p>
+<h3 id="10v19-p2-6">故事 10｜v1.9 阅读体验整改二轮：宽内容自适应、随处可调的阅读控制层、目录统一（P2）〔客户实读反馈立项：宽表格/长代码要左右滑、字号与目录必须滚回篇首才能用、目录与内容结构怪；以阅读体验专家身份二次实读走查补充 6 项〕</h3>
+<p><strong>价值</strong>：作为文档读者，我读到一半随时能调字号、看目录，宽表格和长代码不再强迫我离开阅读动线去左右滑动。</p>
+<p><strong>AC</strong>：</p>
+<ol>
+<li>宽表格自适应：逐表检测溢出 → 自动进入压缩档（缩字号/收边距/允许断行）→ 多数表格直接装下（390px 实测：14 表 3 表压缩后 0 溢出）；仍放不下的才容器内滑动，两缘渐隐提示保留。字号/旋转等布局变化后自动重新适配。</li>
+<li>代码块阅读优先：默认自动换行（长命令、ASCII 流程图免左右滑动），设置面板开关可关回「保结构横向滑动」；代码块限高 65vh 内部滚动，不再占据数屏。</li>
+<li>阅读控制层随手可达：阅读中轻点正文空白处 → 顶栏与底部工具条（☰ 目录 / Aa 字号 / 🔍 查找）一起唤出，再点收起；下滑阅读自动隐退、上滑唤出；篇首顶栏常驻；首次进入沉浸态弹一次性手势提示（轻点屏幕可呼出…）；「↑ 回到顶部」保持独立悬浮键，深滚动任何时刻可及。</li>
+<li>字号五档预设（14/17/20/23/26，底部面板直选 + 当前档高亮 + 「默认」键），改字号锚定当前阅读位置不跳动（禁用浏览器滚动锚定 + 适配表格后按锚点底边补偿滚动）；旧版逐 px 记忆自动吸附最近档；刷新保持。</li>
+<li>目录结构与内容统一：正文手写「目录」小节构建时移除（不可点击、占一整屏、与真实标题粒度不一致）；抽屉成为唯一目录——打开即高亮并定位当前小节、头部显示已读百分比、无「目录」自引用条目；单文件版工具条 ☰ 按当前读到文档动态装配抽屉内容。</li>
+<li>外观三选分段按钮（自动/浅色/深色）替代循环单击，当前项高亮。</li>
+<li>细节修复：正文 overflow-wrap 防长词/长 URL 溢出；行内 code 任意断行；可滚动表格/代码块加 tabindex 可聚焦（键盘可达）；暗色模式 theme-color 适配；「目录」小节紧邻的分隔线一并收纳避免双线。</li>
+</ol>
+<p><strong>验证结果</strong>：verify_extras.py 扩至 58 项 PASS；六套回归全过（build/single/lan/memory/ui/extras）；字号位置保持经 17→26→14→20→17 往返实测（正在读的段落始终覆盖视口顶、目标小节留在屏内，PWA 与单文件双形态）；第二轮 390×844 截图复检抽屉/工具条/面板视觉。</p>
+<nav class="doc-nav"><a class="prev" href="04c6e90faa.html"><span class="d-label">‹ 较新一篇</span><span class="d-title">md2phone · 把 Markdown 放进手机</span></a><a class="next" href="bc5441b46c.html"><span class="d-label">较早一篇 ›</span><span class="d-title">md2phone · 内容与构建约定（AGENTS.md）</span></a></nav>
+<div class="build-id">文档库 内容指纹 7573ae63103d · 来源 <span class="fs-src">—</span></div>
 </article></main>
 <script src="app.js"></script>
 </body>

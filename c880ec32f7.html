@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>把 md 放到手机上：PWA 跨端与实践笔记 · 文档库</title>
 <meta name="theme-color" content="#2563eb">
+<meta name="theme-color" content="#0f1419" media="(prefers-color-scheme: dark)">
 <meta name="robots" content="noindex">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -17,14 +18,54 @@
 <body>
 <header class="top">
   <a class="icon-btn back" href="index.html" aria-label="返回列表">‹</a>
-  <div class="title">把 md 放到手机上：PWA 跨端与实践笔记</div>
-  <button class="icon-btn fs" data-fs="-1" aria-label="缩小字号">A−</button>
-  <button class="icon-btn fs" data-fs="1" aria-label="放大字号">A+</button>
-  <button class="icon-btn" id="tocBtn" aria-label="目录">☰</button>
+  <div class="title" id="docTitle">把 md 放到手机上：PWA 跨端与实践笔记</div>
 </header>
+<div class="fs-pop" id="fsPop" hidden>
+  <div class="fs-row">
+    <span class="fs-label">字号</span>
+    <div class="fs-seg" id="fsSeg">
+      <button type="button" data-fs-preset="14">小</button>
+      <button type="button" data-fs-preset="17">标准</button>
+      <button type="button" data-fs-preset="20">大</button>
+      <button type="button" data-fs-preset="23">特大</button>
+      <button type="button" data-fs-preset="26">超大</button>
+    </div>
+    <button type="button" class="fs-reset" id="fsReset">默认</button>
+  </div>
+  <div class="fs-row">
+    <span class="fs-label">外观</span>
+    <div class="fs-seg" id="themeSeg">
+      <button type="button" data-theme-set="auto">自动</button>
+      <button type="button" data-theme-set="light">浅色</button>
+      <button type="button" data-theme-set="dark">深色</button>
+    </div>
+  </div>
+  <div class="fs-row">
+    <span class="fs-label">代码</span>
+    <button type="button" class="fs-switch" id="prewrapBtn" role="switch" aria-checked="true">
+      <span class="sw-track"><span class="sw-dot"></span></span>
+      <span class="sw-text">长代码自动换行</span>
+    </button>
+  </div>
+  <div class="fs-ver">内容指纹 7573ae63103d · 来源 <span class="fs-src">—</span></div>
+</div>
+<button class="top-btn" id="topBtn" aria-label="回到顶部">↑</button>
+<nav class="readbar" aria-label="阅读工具">
+  <button type="button" class="readbar-btn" id="tocBtn" aria-label="目录"><span class="rb-ico">☰</span><span class="rb-txt">目录</span></button>
+  <button type="button" class="readbar-btn" id="fsBtn" aria-label="字号与外观"><span class="rb-ico">Aa</span><span class="rb-txt">字号</span></button>
+  <button type="button" class="readbar-btn" id="findBtn" aria-label="页内查找"><span class="rb-ico">🔍</span><span class="rb-txt">查找</span></button>
+</nav>
+<div class="find-bar" id="findBar" hidden>
+  <input id="findInput" type="search" placeholder="在本文中查找…" autocomplete="off">
+  <span class="f-count" id="findCount"></span>
+  <button class="icon-btn" id="findPrev" aria-label="上一个">↑</button>
+  <button class="icon-btn" id="findNext" aria-label="下一个">↓</button>
+  <button class="icon-btn" id="findClose" aria-label="关闭查找">×</button>
+</div>
+<div class="progress" id="progress"></div>
 <div class="toc-backdrop"></div>
 <nav class="toc-panel" aria-label="目录">
-  <div class="toc-head">目录</div>
+  <div class="toc-head"><span>目录</span><span class="toc-pct" id="tocPct"></span></div>
 <a class="lv2" href="#pwa">一、方案选型结论（为什么是 PWA 文档站）</a>
 <a class="lv3" href="#_1">三形态对比（同一构建器的三种交付形态）</a>
 <a class="lv3" href="#4">图标的技术本质（练习④：客户要「图标 → 列表 → 阅读」时）</a>
@@ -36,11 +77,8 @@
 <a class="lv2" href="#_5">六、遗留（下次实践补）</a>
 </nav>
 <main><article class="doc">
-<h1 id="md-pwa">把 md 放到手机上：PWA 跨端与实践笔记</h1>
-<blockquote>
-<p>定位：FDE 演练「md 文档手机阅读」的<strong>实践层</strong>沉淀——技术差异、操作步骤、踩坑记录。
-规则层结论已收进《FDE 工作指南》v0.4（3.2「用户端」行、边界契约「代办/引导」条目）；本文档只放不进指南的具体与技术内容。副本已入文档库供手机阅读，以本文件（实践沉淀/）为正本。</p>
-</blockquote>
+<h1 id="md-pwa">把 md 放到手机上：PWA 跨端与实践笔记</h1><div class="doc-meta-line">更新于 2026-10-01 11:19 · 约 10 分钟 · 第 8/8 篇</div>
+<div class="doc-meta"><p>定位：FDE 演练「md 文档手机阅读」的**实践层**沉淀——技术差异、操作步骤、踩坑记录。</p><p>规则层结论已收进《FDE 工作指南》v0.4（3.2「用户端」行、边界契约「代办/引导」条目）；本文档只放不进指南的具体与技术内容。副本已入文档库供手机阅读，以本文件（实践沉淀/）为正本。</p></div>
 <h2 id="pwa">一、方案选型结论（为什么是 PWA 文档站）</h2>
 <div class="table-wrap"><table>
 <thead>
@@ -247,6 +285,8 @@
 <li>iOS 上第三方浏览器（Chrome for iOS）添加主屏的行为不统一，本次未验证，口径上只承诺 Safari。</li>
 <li><code>--watch</code> 循环内「修改文件」路径只被间接覆盖，未单独断言。</li>
 </ul>
+<nav class="doc-nav"><a class="prev" href="a8e08c60a5.html"><span class="d-label">‹ 较新一篇</span><span class="d-title">形态选型复盘：为什么没有早点想到 App</span></a><span class="doc-nav-side next"><span class="d-label">较早一篇 ›</span></span></nav>
+<div class="build-id">文档库 内容指纹 7573ae63103d · 来源 <span class="fs-src">—</span></div>
 </article></main>
 <script src="app.js"></script>
 </body>

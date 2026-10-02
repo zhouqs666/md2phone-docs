@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>文档库（单文件版）</title>
+<meta name="theme-color" content="#2563eb">
+<meta name="theme-color" content="#0f1419" media="(prefers-color-scheme: dark)">
 <meta name="robots" content="noindex">
 <style>
 :root {
@@ -16,23 +18,68 @@
   --brand-weak: #eff4ff;
   --line: #e5e7eb;
   --code-bg: #f3f4f6;
+  --mark-bg: #fde68a;
   --shadow: 0 1px 3px rgba(15, 23, 42, .08);
+  --scroll-shadow: rgba(15, 23, 42, .16);   /* 横向可滑动渐隐提示 */
+  /* Pygments 代码高亮 token 配色（亮色） */
+  --tok-k: #7c3aed;   /* keyword */
+  --tok-s: #b45309;   /* string */
+  --tok-c: #9ca3af;   /* comment */
+  --tok-f: #1d4ed8;   /* function name */
+  --tok-t: #0e7490;   /* type / class name */
+  --tok-b: #0369a1;   /* builtin */
+  --tok-m: #b91c1c;   /* number */
+  --tok-o: #4b5563;   /* operator / punctuation */
+}
+
+/* 暗色变量：手动切换（html[data-theme="dark"]）与跟随系统（媒体查询）两处保持一致 */
+:root[data-theme="dark"] {
+  --bg: #0f1419;
+  --card: #1a2028;
+  --text: #d5dbe3;
+  --muted: #9aa4b2;
+  --brand: #6d9bff;
+  --brand-weak: #1c2740;
+  --line: #2a323d;
+  --code-bg: #242c37;
+  --mark-bg: #a16207;
+  --shadow: 0 1px 3px rgba(0, 0, 0, .4);
+  --scroll-shadow: rgba(0, 0, 0, .55);
+  --tok-k: #c4b5fd;
+  --tok-s: #fcd34d;
+  --tok-c: #6b7280;
+  --tok-f: #93c5fd;
+  --tok-t: #67e8f9;
+  --tok-b: #7dd3fc;
+  --tok-m: #fca5a5;
+  --tok-o: #9ca3af;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #0f1419;
     --card: #1a2028;
-    --text: #e6e9ee;
+    --text: #d5dbe3;
     --muted: #9aa4b2;
     --brand: #6d9bff;
     --brand-weak: #1c2740;
     --line: #2a323d;
     --code-bg: #242c37;
+    --mark-bg: #a16207;
     --shadow: 0 1px 3px rgba(0, 0, 0, .4);
+    --scroll-shadow: rgba(0, 0, 0, .55);
+    --tok-k: #c4b5fd;
+    --tok-s: #fcd34d;
+    --tok-c: #6b7280;
+    --tok-f: #93c5fd;
+    --tok-t: #67e8f9;
+    --tok-b: #7dd3fc;
+    --tok-m: #fca5a5;
+    --tok-o: #9ca3af;
   }
 }
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; overflow-anchor: none; }
 body {
   margin: 0;
   background: var(--bg);
@@ -48,7 +95,10 @@ body {
   padding-top: calc(.55rem + env(safe-area-inset-top));
   background: var(--card);
   border-bottom: 1px solid var(--line);
+  transition: transform .25s ease;
 }
+/* 下滑阅读时顶栏与底部工具条一起隐退，上滑或点正文中央唤出（阅读沉浸） */
+body.top-hidden .top { transform: translateY(-102%); }
 .top .title {
   flex: 1; min-width: 0;
   font-size: 1rem; font-weight: 600;
@@ -65,7 +115,119 @@ body {
 }
 .icon-btn:active { background: var(--brand-weak); }
 .icon-btn.back { font-size: 1.5rem; padding: .2rem .6rem .35rem .3rem; }
-.icon-btn.fs { font-size: .88rem; font-weight: 600; }
+.icon-btn.sort { font-size: .78rem; font-weight: 600; }
+
+/* ---- 底部阅读工具条（目录/字号/查找/回顶，与顶栏同进退） ---- */
+.readbar {
+  position: fixed; left: 0; right: 0; z-index: 8;   /* 低于目录遮罩：抽屉打开时工具条让位 */
+  bottom: 0;
+  display: flex; justify-content: space-around; align-items: stretch;
+  padding: .3rem .6rem calc(.3rem + env(safe-area-inset-bottom));
+  background: var(--card);
+  border-top: 1px solid var(--line);
+  transition: transform .25s ease;
+}
+body.top-hidden .readbar { transform: translateY(110%); }
+.readbar-btn {
+  flex: 1; max-width: 5.5rem;
+  display: flex; flex-direction: column; align-items: center; gap: .12rem;
+  border: none; background: none; color: var(--brand);
+  padding: .3rem .2rem; border-radius: .6rem;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.readbar-btn:active { background: var(--brand-weak); }
+.readbar-btn .rb-ico { font-size: 1.12rem; line-height: 1.2; font-weight: 600; }
+.readbar-btn .rb-txt { font-size: .66rem; color: var(--muted); line-height: 1; }
+
+/* ---- 回到顶部（悬浮；工具条可见时升到其上方，隐退时落回右下角） ---- */
+.top-btn {
+  position: fixed; right: 1rem; z-index: 15;
+  bottom: calc(4.7rem + env(safe-area-inset-bottom));
+  width: 2.5rem; height: 2.5rem;
+  border: 1px solid var(--line); border-radius: 50%;
+  background: var(--card); color: var(--brand);
+  font-size: 1.05rem; line-height: 1;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .16);
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s, bottom .25s ease;
+  cursor: pointer;
+}
+body.top-hidden .top-btn { bottom: calc(1rem + env(safe-area-inset-bottom)); }
+body.deep-scroll .top-btn { opacity: 1; pointer-events: auto; }
+
+/* ---- 字号/外观/代码换行 底部设置面板 ---- */
+.fs-pop {
+  position: fixed; left: .5rem; right: .5rem; z-index: 26;
+  bottom: calc(4rem + env(safe-area-inset-bottom));
+  background: var(--card);
+  border: 1px solid var(--line); border-radius: 16px;
+  box-shadow: 0 -6px 34px rgba(0, 0, 0, .2);
+  padding: .8rem .9rem;
+  animation: fs-pop-in .18s ease;
+}
+@keyframes fs-pop-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+.fs-row { display: flex; align-items: center; gap: .55rem; }
+.fs-row + .fs-row { margin-top: .75rem; }
+.fs-label { font-size: .8rem; color: var(--muted); width: 2.6em; flex: none; }
+.fs-seg {
+  flex: 1; display: flex; gap: .25rem;
+  background: var(--bg); border-radius: 10px; padding: .18rem;
+}
+.fs-seg button {
+  flex: 1; border: none; background: none; color: var(--text);
+  font-size: .8rem; padding: .38rem 0; border-radius: 8px;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.fs-seg button:active { background: var(--brand-weak); }
+.fs-seg button.on { background: var(--card); color: var(--brand); font-weight: 700; box-shadow: var(--shadow); }
+.fs-reset {
+  flex: none; border: 1px solid var(--line); background: none; color: var(--muted);
+  font-size: .74rem; padding: .34rem .6rem; border-radius: 999px; cursor: pointer;
+}
+.fs-switch {
+  flex: 1; display: flex; align-items: center; gap: .5rem;
+  border: none; background: none; padding: .1rem 0;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.fs-switch .sw-track {
+  flex: none; width: 2.15rem; height: 1.3rem; border-radius: 999px;
+  background: var(--line); position: relative; transition: background .18s;
+}
+.fs-switch .sw-dot {
+  position: absolute; top: .14rem; left: .16rem;
+  width: 1.02rem; height: 1.02rem; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .3);
+  transition: transform .18s;
+}
+.fs-switch[aria-checked="true"] .sw-track { background: var(--brand); }
+.fs-switch[aria-checked="true"] .sw-dot { transform: translateX(.82rem); }
+.fs-switch .sw-text { font-size: .84rem; color: var(--text); }
+
+/* ---- 搜索（列表页） ---- */
+.search-row { max-width: 40rem; margin: .8rem auto 0; padding: 0 .9rem; }
+.search-box {
+  display: flex; align-items: center; gap: .15rem;
+  background: var(--card);
+  border: 1px solid var(--line); border-radius: 12px;
+  padding: .05rem .35rem .05rem .75rem;
+  box-shadow: var(--shadow);
+}
+.search-box .s-ico { color: var(--muted); font-size: 1rem; }
+.search-box input {
+  flex: 1; min-width: 0;
+  border: none; background: none; outline: none;
+  padding: .55rem 0; font-size: .95rem; color: var(--text);
+}
+.search-box input::placeholder { color: var(--muted); }
+.search-box .s-clear { font-size: 1.1rem; color: var(--muted); padding: .35rem .5rem; }
+.search-count { font-size: .78rem; color: var(--muted); padding: .5rem .2rem 0; }
+mark {
+  background: var(--mark-bg); color: var(--text);
+  padding: 0 .1em; border-radius: 3px;
+}
 
 /* ---- 首页列表 ---- */
 .list { max-width: 40rem; margin: 0 auto; padding: 1rem .9rem 2rem; }
@@ -81,11 +243,43 @@ body {
 }
 .card:active { background: var(--brand-weak); }
 .card h2 { margin: 0 0 .35rem; font-size: 1.02rem; line-height: 1.5; }
+.card .sum {
+  font-size: .82rem; color: var(--muted); line-height: 1.6;
+  margin: 0 0 .35rem;
+  display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.card .snippet {
+  font-size: .8rem; line-height: 1.6; color: var(--text);
+  background: var(--brand-weak); border-radius: 8px;
+  padding: .4rem .6rem; margin: .1rem 0 .35rem;
+  overflow-wrap: break-word;
+}
 .card .meta { font-size: .78rem; color: var(--muted); }
+.list.filtering .card { display: none; }
+.list.filtering .card.hit-title, .list.filtering .card.hit-body { display: block; }
+
+/* 继续阅读（首页横幅，数据来自阅读位置记忆） */
+.resume-card {
+  display: block;
+  background: var(--brand-weak);
+  border: 1px solid transparent;
+  border-radius: 14px;
+  padding: .85rem 1.1rem;
+  margin-bottom: .9rem;
+  color: inherit; text-decoration: none;
+}
+.resume-card:active { filter: brightness(.97); }
+.resume-card .r-label { font-size: .74rem; font-weight: 700; color: var(--brand); letter-spacing: .04em; }
+.resume-card .r-title { display: block; font-weight: 600; margin-top: .2rem; }
+.resume-card .r-meta { display: block; font-size: .76rem; color: var(--muted); margin-top: .15rem; }
 .empty {
   text-align: center; color: var(--muted);
   padding: 3.5rem 1rem; font-size: .92rem; line-height: 2;
 }
+/* 内容身份标识（页脚 / 设置面板，排障用） */
+.build-id { text-align: center; color: var(--muted); opacity: .75; font-size: .68rem; padding-top: 1rem; }
+.fs-ver { margin-top: .8rem; border-top: 1px dashed var(--line); padding-top: .6rem; color: var(--muted); font-size: .7rem; }
 .foot {
   max-width: 40rem; margin: 0 auto;
   padding: 0 1rem calc(1.5rem + env(safe-area-inset-bottom));
@@ -95,38 +289,92 @@ body {
 /* ---- 阅读页 ---- */
 main > .doc, main > article {
   max-width: 44rem; margin: 0 auto;
-  padding: 1.15rem 1.1rem calc(4rem + env(safe-area-inset-bottom));
+  padding: 1.15rem 1.1rem calc(4.5rem + env(safe-area-inset-bottom));
 }
+.doc { overflow-wrap: break-word; }   /* 长词/长 URL 断行，杜绝正文横向溢出 */
 .doc h1 { font-size: 1.42em; line-height: 1.4; margin: .2em 0 .8em; }
 .doc h2 {
   font-size: 1.22em; line-height: 1.45;
   margin: 1.9em 0 .7em; padding-bottom: .3em;
   border-bottom: 1px solid var(--line);
 }
-.doc h3 { font-size: 1.08em; margin: 1.5em 0 .5em; }
-.doc h4 { font-size: 1em; margin: 1.3em 0 .4em; }
+.doc h3 {
+  font-size: 1.12em; margin: 1.5em 0 .5em;
+  padding-left: .5em;
+  border-left: 3px solid var(--brand);
+}
+.doc h4 { font-size: 1em; margin: 1.3em 0 .4em; font-weight: 600; }
 .doc p { margin: .8em 0; }
-.doc ul, .doc ol { padding-left: 1.5em; margin: .8em 0; }
-.doc li { margin: .3em 0; }
-.doc li > p { margin: .3em 0; }
+.doc ul, .doc ol { padding-left: 1.3em; margin: .8em 0; }
+.doc li { margin: .45em 0; }
+.doc li > p { margin: .25em 0; }
 .doc a { color: var(--brand); }
 .doc hr { border: none; border-top: 1px solid var(--line); margin: 2em 0; }
 .doc img { max-width: 100%; height: auto; border-radius: 10px; }
+.doc img.zoomable { cursor: zoom-in; }
 .doc blockquote {
   margin: 1em 0; padding: .55em 1em;
   border-left: 4px solid var(--brand);
   background: var(--card); border-radius: 0 10px 10px 0;
-  color: var(--muted);
+  color: var(--text);
 }
 .doc blockquote p { margin: .35em 0; }
 
-/* 表格：容器内横向滚动，不撑破页面 */
+/* 文档头卡：开篇 meta（版本/定位/使用方式），由首个 blockquote 升级而来 */
+.doc-meta {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--brand);
+  border-radius: 10px;
+  padding: .65em .95em;
+  margin: 0 0 1.3em;
+  font-size: .93em; line-height: 1.7;
+}
+.doc-meta p { margin: .28em 0; }
+
+/* 阅读页 h1 下的元信息行 */
+.doc-meta-line {
+  color: var(--muted); font-size: .78rem;
+  margin: -0.3em 0 1.5em;
+}
+
+/* 「目录」标题下的自带目录列表：压缩渲染，不占两屏 */
+.doc ul.toc-list { font-size: .92em; line-height: 1.6; }
+.doc ul.toc-list li { margin: .12em 0; }
+
+/* 变更记录折叠（查阅型内容，不占阅读动线） */
+details.changelog {
+  margin: .8em 0 1.5em;
+  border: 1px solid var(--line); border-radius: 10px;
+  background: var(--card);
+}
+details.changelog summary {
+  cursor: pointer; list-style: none;
+  color: var(--brand); font-size: .88rem; font-weight: 600;
+  padding: .55em .95em;
+}
+details.changelog summary::-webkit-details-marker { display: none; }
+details.changelog[open] summary { border-bottom: 1px solid var(--line); }
+details.changelog > *:not(summary) { margin: .8em 1em; }
+
+/* 表格：先自适应收窄（.compact 由 JS 在溢出时挂上），仍放不下才容器内横滑；
+   两缘渐隐提示「还能滑」。 */
 .table-wrap {
   overflow-x: auto; -webkit-overflow-scrolling: touch;
   margin: 1em 0;
   border: 1px solid var(--line); border-radius: 10px;
-  background: var(--card);
+  background-color: var(--card);
+  background-image:
+    linear-gradient(to right, var(--card), rgba(0,0,0,0) 22px),
+    linear-gradient(to left, var(--card), rgba(0,0,0,0) 22px),
+    linear-gradient(to right, var(--scroll-shadow), rgba(0,0,0,0) 10px),
+    linear-gradient(to left, var(--scroll-shadow), rgba(0,0,0,0) 10px);
+  background-repeat: no-repeat;
+  background-attachment: local, local, scroll, scroll;
+  background-position: left center, right center, left center, right center;
+  background-size: 28px 100%, 28px 100%, 12px 100%, 12px 100%;
 }
+.table-wrap:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 .doc table { border-collapse: collapse; font-size: .86em; line-height: 1.55; }
 .doc th, .doc td {
   padding: .5em .75em;
@@ -135,31 +383,126 @@ main > .doc, main > article {
   text-align: left; vertical-align: top;
   min-width: 6em; /* 防止窄列被压成一字一行（中文短词 4 字需 ~5.5em） */
 }
-.doc th { white-space: nowrap; background: var(--brand-weak); font-weight: 600; }
+.doc th { background: var(--brand-weak); font-weight: 600; }
 .doc tr:last-child td { border-bottom: none; }
+/* 自适应紧凑档：缩字号、收 padding、允许任意断行——多数「放不下」的表格就此装下 */
+.table-wrap.compact { background-image: none; }
+.table-wrap.compact table { font-size: .78em; }
+.table-wrap.compact th, .table-wrap.compact td {
+  padding: .4em .55em; min-width: 2em; overflow-wrap: anywhere;
+}
 
-/* 代码块 */
+/* 代码块：默认换行（阅读优先，body.code-wrap）；
+   关闭换行时容器内横滑 + 两缘渐隐；超高块限高内滚，不打断阅读动线。 */
 .doc pre {
-  background: var(--code-bg);
+  background-color: var(--code-bg);
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: .8em .95em;
-  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  overflow: auto; -webkit-overflow-scrolling: touch;
+  max-height: 65vh;
   font-size: .8em; line-height: 1.65;
+  background-image:
+    linear-gradient(to right, var(--code-bg), rgba(0,0,0,0) 22px),
+    linear-gradient(to left, var(--code-bg), rgba(0,0,0,0) 22px),
+    linear-gradient(to right, var(--scroll-shadow), rgba(0,0,0,0) 10px),
+    linear-gradient(to left, var(--scroll-shadow), rgba(0,0,0,0) 10px);
+  background-repeat: no-repeat;
+  background-attachment: local, local, scroll, scroll;
+  background-position: left center, right center, left center, right center;
+  background-size: 28px 100%, 28px 100%, 12px 100%, 12px 100%;
 }
+.doc pre:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+body.code-wrap .doc pre {
+  white-space: pre-wrap; word-break: break-word; overflow-x: hidden;
+  background-image: none;
+}
+.pre-wrap { position: relative; margin: 1em 0; padding-top: 2.1rem; }
+.pre-wrap pre { margin: 0; }
 .doc code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   background: var(--code-bg);
-  padding: .12em .35em; border-radius: 5px;
+  border: 1px solid var(--line);
+  padding: .08em .3em; border-radius: 5px;
   font-size: .88em;
+  overflow-wrap: anywhere;   /* 行内长 token（路径/hash/URL）断行不撑破版面 */
 }
-.doc pre code { background: none; padding: 0; font-size: 1em; }
+.doc pre code { background: none; border: none; padding: 0; font-size: 1em; }
 .codehilite { background: var(--code-bg); border-radius: 10px; }
-.codehilite pre { border: none; margin: 0; background: none; }
+.codehilite pre { border: none; margin: 0; }
+.copy-btn {
+  position: absolute; top: 0; right: 0;
+  border: 1px solid var(--line);
+  background: var(--card); color: var(--muted);
+  font-size: .68rem; line-height: 1;
+  padding: .28rem .6rem; border-radius: 7px;
+  cursor: pointer; opacity: .75;
+}
+.copy-btn:active, .copy-btn.ok { opacity: 1; }
+.copy-btn.ok { color: var(--brand); border-color: var(--brand); }
+
+/* Pygments 代码高亮 token（取色走上方 CSS 变量，亮/暗自动适配） */
+.codehilite .k, .codehilite .kn, .codehilite .kc, .codehilite .kr,
+.codehilite .kp, .codehilite .ow, .codehilite .kt { color: var(--tok-k); font-weight: 600; }
+.codehilite .s, .codehilite .s1, .codehilite .s2, .codehilite .sd,
+.codehilite .sa, .codehilite .sb, .codehilite .sc, .codehilite .se,
+.codehilite .si, .codehilite .sx { color: var(--tok-s); }
+.codehilite .c, .codehilite .c1, .codehilite .cm, .codehilite .ch,
+.codehilite .cs, .codehilite .cd { color: var(--tok-c); font-style: italic; }
+.codehilite .nf, .codehilite .fm { color: var(--tok-f); font-weight: 600; }
+.codehilite .nc, .codehilite .ne, .codehilite .nn { color: var(--tok-t); font-weight: 600; }
+.codehilite .nb, .codehilite .bp { color: var(--tok-b); }
+.codehilite .m, .codehilite .mi, .codehilite .mf, .codehilite .mh,
+.codehilite .mo, .codehilite .il { color: var(--tok-m); }
+.codehilite .o, .codehilite .op, .codehilite .p { color: var(--tok-o); }
+.codehilite .err { border: none; }
+.codehilite .gd { background: rgba(239, 68, 68, .16); }
+.codehilite .gi { background: rgba(34, 197, 94, .16); }
+
+/* 单文件版搜索跳转落点闪烁 */
+.single-doc.flash { animation: flashbg 1.2s ease-out; }
+@keyframes flashbg {
+  0% { background: var(--brand-weak); }
+  100% { background: transparent; }
+}
+
+/* ---- 阅读进度条 ---- */
+.progress {
+  position: fixed; top: 0; left: 0; z-index: 40;
+  height: 3px; width: 0;
+  background: var(--brand);
+  pointer-events: none;
+  transition: width .08s linear;
+}
+
+/* ---- 上一篇 / 下一篇 ---- */
+.doc-nav {
+  display: flex; gap: .6rem;
+  max-width: 44rem; margin: 0 auto;
+  padding: 0 1.1rem calc(3rem + env(safe-area-inset-bottom));
+}
+.doc-nav a, .doc-nav .doc-nav-side {
+  flex: 1; min-width: 0;
+  display: block;
+  background: var(--card);
+  border: 1px solid var(--line); border-radius: 12px;
+  padding: .6rem .8rem;
+  text-decoration: none; color: inherit;
+  box-shadow: var(--shadow);
+}
+.doc-nav a:active { background: var(--brand-weak); }
+.doc-nav .next { text-align: right; }
+.doc-nav .d-label { display: block; font-size: .7rem; color: var(--brand); font-weight: 600; }
+.doc-nav .d-title {
+  display: block; margin-top: .15rem;
+  font-size: .82rem; font-weight: 600; line-height: 1.5;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.doc-nav .doc-nav-side { background: none; border-style: dashed; box-shadow: none; }
 
 /* ---- 目录抽屉 ---- */
 .toc-backdrop {
-  position: fixed; inset: 0; z-index: 19;
+  position: fixed; inset: 0; z-index: 9;   /* 低于顶栏：☰ 可再次点击关闭 */
   background: rgba(0, 0, 0, .38);
   opacity: 0; pointer-events: none; transition: opacity .2s;
 }
@@ -176,10 +519,12 @@ body.toc-open .toc-backdrop { opacity: 1; pointer-events: auto; }
 }
 body.toc-open .toc-panel { transform: none; }
 .toc-head {
+  display: flex; justify-content: space-between; align-items: baseline;
   font-size: .82rem; color: var(--muted); font-weight: 600;
   padding: .2rem .9rem .55rem;
   border-bottom: 1px solid var(--line); margin-bottom: .4rem;
 }
+.toc-head .toc-pct { font-weight: 400; font-size: .74rem; }
 .toc-panel a {
   display: block;
   padding: .45em .9em;
@@ -187,9 +532,83 @@ body.toc-open .toc-panel { transform: none; }
   font-size: .86em; line-height: 1.5;
   border-radius: 8px;
 }
-.toc-panel a:active { background: var(--brand-weak); }
+.toc-panel a:active, .toc-panel a.active { background: var(--brand-weak); }
+.toc-panel a.active { color: var(--brand); font-weight: 600; }
 .toc-panel a.lv3 { padding-left: 2em; color: var(--muted); font-size: .8em; }
+.toc-panel a.lv3.active { color: var(--brand); }
 .toc-none { padding: 1em .9rem; color: var(--muted); font-size: .85em; }
+
+/* ---- 页内查找条（阅读页） ---- */
+.find-bar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 30;
+  display: flex; align-items: center; gap: .1rem;
+  padding: .45rem .5rem;
+  padding-top: calc(.45rem + env(safe-area-inset-top));
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+.find-bar input {
+  flex: 1; min-width: 0;
+  border: 1px solid var(--line); border-radius: 10px;
+  background: var(--bg); color: var(--text);
+  padding: .45rem .7rem; font-size: .92rem; outline: none;
+}
+.find-bar .f-count {
+  flex: none; font-size: .74rem; color: var(--muted);
+  min-width: 3.2em; text-align: center; white-space: nowrap;
+}
+mark.cur { background: #f59e0b; color: #1f2937; }
+
+/* ---- 图片灯箱 ---- */
+.lightbox {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, .88);
+  opacity: 0; pointer-events: none; transition: opacity .2s;
+  cursor: zoom-out;
+}
+body.img-zoom .lightbox { opacity: 1; pointer-events: auto; }
+.lightbox img {
+  max-width: 96vw; max-height: 92vh;
+  border-radius: 6px; box-shadow: 0 8px 40px rgba(0, 0, 0, .5);
+}
+
+/* ---- 首次沉浸阅读的手势提示 ---- */
+.toast {
+  position: fixed; left: 50%; bottom: calc(4.8rem + env(safe-area-inset-bottom));
+  z-index: 45;
+  transform: translate(-50%, 8px);
+  background: rgba(15, 23, 42, .86); color: #fff;
+  font-size: .8rem; line-height: 1;
+  padding: .6rem 1rem; border-radius: 999px;
+  opacity: 0; pointer-events: none;
+  transition: opacity .3s, transform .3s, bottom .25s ease;
+}
+body.top-hidden .toast { bottom: calc(1.2rem + env(safe-area-inset-bottom)); }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---- SW 更新提示条 ---- */
+.sw-banner {
+  position: fixed; left: 50%; bottom: calc(1rem + env(safe-area-inset-bottom));
+  z-index: 50;
+  display: flex; align-items: center; gap: .6rem;
+  background: var(--card);
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: .45rem .5rem .45rem 1.05rem;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .22);
+  font-size: .82rem;
+  opacity: 0; pointer-events: none;
+  transform: translate(-50%, 10px);
+  transition: opacity .25s, transform .25s;
+}
+body.sw-update .sw-banner { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); }
+.sw-banner button {
+  flex: none;
+  border: none; background: var(--brand); color: #fff;
+  font-size: .78rem; padding: .35rem .8rem; border-radius: 999px;
+  cursor: pointer;
+}
 
 /* ---- 单文件版追加 ---- */
 /* 正文 article 不在 main 内，需自带栏宽与内边距（等价于阅读页的 main > article） */
@@ -197,7 +616,7 @@ body.toc-open .toc-panel { transform: none; }
   max-width: 44rem;
   margin: 2.2rem auto 0;
   border-top: 1px solid var(--line);
-  padding: 1.5rem 1.1rem calc(3rem + env(safe-area-inset-bottom));
+  padding: 1.5rem 1.1rem calc(4.5rem + env(safe-area-inset-bottom));
 }
 .doc-head { padding: 0 0 .9rem; }
 .backtop {
@@ -237,244 +656,72 @@ body.toc-open .toc-panel { transform: none; }
 <header class="top">
   <div class="title brand">📚 文档库</div>
   <span class="count">共 8 篇</span>
-  <button class="icon-btn fs" data-fs="-1" aria-label="缩小字号">A−</button>
-  <button class="icon-btn fs" data-fs="1" aria-label="放大字号">A+</button>
 </header>
+<div class="fs-pop" id="fsPop" hidden>
+  <div class="fs-row">
+    <span class="fs-label">字号</span>
+    <div class="fs-seg" id="fsSeg">
+      <button type="button" data-fs-preset="14">小</button>
+      <button type="button" data-fs-preset="17">标准</button>
+      <button type="button" data-fs-preset="20">大</button>
+      <button type="button" data-fs-preset="23">特大</button>
+      <button type="button" data-fs-preset="26">超大</button>
+    </div>
+    <button type="button" class="fs-reset" id="fsReset">默认</button>
+  </div>
+  <div class="fs-row">
+    <span class="fs-label">外观</span>
+    <div class="fs-seg" id="themeSeg">
+      <button type="button" data-theme-set="auto">自动</button>
+      <button type="button" data-theme-set="light">浅色</button>
+      <button type="button" data-theme-set="dark">深色</button>
+    </div>
+  </div>
+  <div class="fs-row">
+    <span class="fs-label">代码</span>
+    <button type="button" class="fs-switch" id="prewrapBtn" role="switch" aria-checked="true">
+      <span class="sw-track"><span class="sw-dot"></span></span>
+      <span class="sw-text">长代码自动换行</span>
+    </button>
+  </div>
+  <div class="fs-ver">内容指纹 7573ae63103d · 来源 <span class="fs-src">—</span></div>
+</div>
+<button class="top-btn" id="topBtn" aria-label="回到顶部">↑</button>
+<nav class="readbar" aria-label="阅读工具">
+  <button type="button" class="readbar-btn" id="tocBtn" aria-label="目录"><span class="rb-ico">☰</span><span class="rb-txt">目录</span></button>
+  <button type="button" class="readbar-btn" id="fsBtn" aria-label="字号与外观"><span class="rb-ico">Aa</span><span class="rb-txt">字号</span></button>
+  <button type="button" class="readbar-btn" id="findBtn" aria-label="页内查找"><span class="rb-ico">🔍</span><span class="rb-txt">查找</span></button>
+</nav>
+<div class="find-bar" id="findBar" hidden>
+  <input id="findInput" type="search" placeholder="在全部文档中查找…" autocomplete="off">
+  <span class="f-count" id="findCount"></span>
+  <button class="icon-btn" id="findPrev" aria-label="上一个">↑</button>
+  <button class="icon-btn" id="findNext" aria-label="下一个">↓</button>
+  <button class="icon-btn" id="findClose" aria-label="关闭查找">×</button>
+</div>
+<div class="progress" id="progress"></div>
+<div class="toc-backdrop"></div>
+<nav class="toc-panel" aria-label="目录">
+  <div class="toc-head"><span>目录</span><span class="toc-pct" id="tocPct"></span></div>
+</nav>
+<div class="search-row">
+  <div class="search-box">
+    <span class="s-ico">🔍</span>
+    <input id="searchInput" type="search" placeholder="搜索标题与正文…" autocomplete="off">
+    <button class="icon-btn s-clear" id="searchClear" aria-label="清空搜索" hidden>×</button>
+  </div>
+  <div class="search-count" id="searchCount" hidden></div>
+</div>
 <main class="list">
-<a class="card" href="#doc-bc5441b46c"><h2>md2phone · 内容与构建约定（AGENTS.md）</h2><div class="meta">更新于 2026-10-01 21:41 · 约 5 分钟</div></a>
-<a class="card" href="#doc-04c6e90faa"><h2>md2phone · 把 Markdown 放进手机</h2><div class="meta">更新于 2026-10-01 21:41 · 约 8 分钟</div></a>
-<a class="card" href="#doc-ea877eb60d"><h2>交付记录 · md2phone（2026-09-30）</h2><div class="meta">更新于 2026-10-01 21:41 · 约 11 分钟</div></a>
-<a class="card" href="#doc-899b96eadf"><h2>需求与验收 · md 文档手机阅读（2026-09-30）</h2><div class="meta">更新于 2026-10-01 21:41 · 约 10 分钟</div></a>
-<a class="card" href="#doc-76a7821113"><h2>FDE 工作指南（Forward Deployed Engineer Work Guide）</h2><div class="meta">更新于 2026-10-01 11:19 · 约 61 分钟</div></a>
-<a class="card" href="#doc-8f07a8680e"><h2>GitHub Pages 全自动发布：绕开 git 端点、空仓库与排障假信号</h2><div class="meta">更新于 2026-10-01 11:19 · 约 4 分钟</div></a>
-<a class="card" href="#doc-a8e08c60a5"><h2>形态选型复盘：为什么没有早点想到 App</h2><div class="meta">更新于 2026-10-01 11:19 · 约 5 分钟</div></a>
-<a class="card" href="#doc-c880ec32f7"><h2>把 md 放到手机上：PWA 跨端与实践笔记</h2><div class="meta">更新于 2026-10-01 11:19 · 约 10 分钟</div></a>
+<a class="card" data-slug="ea877eb60d" data-mts="1790876363" data-title="交付记录 · md2phone（2026-09-30）" href="#doc-ea877eb60d"><h2>交付记录 · md2phone（2026-09-30）</h2><div class="sum">AC2-2 / AC3-5 属「依赖第三方界面与硬件条件」的验证，自动化成本明显高于收益，以显式证据（产物校验 + 本地全链路模…</div><div class="meta">更新于 2026-10-02 01:39 · 约 20 分钟</div></a>
+<a class="card" data-slug="04c6e90faa" data-mts="1790876363" data-title="md2phone · 把 Markdown 放进手机" href="#doc-04c6e90faa"><h2>md2phone · 把 Markdown 放进手机</h2><div class="sum">电脑上的 .md 文档 → 手机桌面图标、App 般的阅读体验、内容随电脑同步更新。 纯静态产物（一个 site/ 文件夹），不…</div><div class="meta">更新于 2026-10-02 01:39 · 约 11 分钟</div></a>
+<a class="card" data-slug="899b96eadf" data-mts="1790873059" data-title="需求与验收 · md 文档手机阅读（2026-09-30）" href="#doc-899b96eadf"><h2>需求与验收 · md 文档手机阅读（2026-09-30）</h2><div class="sum">来源：客户访谈（2026-09-30，书面纪要即本文档）。风险分级说明：全部故事均为 P2（体验类），不触碰资金/隐私/生产数据…</div><div class="meta">更新于 2026-10-02 00:44 · 约 17 分钟</div></a>
+<a class="card" data-slug="bc5441b46c" data-mts="1790865987" data-title="md2phone · 内容与构建约定（AGENTS.md）" href="#doc-bc5441b46c"><h2>md2phone · 内容与构建约定（AGENTS.md）</h2><div class="sum">任何会话在本目录工作前，先读本文件。 这是「手机文档库」的内容管线与构建约定，跨会话唯一的执行依据。（体例沿用 intervie…</div><div class="meta">更新于 2026-10-01 22:46 · 约 5 分钟</div></a>
+<a class="card" data-slug="76a7821113" data-mts="1790824780" data-title="FDE 工作指南（Forward Deployed Engineer Work Guide）" href="#doc-76a7821113"><h2>FDE 工作指南（Forward Deployed Engineer Work Guide）</h2><div class="sum">版本：v0.7 · 日期：2026-10-01</div><div class="meta">更新于 2026-10-01 11:19 · 约 61 分钟</div></a>
+<a class="card" data-slug="8f07a8680e" data-mts="1790824780" data-title="GitHub Pages 全自动发布：绕开 git 端点、空仓库与排障假信号" href="#doc-8f07a8680e"><h2>GitHub Pages 全自动发布：绕开 git 端点、空仓库与排障假信号</h2><div class="sum">定位：练习⑦（全自动同步）的实践层沉淀。规则层结论在指南 v0.7（3.2「外部服务依赖」行）。</div><div class="meta">更新于 2026-10-01 11:19 · 约 4 分钟</div></a>
+<a class="card" data-slug="a8e08c60a5" data-mts="1790824780" data-title="形态选型复盘：为什么没有早点想到 App" href="#doc-a8e08c60a5"><h2>形态选型复盘：为什么没有早点想到 App</h2><div class="sum">定位：FDE 演练「md 文档手机阅读」练习⑥的复盘笔记。客户问了一句「没让你参考前，你的结论一直是需要依赖第三方——是我表达不…</div><div class="meta">更新于 2026-10-01 11:19 · 约 5 分钟</div></a>
+<a class="card" data-slug="c880ec32f7" data-mts="1790824780" data-title="把 md 放到手机上：PWA 跨端与实践笔记" href="#doc-c880ec32f7"><h2>把 md 放到手机上：PWA 跨端与实践笔记</h2><div class="sum">定位：FDE 演练「md 文档手机阅读」的**实践层**沉淀——技术差异、操作步骤、踩坑记录。</div><div class="meta">更新于 2026-10-01 11:19 · 约 10 分钟</div></a>
 </main>
-<article class="doc single-doc" id="doc-bc5441b46c"><div class="doc-head"><a class="backtop" href="#top">↑ 文档列表</a></div><details class="doctoc"><summary>目录</summary><nav><a class="lv2" href="#bc5441b46c-_1">这是什么</a>
-<a class="lv2" href="#bc5441b46c-_2">目录结构</a>
-<a class="lv2" href="#bc5441b46c-_3">日常内容更新（最常用路径）</a>
-<a class="lv2" href="#bc5441b46c-_4">正本与副本（防「改了正本忘了拷」）</a>
-<a class="lv2" href="#bc5441b46c-apkmac-android-sdk">重打 APK（仅功能升级时；Mac 本机执行，需 Android SDK）</a>
-<a class="lv2" href="#bc5441b46c-_5">验证纪律</a>
-<a class="lv2" href="#bc5441b46c-iphone">iPhone 说明</a></nav></details><h1 id="bc5441b46c-md2phone-agentsmd">md2phone · 内容与构建约定（AGENTS.md）</h1>
-<blockquote>
-<p><strong>任何会话在本目录工作前，先读本文件。</strong> 这是「手机文档库」的内容管线与构建约定，跨会话唯一的执行依据。（体例沿用 interview-prep 工程。）</p>
-</blockquote>
-<h2 id="bc5441b46c-_1">这是什么</h2>
-<p>Markdown 文档库，四种形态共用同一个内容源，最终形态是一个 Android App（WebView 套壳 + App 内导入更新）。</p>
-<p>内容链路（单向，勿反向手改）：</p>
-<pre><code>docs/*.md（源，唯一手改点）→ python3 build.py
-    ├→ site/                    （PWA 站点，供托管 / 局域网版）
-    ├→ 文档库.html              （单文件版，微信直接发手机）
-    └→ android-app/.../assets/web（APK 内置内容）
-        → ./gradlew assembleDebug → 文档库.apk
-</code></pre>
-<h2 id="bc5441b46c-_2">目录结构</h2>
-<div class="table-wrap"><table>
-<thead>
-<tr>
-<th>路径</th>
-<th>作用</th>
-<th>是否手改</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>docs/</code></td>
-<td>唯一的源文件（md）</td>
-<td>✅ 只改这里</td>
-</tr>
-<tr>
-<td><code>build.py</code></td>
-<td>生成器（PWA + 单文件 + APK 资产同步）</td>
-<td>一般不改</td>
-</tr>
-<tr>
-<td><code>assets/</code></td>
-<td>网页模板与样式</td>
-<td>一般不改</td>
-</tr>
-<tr>
-<td><code>site/</code>、<code>文档库.html</code></td>
-<td>生成产物</td>
-<td>❌ 由脚本生成</td>
-</tr>
-<tr>
-<td><code>android-app/</code></td>
-<td>Kotlin WebView 壳工程（导入式更新，见 MainActivity.kt 头注释）</td>
-<td>一般不改</td>
-</tr>
-<tr>
-<td><code>文档库.apk</code></td>
-<td>打好的安装包</td>
-<td>❌ 由 gradle 产出</td>
-</tr>
-<tr>
-<td><code>verify_build.py</code> / <code>verify_single.py</code> / <code>verify_lan.py</code></td>
-<td>三个形态的可重复验收</td>
-<td>改动后必跑</td>
-</tr>
-</tbody>
-</table></div>
-<h2 id="bc5441b46c-_3">日常内容更新（最常用路径）</h2>
-<ol>
-<li><strong>改内容只改 <code>docs/*.md</code></strong>（会被下次构建覆盖的文件不要手改）；</li>
-<li>方式一（推荐）：双击「自动同步.command」→ 弹窗确认「发布」→ 网站自动更新 → 手机刷新或 App「从网站拉取最新」；</li>
-<li>方式二（离线）：<code>python3 build.py</code> → 把 <code>文档库.html</code> 发到手机 → App 菜单「导入文档库」。
-   ⚠️ App 导入与拉取的永远是<strong>整库快照</strong>（文档库.html / library.html），不是 .md 原文——App 不解析 md。
-   ⚠️ 自动通道每次发布需弹窗确认（可选「本会话自动发布」）；手动运行 publish_github.py 视为已确认。</li>
-</ol>
-<h2 id="bc5441b46c-_4">正本与副本（防「改了正本忘了拷」）</h2>
-<p><code>docs/</code> 里有一部分文件是<strong>副本</strong>，正本在别处：</p>
-<div class="table-wrap"><table>
-<thead>
-<tr>
-<th>docs/ 副本</th>
-<th>正本位置</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>FDE-工作指南.md</code></td>
-<td><code>~/Desktop/FDE-Playbook/FDE-工作指南.md</code></td>
-</tr>
-<tr>
-<td><code>需求与验收.md</code>、<code>交付记录.md</code>、<code>README.md</code>、<code>AGENTS.md</code></td>
-<td><code>md2phone/</code> 根目录同名文件</td>
-</tr>
-<tr>
-<td><code>001/002-*.md</code></td>
-<td><code>~/Desktop/FDE-Playbook/实践沉淀/</code></td>
-</tr>
-</tbody>
-</table></div>
-<p><strong>规则：改了正本，必须重新拷入 <code>docs/</code> 再构建</strong>，否则库里是旧版本（血泪：指南升到 v0.6，库里的副本还停在 v0.3，被客户一问才发现）。</p>
-<h2 id="bc5441b46c-apkmac-android-sdk">重打 APK（仅功能升级时；Mac 本机执行，需 Android SDK）</h2>
-<pre><code class="language-bash">cd android-app
-./gradlew assembleDebug
-cp app/build/outputs/apk/debug/app-debug.apk ../文档库.apk
-</code></pre>
-<ul>
-<li>debug 签名（自动签名可直接安装），个人用途足够，无需 release 签名；</li>
-<li><code>gradle.properties</code> 已把 Gradle 指向 Android Studio 内嵌 JDK 21，直接 <code>./gradlew</code> 即可，勿用系统 JDK 8；</li>
-<li>gradle 发行版与依赖走本地缓存 / aliyun 源（同 interview-prep），本机可离线构建。</li>
-</ul>
-<h2 id="bc5441b46c-_5">验证纪律</h2>
-<p>任何 <code>docs/</code>、<code>assets/</code>、<code>build.py</code> 改动后：<code>python3 verify_build.py &amp;&amp; python3 verify_single.py &amp;&amp; python3 verify_lan.py</code>。
-<strong>「上一版通过」不证明「这一版结构正确」</strong>（血泪：单文件版正文全出血 bug 连过两轮验证才暴露）。</p>
-<h2 id="bc5441b46c-iphone">iPhone 说明</h2>
-<p>苹果不允许直接装安装包；iPhone 走 site/ 托管 PWA（用法 B）、局域网版（A2）或单文件（A）。</p></article>
-<article class="doc single-doc" id="doc-04c6e90faa"><div class="doc-head"><a class="backtop" href="#top">↑ 文档列表</a></div><details class="doctoc"><summary>目录</summary><nav><a class="lv2" href="#04c6e90faa-_1">两种用法</a>
-<a class="lv3" href="#04c6e90faa-a">用法 A · 单文件版（第一版：不依赖任何第三方，今天就能用）</a>
-<a class="lv3" href="#04c6e90faa-a2">用法 A2 · 局域网版（不要第三方，但要「桌面图标」）</a>
-<a class="lv3" href="#04c6e90faa-a3-appapk-app">用法 A3 · 安卓 App（文档库.apk）：真 App 形态</a>
-<a class="lv3" href="#04c6e90faa-b-pwa">用法 B · PWA 托管版【已配置并实测 ✅】</a>
-<a class="lv2" href="#04c6e90faa-a2-b">手机端一次性设置（装到桌面，用法 A2 / B）</a>
-<a class="lv2" href="#04c6e90faa-b">第一次部署（用法 B 已完成 ✅，以下仅备查；三选一，都是免费档）</a>
-<a class="lv2" href="#04c6e90faa-vs">全自动 vs 半自动</a>
-<a class="lv2" href="#04c6e90faa-_2">常见问题</a>
-<a class="lv2" href="#04c6e90faa-_3">开发者</a></nav></details><h1 id="04c6e90faa-md2phone-markdown">md2phone · 把 Markdown 放进手机</h1>
-<p>电脑上的 <code>.md</code> 文档 → 手机桌面图标、App 般的阅读体验、内容随电脑同步更新。
-纯静态产物（一个 <code>site/</code> 文件夹），不依赖任何付费服务；文档不经过本工具之外的第三方处理（部署到你自己选的托管上）。</p>
-<h2 id="04c6e90faa-_1">两种用法</h2>
-<h3 id="04c6e90faa-a">用法 A · 单文件版（第一版：不依赖任何第三方，今天就能用）</h3>
-<pre><code>1. 把 .md 文件放进 docs/ 文件夹（删除 = 从文件夹移除）
-2. 双击 sync.command（或终端运行 python3 build.py）
-3. 把生成的「文档库.html」发到手机（微信 / 邮件 / 数据线都行）
-</code></pre>
-<p>手机上怎么打开：
-- <strong>iPhone</strong>：微信里点开文件可直接读；或长按 → 存到「文件」App → 点开即读
-- <strong>Android</strong>：微信里点开 → 右上角「…」→ 用浏览器打开（或文件管理器 → Chrome）</p>
-<p>文档更新了：重跑第 2 步，把新的「文档库.html」再发一次（旧的删掉即可）。</p>
-<p>特点：一个文件装下全部文档 + 目录 + 字号调整，<strong>不需要联网、不注册任何服务</strong>；代价是没有自动同步（更新 = 重发文件），桌面图标暂缺（想要时用 A2 或 B）。</p>
-<h3 id="04c6e90faa-a2">用法 A2 · 局域网版（不要第三方，但要「桌面图标」）</h3>
-<p>双击「局域网分享.command」（或终端运行 <code>python3 build.py --serve --lan</code>），终端会显示一个形如 <code>http://192.168.x.x:8787/</code> 的地址：</p>
-<ol>
-<li>手机连到<strong>和电脑同一个 WiFi</strong>，浏览器打开该地址 → 文档列表，点文档即读；</li>
-<li><strong>iPhone</strong>：Safari 打开 → 分享 → 「添加到主屏幕」→ 桌面图标，点开全屏；
-   <strong>Android</strong>：Chrome 菜单 → 「添加到主屏幕」；</li>
-<li>文档更新后：双击 sync.command 重建 → 手机刷新即见最新（同 WiFi 内近似自动同步）。</li>
-</ol>
-<p>前提与代价：电脑开机、手机同 WiFi，离开家打不开；macOS 首次运行若弹防火墙询问，点「允许」。</p>
-<h3 id="04c6e90faa-a3-appapk-app">用法 A3 · 安卓 App（<code>文档库.apk</code>）：真 App 形态</h3>
-<ol>
-<li><strong>安装（一次）</strong>：把 <code>文档库.apk</code> 传到手机点开安装（首次需允许「安装未知应用」）；桌面出现「文档库」图标，点开即文档列表，出厂已内置全部文档，离线可读；</li>
-<li><strong>日常更新·方式一（联网，一键）</strong>：App 右上角菜单「<strong>从网站拉取最新</strong>」→ 自动比对版本 → 有更新即下载并加载（无更新提示「已是最新」）；前提：电脑侧已用「自动同步.command」确认发布上网站；</li>
-<li><strong>日常更新·方式二（离线可用，约 20 秒）</strong>：电脑 <code>python3 build.py</code> → 把新的 <code>文档库.html</code> 发到手机 → 菜单「<strong>导入文档库</strong>」选中该文件即完成；
-   ⚠️ 导入的是 <strong><code>文档库.html</code> 这个整库文件</strong>（里面已打包全部文档的最新版本），不是 .md 原文——App 不解析 md；改了几篇都只需发这一个文件；</li>
-<li>「<strong>恢复内置</strong>」：菜单里一键回到出厂文档；</li>
-<li><strong>阅读位置记忆</strong>：每个文档自动记住读到的位置，重开即从上次处继续（存在手机本地，不跨设备）。</li>
-</ol>
-<p>iPhone 不在此用法内（苹果不允许直接装安装包），用 A / A2 / B。</p>
-<h3 id="04c6e90faa-b-pwa">用法 B · PWA 托管版【已配置并实测 ✅】</h3>
-<p>发布通道已全自动打通（2026-10-01 端到端验收：新增 63s / 删除 73s 反映到公网）：</p>
-<p><strong>文档库网址：https://zhouqs666.github.io/md2phone-docs/</strong></p>
-<ul>
-<li><strong>电脑侧</strong>：双击「自动同步.command」→ docs/ 文件一变 → 自动构建 → <strong>弹窗确认</strong>（发布 / 本次跳过 / 本会话不再询问）→ 约 1 分钟后手机刷新即见最新；</li>
-<li><strong>手机侧（一次性）</strong>：浏览器打开网址 → Android：Chrome 菜单「添加到主屏幕」；iPhone：Safari 分享「添加到主屏幕」→ 桌面图标，全屏 App 体验；</li>
-<li>托管为 GitHub Pages（仓库 <code>zhouqs666/md2phone-docs</code>，public——免费 Pages 的前提），已加 noindex 防搜索引擎收录；</li>
-<li>已知边界：GitHub Pages 有 ≤10 分钟 CDN 缓存（不可配置），对时效极敏感时用用法 A3 的「文档库.html 导入」（秒级）；停用：GitHub 网页进仓库 Settings → Delete。</li>
-</ul>
-<h2 id="04c6e90faa-a2-b">手机端一次性设置（装到桌面，用法 A2 / B）</h2>
-<ol>
-<li>手机浏览器打开文档库网址（<strong>必须 https:// 开头</strong>，安装图标和离线缓存都依赖它）；</li>
-<li><strong>Android（Chrome）</strong>：右上角菜单 → 「添加到主屏幕 / 安装应用」；
-   <strong>iPhone（Safari）</strong>：底部分享按钮 → 「添加到主屏幕」；</li>
-<li>桌面出现「文档库」图标，点开即全屏阅读，断网也能读看过的文档。</li>
-</ol>
-<p>阅读页顶部：<code>‹</code> 返回列表 · <code>A−/A+</code> 调整字号（手机会记住）· <code>☰</code> 目录（点击条目直接跳小节）。深色模式跟随系统。</p>
-<h2 id="04c6e90faa-b">第一次部署（用法 B 已完成 ✅，以下仅备查；三选一，都是免费档）</h2>
-<p><strong>当前已配置：GitHub Pages + <code>publish_github.py</code> 全 API 发布 + <code>自动同步.command</code> 全自动同步。</strong>
-备选方案（如需更换托管）：</p>
-<p>推荐 A，最省事且可全自动：</p>
-<p><strong>A. Netlify（推荐）</strong></p>
-<pre><code class="language-bash">npm install -g netlify-cli     # 需已安装 Node.js
-netlify login                  # 首次注册/登录
-# 之后每次同步自动发布（全自动：存盘 → 上线）：
-DEPLOY_CMD=&quot;netlify deploy --dir site --prod&quot; python3 build.py --watch
-</code></pre>
-<p>不想装命令行：打开 app.netlify.com/drop，把 <code>site/</code> 文件夹拖进去，得到网址（以后每次更新需手动再拖一次，半自动）。</p>
-<p><strong>B. GitHub Pages</strong>：建仓库，把 <code>site/</code> 内容推到 <code>gh-pages</code> 分支，仓库设置里开启 Pages。更新 = 把 site/ 重新提交推送。</p>
-<p><strong>C. Cloudflare Pages / Vercel</strong>：连接 GitHub 仓库自动部署，效果同 A。</p>
-<blockquote>
-<p>原理说明：<code>docs/</code> 是唯一内容来源。构建把 md 转成手机友好的静态页面（含 PWA 清单与 Service Worker）；托管只是把 <code>site/</code> 放上互联网。手机端每次打开都先取最新（network-first），取不到才用本地缓存，所以「电脑更新 → 重建 → 手机刷新即最新」。</p>
-</blockquote>
-<h2 id="04c6e90faa-vs">全自动 vs 半自动</h2>
-<div class="table-wrap"><table>
-<thead>
-<tr>
-<th>方式</th>
-<th>操作</th>
-<th>适用</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>半自动</td>
-<td>双击 <code>sync.command</code></td>
-<td>偶尔更新；未配置发布时用本地预览</td>
-</tr>
-<tr>
-<td>全自动</td>
-<td><code>DEPLOY_CMD="netlify deploy --dir site --prod" python3 build.py --watch</code></td>
-<td>挂在终端里，保存文档几秒后自动上线</td>
-</tr>
-</tbody>
-</table></div>
-<p><code>build.py</code> 参数：<code>--watch</code> 监听 docs/ 与 assets/ 自动重建；<code>--serve</code> 本地预览 http://localhost:8787 （仅供电脑检查，手机安装需 HTTPS 托管）。</p>
-<h2 id="04c6e90faa-_2">常见问题</h2>
-<ul>
-<li><strong>手机上没出现「安装」提示？</strong> iPhone 需在 Safari 里用「分享 → 添加到主屏幕」手动添加；网址必须是 https。</li>
-<li><strong>删除的文档手机上还能看到？</strong> 列表刷新后即消失；已缓存的正文副本会在下次联网刷新后被清掉（Service Worker 按构建版本清理旧缓存）。</li>
-<li><strong>文档里表格太宽？</strong> 表格在手机上可左右滑动，不会撑破页面。</li>
-<li><strong>想换图标/名字？</strong> 改 <code>build.py</code> 里的 <code>manifest</code> 与 <code>make_icons()</code>，或直接替换 <code>site/assets/</code> 下的图标后重建。</li>
-</ul>
-<h2 id="04c6e90faa-_3">开发者</h2>
-<ul>
-<li><code>build.py</code> 生成器；<code>assets/</code> 模板与样式；<code>docs/</code> 内容源；<code>site/</code> 产物（可整目录重新生成，勿手改）。</li>
-<li>自测：<code>python3 verify_build.py</code>（增/改/删同步场景）；<code>python3 verify_ui.py</code>（需配合本地静态服务，见文件头注释）。</li>
-<li>需求、验收标准与验证边界见 <code>需求与验收.md</code> 与 <code>交付记录.md</code>。</li>
-</ul></article>
 <article class="doc single-doc" id="doc-ea877eb60d"><div class="doc-head"><a class="backtop" href="#top">↑ 文档列表</a></div><details class="doctoc"><summary>目录</summary><nav><a class="lv2" href="#ea877eb60d-_1">交付日志</a>
 <a class="lv2" href="#ea877eb60d-7">第三方可用性验证（练习⑦客户专项要求：依赖第三方但必须充分验证其可用性）</a>
 <a class="lv2" href="#ea877eb60d-04-3">已验证 / 未验证清单（红线 0.4-3：诚实声明验证边界）</a>
@@ -482,7 +729,7 @@ DEPLOY_CMD=&quot;netlify deploy --dir site --prod&quot; python3 build.py --watch
 <a class="lv3" href="#ea877eb60d-fde">未验证及原因（部署后由 FDE 在真机补验）</a>
 <a class="lv3" href="#ea877eb60d-51">验证替代理由（5.1 例外条款）</a>
 <a class="lv2" href="#ea877eb60d-backlog-46">风险与后续（Backlog，按 4.6 排序）</a>
-<a class="lv2" href="#ea877eb60d-c">演练复盘（回填附录 C）</a></nav></details><h1 id="ea877eb60d-md2phone2026-09-30">交付记录 · md2phone（2026-09-30）</h1>
+<a class="lv2" href="#ea877eb60d-c">演练复盘（回填附录 C）</a></nav></details><h1 id="ea877eb60d-md2phone2026-09-30">交付记录 · md2phone（2026-09-30）</h1><div class="doc-meta-line">更新于 2026-10-02 01:39 · 约 20 分钟 · 第 1/8 篇</div>
 <h2 id="ea877eb60d-_1">交付日志</h2>
 <div class="table-wrap"><table>
 <thead>
@@ -535,6 +782,54 @@ DEPLOY_CMD=&quot;netlify deploy --dir site --prod&quot; python3 build.py --watch
 <td>练习⑧：确认式上传 + App 云端拉取 + 阅读位置记忆（客户确认方案后实现）。新增：确认门（弹窗三按钮/终端降级/测试钩子）、version.json+library.html 发布端点、App「从网站拉取最新」（版本比对→按需下载→原子替换）、阅读位置记忆（多页按文档/单文件按篇+段内比例）；<strong>修复真 bug：index 构建时间戳破坏内容指纹 → 跳过守卫永不生效</strong>（改为内容驱动的确定性时间）</td>
 <td>FDE（自主）</td>
 <td>F1-RESULT PASS（跳过分支：仓库不动；确认分支：发布前进）；F2-RESULT PASS（公网端点+协议模拟+file:// 渲染）；F3-RESULT PASS（恢复/隔离/单文件五项）；三套回归通过；APK 重打</td>
+</tr>
+<tr>
+<td>v1.7 · 2026-10-01</td>
+<td>练习⑨·体验复盘：全量代码体验审计（21 项清单）分批落地——代码高亮配色补齐（codehilite 有 class 无配色的高亮空转）、首页「继续阅读」横幅（复用位置记忆）、列表全文搜索（标题+正文，构建时内联索引）+ 阅读页/单文件页内查找、目录 scrollspy、字号档位显示+点击重置、外观三档手动切换、代码块一键复制（按钮在滚动容器外）、阅读进度条、上一篇/下一篇、列表滚动位置记忆、排序切换、卡片摘要、SW 静态壳 cache-first 秒开 + 「内容已更新」提示条、docs 本地图片打包（PWA 相对路径 / 单文件 data URI）、图片灯箱；App 侧：外链外跳、拉取进度对话框、导入校验、启动静默查更新、夜间主题</td>
+<td>FDE（自主）</td>
+<td>新增 verify_extras.py 34 项 PASS（可重复执行）；六套回归全过（build/single/lan/memory/ui/extras）；verify_ui 断言修正为动态选文档（测试假设过时，非功能回归）；APK 重打</td>
+</tr>
+<tr>
+<td>v1.8 · 2026-10-01</td>
+<td>练习⑨·二次复盘（以阅读体验专家身份 390×844 实读复检，18 张截图逐张审读）→ 14 项问题全部整改：①表格/代码块两缘渐隐滑动提示 + 表头允许换行（图例表/流程图不再被静默裁切）②复制按钮移到代码块上方工具位（不再压住内容）③开篇 blockquote 升级「文档头卡」（逐行还原字段结构，修复软合并粘连 + 灰字弱化）④行内 code 标记浅色下描边可见 ⑤顶栏收敛为 ‹/标题/Aa/🔍/☰，字号外观入 Aa 弹出层 ⑥顶栏下滑隐退上滑唤出 ⑦深滚动标题自动切换为当前小节名 ⑧h1 下元信息行 ⑨右下角回顶按钮 ⑩h3 品牌色竖条/h4 加粗 + 列表节奏调整 ⑪「目录」自带列表压缩、「变更记录」折叠（23 条）⑫目录遮罩降至顶栏之下（☰ 可再点关闭）+ Esc 全局关闭 ⑬底部导航语义「较新/较早」⑭暗色正文亮度微调 + 摘要单行；<strong>源格式修复：《需求与验收》8 处「AC：」后缺空行致列表被吞成段落墙</strong>（36 条 AC 恢复列表形态）；🔍 替换过淡的 ⌕ 图标</td>
+<td>FDE（自主）</td>
+<td>verify_extras.py 扩至 46 项 PASS；六套回归全过；第二轮实读复检（/tmp/ux_review2/）确认全部生效、无新问题；APK 重打</td>
+</tr>
+<tr>
+<td>v1.9 · 2026-10-02</td>
+<td>客户实读反馈三项整改 + 专家二次实读走查（Playwright 390×844 截图与 DOM 诊断）：①宽表格自适应（逐表检测溢出→压缩档，14 表 3 压缩后 0 溢出，仍放不下才容器内滑动）②代码块默认自动换行（面板开关可关）+ 限高 65vh 内滚③轻点正文唤出/收起阅读控制层（顶栏+底部工具条：目录/字号/查找），首用一次性手势提示，回顶保持独立悬浮键④字号五档预设 14/17/20/23/26 + 改字号锚定阅读位置不跳（修复过程揪出 Chrome scroll anchoring 与表格适配叠加干扰，禁用锚定+锚点底边补偿后 17→26→14→20→17 往返实测通过；旧版逐 px 记忆自动吸附档位）⑤目录统一：正文手写「目录」小节构建时移除、抽屉打开即定位当前小节+已读百分比、单文件版 ☰ 按当前文档动态装配抽屉⑥外观三选分段按钮 ⑦细节：正文 overflow-wrap、行内 code 任意断行、滚动区 tabindex、暗色 theme-color</td>
+<td>FDE（自主）</td>
+<td>verify_extras.py 扩至 58 项 PASS；六套回归全过（build/single/lan/memory/ui/extras）；字号位置保持双形态往返实测；APK 重打</td>
+</tr>
+<tr>
+<td>v1.9.1 · 2026-10-02</td>
+<td>客户真机对比发现差异：APK 里阅读进度条（top:0 的 3px 条）不可见。根因：targetSdk 36 在 Android 15+ 强制 edge-to-edge，WebView 顶进状态栏/手势条底下，而 WebView 内 env(safe-area-inset-*) 恒为 0、网页无从感知。修复：MainActivity 给 WebView 挂 OnApplyWindowInsetsListener，把系统栏内边距套到 WebView 上（R+ 用 getInsets，老版本走废弃字段降级），网页视口从状态栏下方开始，页内布局零改动——进度条/底部工具条/悬浮键一并归位</td>
+<td>FDE（自主）</td>
+<td>APK 重打（01:08）；手机视口 Playwright 复核网页侧渲染正常；真机状态栏避让列为未验证清单</td>
+</tr>
+<tr>
+<td>v1.9.2 · 2026-10-02</td>
+<td>客户真机复测：进度条仍不可见且顶部文字被状态栏遮挡——坐实 v1.9.1 修复无效。根因升级：WebView.setPadding 不改变网页内容布局（WebView 已知怪癖），把内边距套在 WebView 自身上不生效。改用标准做法：WebView 放进 fitsSystemWindows=true 的父容器（FrameLayout），系统栏内边距落到容器上，网页视口从状态栏下方、手势条上方开始</td>
+<td>FDE（自主）</td>
+<td>APK 重打（01:14）；真机系统栏避让与进度条可见性待客户复测</td>
+</tr>
+<tr>
+<td>v1.9.3 · 2026-10-02</td>
+<td>客户复测（iQOO 11 / Android 16）：进度条仍不可见且「轻点唤出工具条」失效——轻点唤出是 v1.9 新增功能不可能凭空回退，高度怀疑手机在跑旧内容（此前导入的旧快照优先级高于 APK 内置）。为远程定位给页面加「内容身份标识」：构建指纹 + 内容来源（APK 内置 / 导入快照 / 网页，按 location.href 判别）渲染在文章末尾与设置面板，window.onerror 会把脚本异常写进同一位置；APK versionName 升至 1.9.2 供安装核验</td>
+<td>FDE（自主）</td>
+<td>APK 重打（指纹 7a46e3bd77ab 与 site 一致）；待客户按标识复测回传</td>
+</tr>
+<tr>
+<td>v1.9.4 · 2026-10-02</td>
+<td>客户真机复测回传（iQOO 11 / Android 16）：安装 v1.9.2 APK 后未恢复内置仍无进度条，菜单「恢复内置文档」后一切正常——确认为旧导入快照优先加载（导入件 &gt; APK 内置为免重装更新的设计），叠加 Android 15+ edge-to-edge 遮挡。进度条、轻点唤出工具条、顶部遮挡在真机全部通过；内容身份标识完成定位使命。README 常见问题补充「重装后还是旧内容」条目</td>
+<td>FDE（自主）</td>
+<td>真机验收通过；APK 与 site 指纹一致</td>
+</tr>
+<tr>
+<td>v1.9.5 · 2026-10-02</td>
+<td>客户再报：点「从网站拉取最新」后再次回退。定位：拉取功能正常，但网站自 10-01 发布后未再更新，拉下来的是旧构建——「网站过期 + 指纹不一致即提示更新」的组合把旧内容当成了「新内容」。处置：重新发布最新构建到 GitHub Pages（手动运行 publish_github.py 按约定视为已确认），发布后拉取即得最新；README 常见问题补充「拉取后变旧了」条目</td>
+<td>FDE（自主）</td>
+<td>远端 version.json 与本地 site 指纹核对一致；真机「恢复内置 → 拉取」复测待客户</td>
 </tr>
 </tbody>
 </table></div>
@@ -598,6 +893,9 @@ DEPLOY_CMD=&quot;netlify deploy --dir site --prod&quot; python3 build.py --watch
 <li>安卓 App（v1.4）：gradle assembleDebug 成功（gradle 本地缓存 + aliyun 源，可离线构建）；APK 静态检查：assets 内 7 页齐全、包名 com.mddocs、应用名「文档库」、启动 Activity 正确、自适应图标就位；三套回归全过（验证脚本预期值改为按 docs.json 动态取数，文档数量变化不再误报）</li>
 <li>练习⑧（v1.6）：F1 确认门两分支（跳过不发布/确认发布，同进程树编排）✅；F2 拉取协议全流程（指纹比对→按需下载→校验→落盘→file:// 渲染 8 篇）✅；F3 阅读记忆五项（多页恢复、跨文档隔离×2、单文件回篇、段内落点）✅；<code>verify_memory.py</code> 可重复执行</li>
 <li>内容指纹稳定性：确定性时间戳修复后，未变化内容重复构建 → 发布跳过（守卫生效实证）</li>
+<li>v1.7 体验升级全套（<code>verify_extras.py</code> 34 项可重复执行）：全文搜索（列表过滤/命中片段高亮/命中数、单文件 Enter 跳转）、继续阅读横幅（回列表出现、点击落回上次位置）、排序切换（zh locale 升序）、列表位置记忆（返回不回顶）、页内查找（高亮/计数/循环/清除）、目录 scrollspy、阅读进度条、代码复制按钮（滚动容器外定位）、字号档位显示+重置、上一篇/下一篇、主题三档（切换/记住/配色实测变化）、SW 更新提示条（模拟广播）、图片打包（site 拷贝 + data URI 字节级一致 + APK 资产同步 + 灯箱）</li>
+<li>v1.7 安卓 App（代码路径本机验证 + gradle assembleDebug 成功）：外链外跳（http/https/mailto/tel/sms → ACTION_VIEW，file:// 照常页内）、拉取进度对话框（连接→下载两段提示、可取消、取消不落盘）、导入校验（≥2KB + 「文档库」标记，与拉取路径同款）、启动静默查更新（指纹不一致才弹窗询问）、夜间主题（values-night + 窗口背景与网页 --bg 同色防闪白）</li>
+<li>v1.8 阅读体验整改（<code>verify_extras.py</code> 扩至 46 项）：表格/代码块渐隐滑动提示、表头换行后图例表首屏完整、复制按钮工具位不遮内容（几何断言 b.bottom ≤ p.top）、文档头卡 + meta 行、顶栏隐退/唤出/标题随小节切换、回顶按钮、自带目录压缩、变更记录折叠、☰ 再点关闭、Esc 关闭弹出层、上下篇「较新/较早」标签；第二轮实读复检 18 张截图确认无新问题</li>
 </ul>
 <h3 id="ea877eb60d-fde">未验证及原因（部署后由 FDE 在真机补验）</h3>
 <ul>
@@ -609,15 +907,18 @@ DEPLOY_CMD=&quot;netlify deploy --dir site --prod&quot; python3 build.py --watch
 <li><strong>单文件版在部分安卓浏览器的字号记忆</strong>：content:// 源下 localStorage 可能不持久，字号调节本身可用，记忆降级为可选。</li>
 <li><strong>局域网版真机环节</strong>（v1.3）：真手机同 WiFi 访问、添加到主屏幕（iOS 全屏 / Android 图标形态）、macOS 防火墙弹窗处理——需真机与真实局域网环境。</li>
 <li><strong>Netlify/GitHub Pages 部署步骤本身</strong>——需客户账号；命令行流程来自托管方公开文档，未在本机实跑。</li>
+<li><strong>v1.7 真机项</strong>：App 外链拉起系统浏览器的实际跳转、拉取进度对话框手感与取消时机、启动更新弹窗、夜间主题实机配色；PWA「内容已更新」提示条需「两代构建 + 真机」才能自然触发（本地以模拟广播验证）。</li>
+<li><strong>v1.7 单文件图片内嵌的体积代价</strong>：图片转 data URI 会放大体积（base64 +33%），微信传输与 WebView 加载的真实体感需有图文档出现后实测（当前 docs/ 无图片，verify_extras 以临时文档验证）。</li>
 </ul>
 <h3 id="ea877eb60d-51">验证替代理由（5.1 例外条款）</h3>
 <p>AC2-2 / AC3-5 属「依赖第三方界面与硬件条件」的验证，自动化成本明显高于收益，以显式证据（产物校验 + 本地全链路模拟）替代，经交付责任人（本人，演练）确认；<strong>真实客户场景下应转为真机验收项</strong>。</p>
 <h2 id="ea877eb60d-backlog-46">风险与后续（Backlog，按 4.6 排序）</h2>
 <ol>
-<li>P2｜全文搜索（文档多了以后的第一个需求）</li>
-<li>P2｜手动深色/浅色切换（当前仅跟随系统）</li>
+<li>~~P2｜全文搜索~~ ✅ v1.7 完成（列表搜索 + 单文件搜索 + 页内查找）</li>
+<li>~~P2｜手动深色/浅色切换~~ ✅ v1.7 完成（三档：跟随系统/浅色/深色）</li>
 <li>P2｜iOS 微信内打开体验引导页</li>
 <li>P3｜发布状态回执（当前 DEPLOY_CMD 失败仅打印，不重试通知）</li>
+<li>P3｜mermaid 图 / LaTeX 公式渲染（当前文档未出现；出现时引入，需离线内联方案以保住「自包含」承诺）</li>
 </ol>
 <h2 id="ea877eb60d-c">演练复盘（回填附录 C）</h2>
 <ul>
@@ -625,7 +926,122 @@ DEPLOY_CMD=&quot;netlify deploy --dir site --prod&quot; python3 build.py --watch
 <li>有效：P2 分级 + 轻量验证（构建断言 + UI 截图）与爆炸半径匹配，全程无过度工件。</li>
 <li>缺失：指南没有「客户非技术背景时，部署步骤如何代办/引导」的规则；本次用 README 三选一缓解，真实场景应写入边界契约（客户提供项：托管账号）。</li>
 <li>待改进：--watch 的「修改后自动重建」仅由 verify_build 的独立更新场景间接覆盖，监听循环内的修改路径未单独断言。</li>
-</ul></article>
+</ul><nav class="doc-nav"><span class="doc-nav-side prev"><span class="d-label">‹ 较新一篇</span></span><a class="next" href="#doc-04c6e90faa"><span class="d-label">较早一篇 ›</span><span class="d-title">md2phone · 把 Markdown 放进手机</span></a></nav></article>
+<article class="doc single-doc" id="doc-04c6e90faa"><div class="doc-head"><a class="backtop" href="#top">↑ 文档列表</a></div><details class="doctoc"><summary>目录</summary><nav><a class="lv2" href="#04c6e90faa-_1">两种用法</a>
+<a class="lv3" href="#04c6e90faa-a">用法 A · 单文件版（第一版：不依赖任何第三方，今天就能用）</a>
+<a class="lv3" href="#04c6e90faa-a2">用法 A2 · 局域网版（不要第三方，但要「桌面图标」）</a>
+<a class="lv3" href="#04c6e90faa-a3-appapk-app">用法 A3 · 安卓 App（文档库.apk）：真 App 形态</a>
+<a class="lv3" href="#04c6e90faa-b-pwa">用法 B · PWA 托管版【已配置并实测 ✅】</a>
+<a class="lv2" href="#04c6e90faa-a2-b">手机端一次性设置（装到桌面，用法 A2 / B）</a>
+<a class="lv2" href="#04c6e90faa-b">第一次部署（用法 B 已完成 ✅，以下仅备查；三选一，都是免费档）</a>
+<a class="lv2" href="#04c6e90faa-vs">全自动 vs 半自动</a>
+<a class="lv2" href="#04c6e90faa-_2">常见问题</a>
+<a class="lv2" href="#04c6e90faa-_3">开发者</a></nav></details><h1 id="04c6e90faa-md2phone-markdown">md2phone · 把 Markdown 放进手机</h1><div class="doc-meta-line">更新于 2026-10-02 01:39 · 约 11 分钟 · 第 2/8 篇</div>
+<p>电脑上的 <code>.md</code> 文档 → 手机桌面图标、App 般的阅读体验、内容随电脑同步更新。
+纯静态产物（一个 <code>site/</code> 文件夹），不依赖任何付费服务；文档不经过本工具之外的第三方处理（部署到你自己选的托管上）。</p>
+<h2 id="04c6e90faa-_1">两种用法</h2>
+<h3 id="04c6e90faa-a">用法 A · 单文件版（第一版：不依赖任何第三方，今天就能用）</h3>
+<pre><code>1. 把 .md 文件放进 docs/ 文件夹（删除 = 从文件夹移除）
+2. 双击 sync.command（或终端运行 python3 build.py）
+3. 把生成的「文档库.html」发到手机（微信 / 邮件 / 数据线都行）
+</code></pre>
+<p>手机上怎么打开：
+- <strong>iPhone</strong>：微信里点开文件可直接读；或长按 → 存到「文件」App → 点开即读
+- <strong>Android</strong>：微信里点开 → 右上角「…」→ 用浏览器打开（或文件管理器 → Chrome）</p>
+<p>文档更新了：重跑第 2 步，把新的「文档库.html」再发一次（旧的删掉即可）。</p>
+<p>特点：一个文件装下全部文档 + 目录 + 字号调整，<strong>不需要联网、不注册任何服务</strong>；代价是没有自动同步（更新 = 重发文件），桌面图标暂缺（想要时用 A2 或 B）。</p>
+<h3 id="04c6e90faa-a2">用法 A2 · 局域网版（不要第三方，但要「桌面图标」）</h3>
+<p>双击「局域网分享.command」（或终端运行 <code>python3 build.py --serve --lan</code>），终端会显示一个形如 <code>http://192.168.x.x:8787/</code> 的地址：</p>
+<ol>
+<li>手机连到<strong>和电脑同一个 WiFi</strong>，浏览器打开该地址 → 文档列表，点文档即读；</li>
+<li><strong>iPhone</strong>：Safari 打开 → 分享 → 「添加到主屏幕」→ 桌面图标，点开全屏；
+   <strong>Android</strong>：Chrome 菜单 → 「添加到主屏幕」；</li>
+<li>文档更新后：双击 sync.command 重建 → 手机刷新即见最新（同 WiFi 内近似自动同步）。</li>
+</ol>
+<p>前提与代价：电脑开机、手机同 WiFi，离开家打不开；macOS 首次运行若弹防火墙询问，点「允许」。</p>
+<h3 id="04c6e90faa-a3-appapk-app">用法 A3 · 安卓 App（<code>文档库.apk</code>）：真 App 形态</h3>
+<ol>
+<li><strong>安装（一次）</strong>：把 <code>文档库.apk</code> 传到手机点开安装（首次需允许「安装未知应用」）；桌面出现「文档库」图标，点开即文档列表，出厂已内置全部文档，离线可读；</li>
+<li><strong>日常更新·方式一（联网，一键）</strong>：App 启动时会静默比对版本，有新内容弹窗询问；也可随时点右上角菜单「<strong>从网站拉取最新</strong>」→ 进度对话框内自动比对版本 → 有更新即下载并加载（无更新提示「已是最新」）；前提：电脑侧已用「自动同步.command」确认发布上网站；</li>
+<li><strong>日常更新·方式二（离线可用，约 20 秒）</strong>：电脑 <code>python3 build.py</code> → 把新的 <code>文档库.html</code> 发到手机 → 菜单「<strong>导入文档库</strong>」选中该文件即完成（App 会校验文件确实为整库快照，选错会提示）；
+   ⚠️ 导入的是 <strong><code>文档库.html</code> 这个整库文件</strong>（里面已打包全部文档的最新版本），不是 .md 原文——App 不解析 md；改了几篇都只需发这一个文件；</li>
+<li>「<strong>恢复内置</strong>」：菜单里一键回到出厂文档；</li>
+<li><strong>阅读位置记忆</strong>：每个文档自动记住读到的位置，重开即从上次处继续（存在手机本地，不跨设备）；</li>
+<li><strong>文档里的外链</strong>（网页/邮件/电话）点击后交给系统浏览器等应用打开，不会困在 App 里。</li>
+</ol>
+<p>iPhone 不在此用法内（苹果不允许直接装安装包），用 A / A2 / B。</p>
+<h3 id="04c6e90faa-b-pwa">用法 B · PWA 托管版【已配置并实测 ✅】</h3>
+<p>发布通道已全自动打通（2026-10-01 端到端验收：新增 63s / 删除 73s 反映到公网）：</p>
+<p><strong>文档库网址：https://zhouqs666.github.io/md2phone-docs/</strong></p>
+<ul>
+<li><strong>电脑侧</strong>：双击「自动同步.command」→ docs/ 文件一变 → 自动构建 → <strong>弹窗确认</strong>（发布 / 本次跳过 / 本会话不再询问）→ 约 1 分钟后手机刷新即见最新；</li>
+<li><strong>手机侧（一次性）</strong>：浏览器打开网址 → Android：Chrome 菜单「添加到主屏幕」；iPhone：Safari 分享「添加到主屏幕」→ 桌面图标，全屏 App 体验；</li>
+<li>托管为 GitHub Pages（仓库 <code>zhouqs666/md2phone-docs</code>，public——免费 Pages 的前提），已加 noindex 防搜索引擎收录；</li>
+<li>已知边界：GitHub Pages 有 ≤10 分钟 CDN 缓存（不可配置），对时效极敏感时用用法 A3 的「文档库.html 导入」（秒级）；停用：GitHub 网页进仓库 Settings → Delete。</li>
+</ul>
+<h2 id="04c6e90faa-a2-b">手机端一次性设置（装到桌面，用法 A2 / B）</h2>
+<ol>
+<li>手机浏览器打开文档库网址（<strong>必须 https:// 开头</strong>，安装图标和离线缓存都依赖它）；</li>
+<li><strong>Android（Chrome）</strong>：右上角菜单 → 「添加到主屏幕 / 安装应用」；
+   <strong>iPhone（Safari）</strong>：底部分享按钮 → 「添加到主屏幕」；</li>
+<li>桌面出现「文档库」图标，点开即全屏阅读，断网也能读看过的文档。</li>
+</ol>
+<p>阅读页：顶栏 <code>‹</code> 返回列表 · 标题（滚到深处自动切换为当前小节名）；<strong>轻点正文空白处唤出/收起控制层</strong>——顶栏与底部工具条（<code>☰</code> 目录 · <code>Aa</code> 字号 · <code>🔍</code> 查找）一起进出，读到一半随时可用，不必滚回篇首；首次进入沉浸阅读会有一次性手势提示。目录抽屉打开即定位当前小节并显示已读百分比。字号五档预设（14/17/20/23/26px，当前档高亮，「默认」键一键回 17），<strong>改字号阅读位置不跳动</strong>；外观三档：跟随系统/浅色/深色；「长代码自动换行」默认开（面板可关回横向滑动保结构），超长代码块限高内滚。<code>🔍</code> 页内查找（高亮 + 上/下一个）。宽表格先自适应收窄装下，装不下才容器内滑动（两缘渐隐提示）；下滑阅读时控制层自动隐退、上滑唤出；深滚动时右下角悬浮「↑ 回到顶部」。</p>
+<p>正文还有：标题下元信息行（更新时间/时长/序号）、开篇文档头卡（版本/定位逐行呈现）、顶部阅读进度条、代码块一键复制（独立工具位不遮内容）、表格与代码块两缘渐隐滑动提示、图片点击放大、底部「较新一篇 / 较早一篇」切换。首页：搜索框（标题+正文，命中片段高亮）· <code>⇅</code> 排序切换 · 「继续阅读」横幅 · 列表滚动位置记忆。PWA 有新内容时弹「内容已更新」提示条。</p>
+<h2 id="04c6e90faa-b">第一次部署（用法 B 已完成 ✅，以下仅备查；三选一，都是免费档）</h2>
+<p><strong>当前已配置：GitHub Pages + <code>publish_github.py</code> 全 API 发布 + <code>自动同步.command</code> 全自动同步。</strong>
+备选方案（如需更换托管）：</p>
+<p>推荐 A，最省事且可全自动：</p>
+<p><strong>A. Netlify（推荐）</strong></p>
+<pre><code class="language-bash">npm install -g netlify-cli     # 需已安装 Node.js
+netlify login                  # 首次注册/登录
+# 之后每次同步自动发布（全自动：存盘 → 上线）：
+DEPLOY_CMD=&quot;netlify deploy --dir site --prod&quot; python3 build.py --watch
+</code></pre>
+<p>不想装命令行：打开 app.netlify.com/drop，把 <code>site/</code> 文件夹拖进去，得到网址（以后每次更新需手动再拖一次，半自动）。</p>
+<p><strong>B. GitHub Pages</strong>：建仓库，把 <code>site/</code> 内容推到 <code>gh-pages</code> 分支，仓库设置里开启 Pages。更新 = 把 site/ 重新提交推送。</p>
+<p><strong>C. Cloudflare Pages / Vercel</strong>：连接 GitHub 仓库自动部署，效果同 A。</p>
+<blockquote>
+<p>原理说明：<code>docs/</code> 是唯一内容来源。构建把 md 转成手机友好的静态页面（含 PWA 清单与 Service Worker）；托管只是把 <code>site/</code> 放上互联网。手机端每次打开都先取最新（network-first），取不到才用本地缓存，所以「电脑更新 → 重建 → 手机刷新即最新」。</p>
+</blockquote>
+<h2 id="04c6e90faa-vs">全自动 vs 半自动</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>方式</th>
+<th>操作</th>
+<th>适用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>半自动</td>
+<td>双击 <code>sync.command</code></td>
+<td>偶尔更新；未配置发布时用本地预览</td>
+</tr>
+<tr>
+<td>全自动</td>
+<td><code>DEPLOY_CMD="netlify deploy --dir site --prod" python3 build.py --watch</code></td>
+<td>挂在终端里，保存文档几秒后自动上线</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>build.py</code> 参数：<code>--watch</code> 监听 docs/ 与 assets/ 自动重建；<code>--serve</code> 本地预览 http://localhost:8787 （仅供电脑检查，手机安装需 HTTPS 托管）。</p>
+<h2 id="04c6e90faa-_2">常见问题</h2>
+<ul>
+<li><strong>手机上没出现「安装」提示？</strong> iPhone 需在 Safari 里用「分享 → 添加到主屏幕」手动添加；网址必须是 https。</li>
+<li><strong>删除的文档手机上还能看到？</strong> 列表刷新后即消失；已缓存的正文副本会在下次联网刷新后被清掉（Service Worker 按构建版本清理旧缓存）。</li>
+<li><strong>「从网站拉取最新」之后内容反而变旧了？</strong> 拉取拉的是「网站上的版本」——如果电脑改完文档还没发布（双击 <code>自动同步.command</code> 确认发布），网站上就是旧的，拉取会用旧构建替换手机内容。先发布再拉取即可；拉错了就用菜单「恢复内置文档」回滚。</li>
+<li><strong>重装/更新 App 后还是旧内容？</strong> App 优先加载之前「导入文档库 / 从网站拉取最新」留下的快照，覆盖安装 APK 不会覆盖它。菜单「恢复内置文档」回到出厂内容，或直接「导入文档库」选新的 文档库.html。想确认加载的是哪份内容：Aa 设置面板或文章末尾有「内容指纹 + 来源」标识。</li>
+<li><strong>文档里表格太宽？</strong> 表格先自适应收窄（缩字号/紧边距）尽量装下；实在装不下的在卡片容器内左右滑动，两缘有渐隐提示。代码块默认自动换行，可在阅读工具条 <code>Aa</code> 面板里改回「保结构横向滑动」。</li>
+<li><strong>想换图标/名字？</strong> 改 <code>build.py</code> 里的 <code>manifest</code> 与 <code>make_icons()</code>，或直接替换 <code>site/assets/</code> 下的图标后重建。</li>
+</ul>
+<h2 id="04c6e90faa-_3">开发者</h2>
+<ul>
+<li><code>build.py</code> 生成器；<code>assets/</code> 模板与样式；<code>docs/</code> 内容源；<code>site/</code> 产物（可整目录重新生成，勿手改）。</li>
+<li>自测：<code>python3 verify_build.py</code>（增/改/删同步场景）；<code>python3 verify_single.py</code>（单文件）；<code>python3 verify_lan.py</code>（局域网）；<code>python3 verify_memory.py</code>（阅读记忆）；<code>python3 verify_extras.py</code>（v1.7 体验功能：搜索/继续阅读/查找/图片打包等）；<code>python3 verify_ui.py</code>（需配合本地静态服务，见文件头注释）。</li>
+<li>需求、验收标准与验证边界见 <code>需求与验收.md</code> 与 <code>交付记录.md</code>。</li>
+</ul><nav class="doc-nav"><a class="prev" href="#doc-ea877eb60d"><span class="d-label">‹ 较新一篇</span><span class="d-title">交付记录 · md2phone（2026-09-30）</span></a><a class="next" href="#doc-899b96eadf"><span class="d-label">较早一篇 ›</span><span class="d-title">需求与验收 · md 文档手机阅读（2026-09-30）</span></a></nav></article>
 <article class="doc single-doc" id="doc-899b96eadf"><div class="doc-head"><a class="backtop" href="#top">↑ 文档列表</a></div><details class="doctoc"><summary>目录</summary><nav><a class="lv2" href="#899b96eadf-_1">问题定义</a>
 <a class="lv2" href="#899b96eadf-_2">故事与验收标准</a>
 <a class="lv3" href="#899b96eadf-1-mdp2">故事 1｜在手机上舒服地读一份 md（P2）</a>
@@ -634,7 +1050,10 @@ DEPLOY_CMD=&quot;netlify deploy --dir site --prod&quot; python3 build.py --watch
 <a class="lv3" href="#899b96eadf-4p23">故事 4｜单文件文档库（P2）〔练习③新增，第一版形态〕</a>
 <a class="lv3" href="#899b96eadf-5-p24">故事 5｜局域网版：图标 → 列表 → 阅读（P2）〔练习④新增，零第三方〕</a>
 <a class="lv3" href="#899b96eadf-6-app-p25interview-prep-app">故事 6｜安卓 App：图标 → 列表 → 阅读 + 导入更新（P2）〔练习⑤新增；客户确认：interview-prep 壳模式 + App 内导入〕</a>
-<a class="lv3" href="#899b96eadf-7-app-p28">故事 7｜确认式上传 + App 云端拉取 + 阅读位置记忆（P2）〔练习⑧，客户确认方案后实现〕</a></nav></details><h1 id="899b96eadf-md-2026-09-30">需求与验收 · md 文档手机阅读（2026-09-30）</h1>
+<a class="lv3" href="#899b96eadf-7-app-p28">故事 7｜确认式上传 + App 云端拉取 + 阅读位置记忆（P2）〔练习⑧，客户确认方案后实现〕</a>
+<a class="lv3" href="#899b96eadf-8v17-p29">故事 8｜v1.7 体验升级：搜索、继续阅读、查找与内容形态补强（P2）〔练习⑨·体验复盘新增；访谈非目标中仅「不做全文搜索」一项由本轮复盘解除，账号/协作/在线编辑仍为非目标〕</a>
+<a class="lv3" href="#899b96eadf-9v18-14-p29">故事 9｜v1.8 阅读体验整改：专家实读审查 14 项问题清零（P2）〔练习⑨二次复盘；以阅读体验专家身份对渲染页面逐屏实读后立项〕</a>
+<a class="lv3" href="#899b96eadf-10v19-p2-6">故事 10｜v1.9 阅读体验整改二轮：宽内容自适应、随处可调的阅读控制层、目录统一（P2）〔客户实读反馈立项：宽表格/长代码要左右滑、字号与目录必须滚回篇首才能用、目录与内容结构怪；以阅读体验专家身份二次实读走查补充 6 项〕</a></nav></details><h1 id="899b96eadf-md-2026-09-30">需求与验收 · md 文档手机阅读（2026-09-30）</h1><div class="doc-meta-line">更新于 2026-10-02 00:44 · 约 17 分钟 · 第 3/8 篇</div>
 <blockquote>
 <p>来源：客户访谈（2026-09-30，书面纪要即本文档）。风险分级说明：全部故事均为 P2（体验类），不触碰资金/隐私/生产数据，验证深度按 A1 取轻。</p>
 </blockquote>
@@ -653,63 +1072,234 @@ DEPLOY_CMD=&quot;netlify deploy --dir site --prod&quot; python3 build.py --watch
 <h2 id="899b96eadf-_2">故事与验收标准</h2>
 <h3 id="899b96eadf-1-mdp2">故事 1｜在手机上舒服地读一份 md（P2）</h3>
 <p><strong>价值</strong>：作为文档读者，我希望 md 文档在手机上排版良好、字号可调，随时随地能看。</p>
-<p><strong>AC</strong>：
-1. 给定 docs/ 内一份含标题、表格、代码块、引用、列表的 md，当执行构建，then 生成对应阅读页；390px 视口下正文无需横向滚动；表格在自身容器内横向滚动、不撑破页面；代码块同样容器内滚动。
-2. 点击「A−/A+」正文字号改变一档（范围 14–24px），刷新后保持（localStorage）。
-3. 点击目录按钮展开全部二/三级标题；点击条目跳转至对应小节并收起目录。
-4. 断网后，曾经打开过的页面仍可阅读（Service Worker 缓存回退）。</p>
+<p><strong>AC</strong>：</p>
+<ol>
+<li>给定 docs/ 内一份含标题、表格、代码块、引用、列表的 md，当执行构建，then 生成对应阅读页；390px 视口下正文无需横向滚动；表格在自身容器内横向滚动、不撑破页面；代码块同样容器内滚动。</li>
+<li>点击「A−/A+」正文字号改变一档（范围 14–24px），刷新后保持（localStorage）。</li>
+<li>点击目录按钮展开全部二/三级标题；点击条目跳转至对应小节并收起目录。</li>
+<li>断网后，曾经打开过的页面仍可阅读（Service Worker 缓存回退）。</li>
+</ol>
 <h3 id="899b96eadf-2p2">故事 2｜安装到手机桌面（P2）</h3>
 <p><strong>价值</strong>：作为文档读者，我希望像打开 App 一样从桌面图标进入文档库。</p>
-<p><strong>AC</strong>：
-1. 构建产物包含 manifest.webmanifest、192/512 图标与 apple-touch-icon，清单字段完整有效。
-2. 经 HTTPS 部署后，Android Chrome 菜单出现「添加到主屏幕」，iOS Safari 经「分享 → 添加到主屏幕」可安装，图标启动后以独立窗口（standalone）打开。
-   ——AC2 依赖真机与真实托管，本地只能验证 AC1；AC2 列入交付记录的未验证清单。〔练习③起 AC2 移出第一版；练习⑦起服务器侧已就绪：HTTPS 托管 https://zhouqs666.github.io/md2phone-docs/ 经公网验证，仅剩真机安装环节〕</p>
+<p><strong>AC</strong>：</p>
+<ol>
+<li>构建产物包含 manifest.webmanifest、192/512 图标与 apple-touch-icon，清单字段完整有效。</li>
+<li>经 HTTPS 部署后，Android Chrome 菜单出现「添加到主屏幕」，iOS Safari 经「分享 → 添加到主屏幕」可安装，图标启动后以独立窗口（standalone）打开。
+   ——AC2 依赖真机与真实托管，本地只能验证 AC1；AC2 列入交付记录的未验证清单。〔练习③起 AC2 移出第一版；练习⑦起服务器侧已就绪：HTTPS 托管 https://zhouqs666.github.io/md2phone-docs/ 经公网验证，仅剩真机安装环节〕</li>
+</ol>
 <h3 id="899b96eadf-3p23">故事 3｜电脑侧更新同步到手机（P2）〔练习③起移出第一版，升级路径保留〕</h3>
 <p><strong>价值</strong>：作为文档作者，我把 md 放进文件夹、跑一次同步，手机端就能看到最新内容；删除亦然。</p>
-<p><strong>AC</strong>：
-1. 新增：docs/ 放入新 md → 构建 → 首页列表出现该文档，点开内容完整。
-2. 更新：修改已有 md → 构建 → 对应页面内容变为新版本，首页「更新时间」刷新。
-3. 删除：从 docs/ 移除 md → 构建 → 首页不再出现，产物中该页面文件消失。
-4. 自动化：<code>--watch</code> 模式下，docs/ 文件增改删后 5 秒内自动重建；若设置 DEPLOY_CMD，重建后自动执行发布命令。
-5. 同步链路：部署到 HTTPS 托管后，手机端刷新即见最新列表。——依赖故事 2 的托管环境，真机验证列入未验证清单。〔练习⑦：服务器侧端到端已实测通过——新增 63s / 删除 73s 反映到公网；真机刷新为最后一步〕</p>
+<p><strong>AC</strong>：</p>
+<ol>
+<li>新增：docs/ 放入新 md → 构建 → 首页列表出现该文档，点开内容完整。</li>
+<li>更新：修改已有 md → 构建 → 对应页面内容变为新版本，首页「更新时间」刷新。</li>
+<li>删除：从 docs/ 移除 md → 构建 → 首页不再出现，产物中该页面文件消失。</li>
+<li>自动化：<code>--watch</code> 模式下，docs/ 文件增改删后 5 秒内自动重建；若设置 DEPLOY_CMD，重建后自动执行发布命令。</li>
+<li>同步链路：部署到 HTTPS 托管后，手机端刷新即见最新列表。——依赖故事 2 的托管环境，真机验证列入未验证清单。〔练习⑦：服务器侧端到端已实测通过——新增 63s / 删除 73s 反映到公网；真机刷新为最后一步〕</li>
+</ol>
 <p><strong>依赖</strong>：客户自备任一免费静态托管（Netlify / GitHub Pages / Cloudflare Pages，README 给出推荐与步骤）。</p>
 <h3 id="899b96eadf-4p23">故事 4｜单文件文档库（P2）〔练习③新增，第一版形态〕</h3>
 <p><strong>价值</strong>：作为文档读者，我希望拿到一个文件就能在手机上读全部文档——不注册、不安装、不联网、不依赖任何第三方服务。</p>
-<p><strong>AC</strong>：
-1. 构建产出单个自包含 HTML（<code>文档库.html</code>）：无外部样式/脚本/网络请求，双击即可在浏览器打开，断网可读。
-2. 390px 视口：文档列表与每篇正文均无横向滚动；表格在自身容器内滚动、不撑破页面。
-3. 点卡片跳到对应文档；每篇带「目录」可跳转小节；「↑ 文档列表」可返回。
-4. 字号 A−/A+ 生效；浏览器允许时刷新后保持。
-5. 传输路径：文件经微信/邮件/数据线到达手机后可直接打开阅读。——真机验证列入未验证清单，本地以 file:// 等效验证。</p>
+<p><strong>AC</strong>：</p>
+<ol>
+<li>构建产出单个自包含 HTML（<code>文档库.html</code>）：无外部样式/脚本/网络请求，双击即可在浏览器打开，断网可读。</li>
+<li>390px 视口：文档列表与每篇正文均无横向滚动；表格在自身容器内滚动、不撑破页面。</li>
+<li>点卡片跳到对应文档；每篇带「目录」可跳转小节；「↑ 文档列表」可返回。</li>
+<li>字号 A−/A+ 生效；浏览器允许时刷新后保持。</li>
+<li>传输路径：文件经微信/邮件/数据线到达手机后可直接打开阅读。——真机验证列入未验证清单，本地以 file:// 等效验证。</li>
+</ol>
 <p><strong>非目标（本版明确不做）</strong>：自动同步（更新 = 重发文件）；HTTPS 托管与桌面图标（升级路径，见故事 2/3）。</p>
 <h3 id="899b96eadf-5-p24">故事 5｜局域网版：图标 → 列表 → 阅读（P2）〔练习④新增，零第三方〕</h3>
 <p><strong>价值</strong>：作为文档读者，我希望从手机桌面图标点进文档库，看到列表、点开阅读——但不引入任何第三方服务。（练习④客户需求：需要一个图标，点进去能看到文档列表，点击文档打开阅读。）</p>
-<p><strong>AC</strong>：
-1. 电脑侧一条命令（双击 <code>局域网分享.command</code> 或 <code>python3 build.py --serve --lan</code>）启动服务，绑定所有网卡并显示出局域网访问地址。
-2. 同一 WiFi 下手机浏览器打开该地址：可见文档列表，点击任一文档进入阅读页。——本地以本机局域网 IP 访问等效验证；真机列未验证清单。
-3. 站点含 manifest 与图标文件；「添加到主屏幕」后以图标进入（预期：iOS 全屏 standalone、Android 图标快捷方式）——真机行为列未验证清单。
-4. 局域网范围内「准同步」：电脑重新构建后，手机刷新即见最新；与单文件版共用同一内容源（docs/）与构建器，互不冲突。</p>
+<p><strong>AC</strong>：</p>
+<ol>
+<li>电脑侧一条命令（双击 <code>局域网分享.command</code> 或 <code>python3 build.py --serve --lan</code>）启动服务，绑定所有网卡并显示出局域网访问地址。</li>
+<li>同一 WiFi 下手机浏览器打开该地址：可见文档列表，点击任一文档进入阅读页。——本地以本机局域网 IP 访问等效验证；真机列未验证清单。</li>
+<li>站点含 manifest 与图标文件；「添加到主屏幕」后以图标进入（预期：iOS 全屏 standalone、Android 图标快捷方式）——真机行为列未验证清单。</li>
+<li>局域网范围内「准同步」：电脑重新构建后，手机刷新即见最新；与单文件版共用同一内容源（docs/）与构建器，互不冲突。</li>
+</ol>
 <p><strong>边界</strong>：电脑需开机且手机同 WiFi；离开该网络不可用（此为与托管版的本质差异，交付时向客户讲明）。</p>
 <h3 id="899b96eadf-6-app-p25interview-prep-app">故事 6｜安卓 App：图标 → 列表 → 阅读 + 导入更新（P2）〔练习⑤新增；客户确认：interview-prep 壳模式 + App 内导入〕</h3>
 <p><strong>价值</strong>：作为文档读者，我要装一个真正的 App：桌面图标点开就是文档库，离线可读，日常更新不需要重装、不依赖电脑构建链。</p>
-<p><strong>AC</strong>：
-1. 构建流水线产出 <code>文档库.apk</code>（debug 签名，可直接安装）：内置当前全部文档（assets），首次安装开箱即读，全程离线。
-2. 点桌面图标 → 文档列表 → 点击进入阅读页；返回键在页内历史回退；390px 视口下阅读体验与网页版一致（字号/目录/表格容器滚动）。
-3. App 菜单「导入文档库」：经系统文件选择器选择 文档库.html 后立即切换为所导内容（拷入应用私有目录，重启后仍生效）；菜单「恢复内置」一键回到出厂文档。
-4. 内容更新 = 电脑改 md → <code>python3 build.py</code> → 把新的 文档库.html 发到手机 → App 内导入（约 20 秒，不重装）；APK 仅功能升级时重打。</p>
+<p><strong>AC</strong>：</p>
+<ol>
+<li>构建流水线产出 <code>文档库.apk</code>（debug 签名，可直接安装）：内置当前全部文档（assets），首次安装开箱即读，全程离线。</li>
+<li>点桌面图标 → 文档列表 → 点击进入阅读页；返回键在页内历史回退；390px 视口下阅读体验与网页版一致（字号/目录/表格容器滚动）。</li>
+<li>App 菜单「导入文档库」：经系统文件选择器选择 文档库.html 后立即切换为所导内容（拷入应用私有目录，重启后仍生效）；菜单「恢复内置」一键回到出厂文档。</li>
+<li>内容更新 = 电脑改 md → <code>python3 build.py</code> → 把新的 文档库.html 发到手机 → App 内导入（约 20 秒，不重装）；APK 仅功能升级时重打。</li>
+</ol>
 <p><strong>非目标</strong>：iOS App（苹果签名门槛，客户确认跟随参考模式结论，iPhone 走 PWA/单文件）；自动同步（局域网拉取列为后续可选）。</p>
 <p><strong>验证边界</strong>：AC1 静态检查（APK 结构、assets 页面、包名与应用名）与 AC3 代码路径本机可验；AC2/AC3 的真机安装与手势操作列未验证清单。</p>
 <h3 id="899b96eadf-7-app-p28">故事 7｜确认式上传 + App 云端拉取 + 阅读位置记忆（P2）〔练习⑧，客户确认方案后实现〕</h3>
 <p><strong>价值</strong>：作为文档作者，我希望电脑上的更新经我确认后才上传网站；作为读者，我希望在 App 上一键拉取最新内容，并且每个文档都能从上次读到的地方继续。</p>
-<p><strong>AC</strong>：
-1. 确认门：自动通道检测到 docs/ 变化 → 弹出系统对话框【发布 / 本次跳过 / 本会话不再询问】；跳过 → 不发布且下次变化再次询问；确认 → 发布；「本会话不再询问」后本进程内不再弹窗。手动运行 publish_github.py 视为已确认，不弹窗。（跳过/确认两分支已自动化验证：F1-RESULT PASS；弹窗点击为人工验证项）
-2. 发布侧提供 <code>version.json</code>（内容指纹）与 <code>library.html</code>（整库快照），且站点构建产物确定性可复现（相同 docs → 相同产物 → 指纹一致，跳过守卫有效）。
-3. App 菜单「从网站拉取最新」：比对指纹 → 无更新提示「已是最新」；有更新 → 下载整库快照 → 大小与内容校验 → 原子替换本地副本 → 立即加载并提示大小；失败（无网络/校验不过）不影响本地已有内容。（协议与产物已公网验证；按钮手势真机验）
-4. 阅读位置记忆：多页阅读页按文档记忆滚动位置（百分比），重开恢复；单文件库按「文档 ID + 段内比例」记忆恢复；跨文档互不干扰；记忆仅存本机 localStorage。（Playwright 自动化验证；真机 WebView 手感待验）</p>
+<p><strong>AC</strong>：</p>
+<ol>
+<li>确认门：自动通道检测到 docs/ 变化 → 弹出系统对话框【发布 / 本次跳过 / 本会话不再询问】；跳过 → 不发布且下次变化再次询问；确认 → 发布；「本会话不再询问」后本进程内不再弹窗。手动运行 publish_github.py 视为已确认，不弹窗。（跳过/确认两分支已自动化验证：F1-RESULT PASS；弹窗点击为人工验证项）</li>
+<li>发布侧提供 <code>version.json</code>（内容指纹）与 <code>library.html</code>（整库快照），且站点构建产物确定性可复现（相同 docs → 相同产物 → 指纹一致，跳过守卫有效）。</li>
+<li>App 菜单「从网站拉取最新」：比对指纹 → 无更新提示「已是最新」；有更新 → 下载整库快照 → 大小与内容校验 → 原子替换本地副本 → 立即加载并提示大小；失败（无网络/校验不过）不影响本地已有内容。（协议与产物已公网验证；按钮手势真机验）</li>
+<li>阅读位置记忆：多页阅读页按文档记忆滚动位置（百分比），重开恢复；单文件库按「文档 ID + 段内比例」记忆恢复；跨文档互不干扰；记忆仅存本机 localStorage。（Playwright 自动化验证；真机 WebView 手感待验）</li>
+</ol>
 <p><strong>非目标</strong>：App 后台自动拉取（仅按钮手动）；跨设备位置漫游。</p>
-<p><strong>验证结果</strong>：F1-RESULT PASS（分支A 跳过/分支B 确认）；F2 协议模拟 PASS（公网端点+校验+落盘+渲染）；F3 见 verify_memory.py 输出。</p></article>
+<p><strong>验证结果</strong>：F1-RESULT PASS（分支A 跳过/分支B 确认）；F2 协议模拟 PASS（公网端点+校验+落盘+渲染）；F3 见 verify_memory.py 输出。</p>
+<h3 id="899b96eadf-8v17-p29">故事 8｜v1.7 体验升级：搜索、继续阅读、查找与内容形态补强（P2）〔练习⑨·体验复盘新增；访谈非目标中仅「不做全文搜索」一项由本轮复盘解除，账号/协作/在线编辑仍为非目标〕</h3>
+<p><strong>价值</strong>：作为文档读者，我希望文档多了也能快速定位内容、随时接着上次继续读，阅读器具备完整的手感与离线秒开体验。</p>
+<p><strong>AC</strong>：</p>
+<ol>
+<li>列表搜索：首页搜索框输入关键词 → 按标题/正文过滤卡片，正文命中显示高亮片段与「命中 n/共 m 篇」；清空恢复。索引构建时内联进首页（file:// 与离线可用）。单文件版从 DOM 建索引，Enter 跳到第一篇命中文档并闪烁标记。</li>
+<li>继续阅读：读过某篇（非顶部/结尾）后回列表 → 顶部出现「继续阅读」横幅（最近在读一篇 + 上次位置百分比），点击直达该位置；列表页返回后滚动位置保持，不回顶。</li>
+<li>页内查找：阅读页 ⌕ 打开查找条 → 命中处高亮、显示 n/m、↑↓ 循环定位、× 或 Esc 清除；单文件版作用于全部文档（上限 500 处防卡顿）。</li>
+<li>阅读辅助：目录随滚动高亮当前小节；顶部阅读进度条；代码块一键复制（按钮固定于滚动容器右上角）；正文图片点击灯箱放大；底部「上一篇/下一篇」（单文件版为篇内锚点）。</li>
+<li>外观与字号：◐ 三档（跟随系统/浅色/深色）即时生效且刷新保持；A−/A+ 之间显示当前档位，点击恢复默认 17。</li>
+<li>秒开与更新感知：静态壳（样式/脚本/图标/清单）cache-first，打开不被网络阻塞（HTML 仍 network-first 保证内容最新）；SW 换代激活后向已打开页面广播「内容已更新」提示条（首次安装不弹）。</li>
+<li>图片打包：docs/ 内 md 引用的本地图片，构建后 PWA 版拷入 site/assets/docs/<slug>/ 并改写相对路径；单文件版内嵌 data URI（字节级一致）；随 APK 资产同步。找不到的图片保留原引用并构建时告警。</li>
+<li>安卓 App：文档内外链（http/https/mailto/tel/sms）调起系统应用，App 内仅保留 file:// 导航；「从网站拉取最新」全程进度对话框（连接→下载），可取消且取消不落盘；「导入文档库」校验文件（≥2KB 且含整库标记），选错提示不加载；启动时静默比对版本指纹，不一致才弹窗询问（不自动下载）；夜间主题（values-night）跟随系统，标题栏/状态栏与暗色内容一致。</li>
+</ol>
+<p><strong>验证结果</strong>：verify_extras.py 34 项 PASS（新增可重复脚本，覆盖 AC1–7）；六套回归全过（build/single/lan/memory/ui/extras）；AC8 为代码路径本机验证 + APK 重打成功，真机手势列未验证清单。</p>
+<h3 id="899b96eadf-9v18-14-p29">故事 9｜v1.8 阅读体验整改：专家实读审查 14 项问题清零（P2）〔练习⑨二次复盘；以阅读体验专家身份对渲染页面逐屏实读后立项〕</h3>
+<p><strong>价值</strong>：作为文档读者，我希望长文档在手机上"读得进去"——内容不被静默裁切、界面不喧宾夺主、长滚动有节奏有去向。</p>
+<p><strong>AC</strong>：</p>
+<ol>
+<li>宽内容可发现：表格与代码块两缘在可滑动方向显示渐隐提示；表头允许换行——「可信度图例表」恢复首屏完整可读，流程图裁切处有滑动暗示。</li>
+<li>复制按钮置于代码块上方预留工具位（几何断言：按钮底边 ≤ 代码块顶边），不遮挡任何正文。</li>
+<li>开篇 blockquote 升级为「文档头卡」：从源文本逐行还原字段结构（修复 markdown 软合并导致的粘连），正常字色；仅当正文开头（允许 h1 在前）即该引用块时触发，不误伤普通 callout。</li>
+<li>行内 code 标记加描边，浅色下「已实践/待验证/假设」可信度标记肉眼可辨。</li>
+<li>阅读页顶栏收敛为 <code>‹ 标题 Aa 🔍 ☰</code>：字号（A−/档位/A+，点档位恢复默认 17）与外观三档收进 Aa 弹出层（点外部/Esc 收起）。</li>
+<li>顶栏下滑隐退、上滑唤出（弹出层/抽屉打开时保持可见）；深滚动时顶栏标题自动切换为当前小节名，回到篇首恢复文档标题。</li>
+<li>长文档辅助：h1 下元信息行（更新时间 · 时长 · 序号/总篇数）；右下角「↑ 回到顶部」深滚动出现；「目录」标题下自带列表压缩渲染；「变更记录」小节折叠为「展开变更记录（N 条）」。</li>
+<li>层级与节奏：h3 带品牌色左侧竖条、h4 加粗；列表条目间距加大、bullet 与文本间距收紧。</li>
+<li>交互修补：目录遮罩层级降至顶栏之下（☰ 可再次点击关闭）；Esc 依次关闭灯箱/查找条/弹出层/抽屉；底部导航语义改为「‹ 较新一篇 / 较早一篇 ›」。</li>
+<li>暗色正文亮度微调（#e6e9ee → #d5dbe3）；首页卡片摘要收紧为单行。</li>
+<li>源格式修复：《需求与验收》8 处「<strong>AC</strong>：」后缺空行导致 AC 列表被吞成段落墙——补空行后 36 条 AC 恢复列表形态（渲染断言：ol 条目数 = 36）。</li>
+</ol>
+<p><strong>验证结果</strong>：verify_extras.py 扩至 46 项 PASS；六套回归全过；第二轮 390×844 实读复检（/tmp/ux_review2/，18 张截图逐张审读）确认各项生效且无新问题；APK 重打。</p>
+<h3 id="899b96eadf-10v19-p2-6">故事 10｜v1.9 阅读体验整改二轮：宽内容自适应、随处可调的阅读控制层、目录统一（P2）〔客户实读反馈立项：宽表格/长代码要左右滑、字号与目录必须滚回篇首才能用、目录与内容结构怪；以阅读体验专家身份二次实读走查补充 6 项〕</h3>
+<p><strong>价值</strong>：作为文档读者，我读到一半随时能调字号、看目录，宽表格和长代码不再强迫我离开阅读动线去左右滑动。</p>
+<p><strong>AC</strong>：</p>
+<ol>
+<li>宽表格自适应：逐表检测溢出 → 自动进入压缩档（缩字号/收边距/允许断行）→ 多数表格直接装下（390px 实测：14 表 3 表压缩后 0 溢出）；仍放不下的才容器内滑动，两缘渐隐提示保留。字号/旋转等布局变化后自动重新适配。</li>
+<li>代码块阅读优先：默认自动换行（长命令、ASCII 流程图免左右滑动），设置面板开关可关回「保结构横向滑动」；代码块限高 65vh 内部滚动，不再占据数屏。</li>
+<li>阅读控制层随手可达：阅读中轻点正文空白处 → 顶栏与底部工具条（☰ 目录 / Aa 字号 / 🔍 查找）一起唤出，再点收起；下滑阅读自动隐退、上滑唤出；篇首顶栏常驻；首次进入沉浸态弹一次性手势提示（轻点屏幕可呼出…）；「↑ 回到顶部」保持独立悬浮键，深滚动任何时刻可及。</li>
+<li>字号五档预设（14/17/20/23/26，底部面板直选 + 当前档高亮 + 「默认」键），改字号锚定当前阅读位置不跳动（禁用浏览器滚动锚定 + 适配表格后按锚点底边补偿滚动）；旧版逐 px 记忆自动吸附最近档；刷新保持。</li>
+<li>目录结构与内容统一：正文手写「目录」小节构建时移除（不可点击、占一整屏、与真实标题粒度不一致）；抽屉成为唯一目录——打开即高亮并定位当前小节、头部显示已读百分比、无「目录」自引用条目；单文件版工具条 ☰ 按当前读到文档动态装配抽屉内容。</li>
+<li>外观三选分段按钮（自动/浅色/深色）替代循环单击，当前项高亮。</li>
+<li>细节修复：正文 overflow-wrap 防长词/长 URL 溢出；行内 code 任意断行；可滚动表格/代码块加 tabindex 可聚焦（键盘可达）；暗色模式 theme-color 适配；「目录」小节紧邻的分隔线一并收纳避免双线。</li>
+</ol>
+<p><strong>验证结果</strong>：verify_extras.py 扩至 58 项 PASS；六套回归全过（build/single/lan/memory/ui/extras）；字号位置保持经 17→26→14→20→17 往返实测（正在读的段落始终覆盖视口顶、目标小节留在屏内，PWA 与单文件双形态）；第二轮 390×844 截图复检抽屉/工具条/面板视觉。</p><nav class="doc-nav"><a class="prev" href="#doc-04c6e90faa"><span class="d-label">‹ 较新一篇</span><span class="d-title">md2phone · 把 Markdown 放进手机</span></a><a class="next" href="#doc-bc5441b46c"><span class="d-label">较早一篇 ›</span><span class="d-title">md2phone · 内容与构建约定（AGENTS.md）</span></a></nav></article>
+<article class="doc single-doc" id="doc-bc5441b46c"><div class="doc-head"><a class="backtop" href="#top">↑ 文档列表</a></div><details class="doctoc"><summary>目录</summary><nav><a class="lv2" href="#bc5441b46c-_1">这是什么</a>
+<a class="lv2" href="#bc5441b46c-_2">目录结构</a>
+<a class="lv2" href="#bc5441b46c-_3">日常内容更新（最常用路径）</a>
+<a class="lv2" href="#bc5441b46c-_4">正本与副本（防「改了正本忘了拷」）</a>
+<a class="lv2" href="#bc5441b46c-apkmac-android-sdk">重打 APK（仅功能升级时；Mac 本机执行，需 Android SDK）</a>
+<a class="lv2" href="#bc5441b46c-_5">验证纪律</a>
+<a class="lv2" href="#bc5441b46c-iphone">iPhone 说明</a></nav></details><h1 id="bc5441b46c-md2phone-agentsmd">md2phone · 内容与构建约定（AGENTS.md）</h1><div class="doc-meta-line">更新于 2026-10-01 22:46 · 约 5 分钟 · 第 4/8 篇</div>
+<blockquote>
+<p><strong>任何会话在本目录工作前，先读本文件。</strong> 这是「手机文档库」的内容管线与构建约定，跨会话唯一的执行依据。（体例沿用 interview-prep 工程。）</p>
+</blockquote>
+<h2 id="bc5441b46c-_1">这是什么</h2>
+<p>Markdown 文档库，四种形态共用同一个内容源，最终形态是一个 Android App（WebView 套壳 + App 内导入更新）。</p>
+<p>内容链路（单向，勿反向手改）：</p>
+<pre><code>docs/*.md（源，唯一手改点）→ python3 build.py
+    ├→ site/                    （PWA 站点，供托管 / 局域网版）
+    ├→ 文档库.html              （单文件版，微信直接发手机）
+    └→ android-app/.../assets/web（APK 内置内容）
+        → ./gradlew assembleDebug → 文档库.apk
+</code></pre>
+<h2 id="bc5441b46c-_2">目录结构</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>路径</th>
+<th>作用</th>
+<th>是否手改</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>docs/</code></td>
+<td>唯一的源文件（md）</td>
+<td>✅ 只改这里</td>
+</tr>
+<tr>
+<td><code>build.py</code></td>
+<td>生成器（PWA + 单文件 + APK 资产同步）</td>
+<td>一般不改</td>
+</tr>
+<tr>
+<td><code>assets/</code></td>
+<td>网页模板与样式</td>
+<td>一般不改</td>
+</tr>
+<tr>
+<td><code>site/</code>、<code>文档库.html</code></td>
+<td>生成产物</td>
+<td>❌ 由脚本生成</td>
+</tr>
+<tr>
+<td><code>android-app/</code></td>
+<td>Kotlin WebView 壳工程（导入式更新，见 MainActivity.kt 头注释）</td>
+<td>一般不改</td>
+</tr>
+<tr>
+<td><code>文档库.apk</code></td>
+<td>打好的安装包</td>
+<td>❌ 由 gradle 产出</td>
+</tr>
+<tr>
+<td><code>verify_build.py</code> / <code>verify_single.py</code> / <code>verify_lan.py</code> / <code>verify_memory.py</code> / <code>verify_extras.py</code> / <code>verify_ui.py</code></td>
+<td>各形态与功能的可重复验收</td>
+<td>改动后必跑</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="bc5441b46c-_3">日常内容更新（最常用路径）</h2>
+<ol>
+<li><strong>改内容只改 <code>docs/*.md</code></strong>（会被下次构建覆盖的文件不要手改）；</li>
+<li>方式一（推荐）：双击「自动同步.command」→ 弹窗确认「发布」→ 网站自动更新 → 手机刷新或 App「从网站拉取最新」；</li>
+<li>方式二（离线）：<code>python3 build.py</code> → 把 <code>文档库.html</code> 发到手机 → App 菜单「导入文档库」。
+   ⚠️ App 导入与拉取的永远是<strong>整库快照</strong>（文档库.html / library.html），不是 .md 原文——App 不解析 md。
+   ⚠️ 自动通道每次发布需弹窗确认（可选「本会话自动发布」）；手动运行 publish_github.py 视为已确认。</li>
+</ol>
+<h2 id="bc5441b46c-_4">正本与副本（防「改了正本忘了拷」）</h2>
+<p><code>docs/</code> 里有一部分文件是<strong>副本</strong>，正本在别处：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>docs/ 副本</th>
+<th>正本位置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FDE-工作指南.md</code></td>
+<td><code>~/Desktop/FDE-Playbook/FDE-工作指南.md</code></td>
+</tr>
+<tr>
+<td><code>需求与验收.md</code>、<code>交付记录.md</code>、<code>README.md</code>、<code>AGENTS.md</code></td>
+<td><code>md2phone/</code> 根目录同名文件</td>
+</tr>
+<tr>
+<td><code>001/002-*.md</code></td>
+<td><code>~/Desktop/FDE-Playbook/实践沉淀/</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>规则：改了正本，必须重新拷入 <code>docs/</code> 再构建</strong>，否则库里是旧版本（血泪：指南升到 v0.6，库里的副本还停在 v0.3，被客户一问才发现）。</p>
+<h2 id="bc5441b46c-apkmac-android-sdk">重打 APK（仅功能升级时；Mac 本机执行，需 Android SDK）</h2>
+<pre><code class="language-bash">cd android-app
+./gradlew assembleDebug
+cp app/build/outputs/apk/debug/app-debug.apk ../文档库.apk
+</code></pre>
+<ul>
+<li>debug 签名（自动签名可直接安装），个人用途足够，无需 release 签名；</li>
+<li><code>gradle.properties</code> 已把 Gradle 指向 Android Studio 内嵌 JDK 21，直接 <code>./gradlew</code> 即可，勿用系统 JDK 8；</li>
+<li>gradle 发行版与依赖走本地缓存 / aliyun 源（同 interview-prep），本机可离线构建。</li>
+</ul>
+<h2 id="bc5441b46c-_5">验证纪律</h2>
+<p>任何 <code>docs/</code>、<code>assets/</code>、<code>build.py</code> 改动后：<code>python3 verify_build.py &amp;&amp; python3 verify_single.py &amp;&amp; python3 verify_lan.py &amp;&amp; python3 verify_memory.py &amp;&amp; python3 verify_extras.py</code>（<code>verify_ui.py</code> 需另配本地静态服务，发布前补跑）。
+<strong>「上一版通过」不证明「这一版结构正确」</strong>（血泪：单文件版正文全出血 bug 连过两轮验证才暴露）。</p>
+<h2 id="bc5441b46c-iphone">iPhone 说明</h2>
+<p>苹果不允许直接装安装包；iPhone 走 site/ 托管 PWA（用法 B）、局域网版（A2）或单文件（A）。</p><nav class="doc-nav"><a class="prev" href="#doc-899b96eadf"><span class="d-label">‹ 较新一篇</span><span class="d-title">需求与验收 · md 文档手机阅读（2026-09-30）</span></a><a class="next" href="#doc-76a7821113"><span class="d-label">较早一篇 ›</span><span class="d-title">FDE 工作指南（Forward Deployed Engineer Work Guide）</span></a></nav></article>
 <article class="doc single-doc" id="doc-76a7821113"><div class="doc-head"><a class="backtop" href="#top">↑ 文档列表</a></div><details class="doctoc"><summary>目录</summary><nav><a class="lv2" href="#76a7821113-_1">本版验证状态（先读）</a>
-<a class="lv2" href="#76a7821113-_2">目录</a>
 <a class="lv2" href="#76a7821113-0">0. 角色与公理</a>
 <a class="lv3" href="#76a7821113-01-fde">0.1 FDE 是什么</a>
 <a class="lv3" href="#76a7821113-02">0.2 三条公理（一切裁剪的推导起点）</a>
@@ -759,12 +1349,8 @@ DEPLOY_CMD=&quot;netlify deploy --dir site --prod&quot; python3 build.py --watch
 <a class="lv2" href="#76a7821113-b">附录 B：术语表</a>
 <a class="lv2" href="#76a7821113-c">附录 C：实践验证记录</a>
 <a class="lv2" href="#76a7821113-_3">资料来源与时效</a>
-<a class="lv2" href="#76a7821113-_4">变更记录</a></nav></details><h1 id="76a7821113-fde-forward-deployed-engineer-work-guide">FDE 工作指南（Forward Deployed Engineer Work Guide）</h1>
-<blockquote>
-<p>版本：v0.7 · 日期：2026-10-01
-定位：面向「前置部署工程师（FDE）」角色的通用交付流程框架。独立于任何具体产品、技术栈、AI 工具与硬件环境。
-使用方式：本文档是骨架与公理的唯一定义处。所有裁剪（流程轻重、工件增减、工具选择）都从公理与适配层推导，不修改本文档；修改本文档 = 版本升级（见文末变更记录）。</p>
-</blockquote>
+<a class="lv2" href="#76a7821113-_4">变更记录</a></nav></details><h1 id="76a7821113-fde-forward-deployed-engineer-work-guide">FDE 工作指南（Forward Deployed Engineer Work Guide）</h1><div class="doc-meta-line">更新于 2026-10-01 11:19 · 约 61 分钟 · 第 5/8 篇</div>
+<div class="doc-meta"><p>版本：v0.7 · 日期：2026-10-01</p><p>定位：面向「前置部署工程师（FDE）」角色的通用交付流程框架。独立于任何具体产品、技术栈、AI 工具与硬件环境。</p><p>使用方式：本文档是骨架与公理的唯一定义处。所有裁剪（流程轻重、工件增减、工具选择）都从公理与适配层推导，不修改本文档；修改本文档 = 版本升级（见文末变更记录）。</p></div>
 <h2 id="76a7821113-_1">本版验证状态（先读）</h2>
 <p>这份文档的规则分三种可信度，混着读会误判：</p>
 <div class="table-wrap"><table>
@@ -873,80 +1459,6 @@ DEPLOY_CMD=&quot;netlify deploy --dir site --prod&quot; python3 build.py --watch
 </tbody>
 </table></div>
 <p><strong>每完成一轮实战或演练，往附录 C 记一行</strong>——那是这份文档唯一的迭代输入。</p>
-<hr />
-<h2 id="76a7821113-_2">目录</h2>
-<ul>
-<li>
-<ol start="0">
-<li>角色与公理（FDE 是什么 / 三条公理 / 职责槽位 / 职业红线 / 转型者入口）</li>
-</ol>
-</li>
-<li>
-<ol>
-<li>交付全程总览（阶段、门、时间配比）</li>
-</ol>
-</li>
-<li>
-<ol start="2">
-<li>接洽前：项目评估（门 G0）</li>
-</ol>
-</li>
-<li>
-<ol start="3">
-<li>阶段一：理解（Discovery）｜出口门 G1</li>
-</ol>
-</li>
-<li>
-<ol start="4">
-<li>阶段二：定义｜出口门 G2</li>
-</ol>
-</li>
-<li>
-<ol start="5">
-<li>阶段三：构建｜出口门 G3</li>
-</ol>
-</li>
-<li>
-<ol start="6">
-<li>阶段四：交付｜出口门 G4</li>
-</ol>
-</li>
-<li>
-<ol start="7">
-<li>收尾与沉淀（门 G5）</li>
-</ol>
-</li>
-<li>
-<ol start="8">
-<li>工件体系（存在什么、何时加重）</li>
-</ol>
-</li>
-<li>
-<ol start="9">
-<li>适配层（进新项目/新公司先跑一遍）</li>
-</ol>
-</li>
-<li>
-<ol start="10">
-<li>能力模型（刻意练习映射）</li>
-</ol>
-</li>
-<li>
-<ol start="11">
-<li>与公司内部的协作</li>
-</ol>
-</li>
-<li>
-<ol start="12">
-<li>常见困境与应对</li>
-</ol>
-</li>
-<li>附录 A：示例（虚构项目，用于校准「写到多细」）</li>
-<li>附录 B：术语表</li>
-<li>附录 C：实践验证记录</li>
-<li>资料来源与时效</li>
-<li>变更记录</li>
-</ul>
 <hr />
 <h2 id="76a7821113-0">0. 角色与公理</h2>
 <h3 id="76a7821113-01-fde">0.1 FDE 是什么</h3>
@@ -1990,7 +2502,7 @@ DEPLOY_CMD=&quot;netlify deploy --dir site --prod&quot; python3 build.py --watch
 </table></div>
 <p><strong>校准规则</strong>：本节数据每年校准一次（与年度复盘合并）。指南正文刻意不绑定具体工具与厂商，正文内容不随行业热点漂移；漂移只发生在本节的证据数字上。<strong>v0.3 未逐条核对原始报告</strong>，校准时请补原始链接并标注核对结论。</p>
 <hr />
-<h2 id="76a7821113-_4">变更记录</h2>
+<h2 id="76a7821113-_4">变更记录</h2><details class="changelog"><summary>展开变更记录（23 条）</summary>
 <ul>
 <li>v0.7（2026-10-01）：练习⑦（全自动同步）触发的修订，见附录 C。</li>
 <li>3.2 环境评估清单新增「外部服务依赖」行：第三方服务的账号授权归属、配额/延迟/可达性的逐项验证、不可达时的替代路径是必答项（<code>待验证</code>；本轮实践中「git 端点不可达 → 全 API 发布替代」正是该条的实证）。</li>
@@ -2015,11 +2527,11 @@ DEPLOY_CMD=&quot;netlify deploy --dir site --prod&quot; python3 build.py --watch
 <li>复核层（独立上下文对抗性复核后修正）：统一 4.6 与 6.4 的范围判据（消除环状引用）；8.1 补入边界契约/环境评估/签认与验收记录/运维手册，8.2 与 4.5 的触发条件对齐；5.1 补「显式证据替代自动化」的唯一例外口径；把非确定性产出的落点补全（4.4 抽样项、4.5 评测集触发器、3.4 成本与延迟字段）；0.3 增设「独立审查」槽位并给出单人场景的审查解法（5.4）；5.4 定义「关键改动」；6.3 补最小观测动作清单；第 9 章补每步产出物与强度对照表；G4 纳入发布门；术语表补 P95/制品哈希/回归/抽样比例；清除「实践教训」「行业的新共识」「2026 年的市场现实」等暗示已验证或脱离来源保护的表述；修正岗位数量区间（991 不在 1,000–1,500 内）与附录 C 示例行。</li>
 <li>v0.2（2026-09-30）：资深 FDE 视角全面审查后修订——补齐 DoD 检查表（4.4）与 G0/G5 过门标准，门控体系闭环；新增需求变更管理（6.4）、内部协作（11）、常见困境（12）；环境评估补数据质量维度；时间配比等绝对化表述改为参考值；新增转型者入口（0.5，含求职防坑）、访谈观察法与怀疑者名单（3.1）；新增附录 A 示例、附录 B 术语表；行业证据更新至 2026 年并新增「资料来源与时效」小节。</li>
 <li>v0.1（2026-09-30）：初稿。四阶段骨架 + 三公理 + 职责槽位 + 理解阶段标准化（访谈提纲/环境评估/两张一页纸）+ 工件触发器 + 适配层 + 能力映射。</li>
-</ul></article>
+</ul></details><nav class="doc-nav"><a class="prev" href="#doc-bc5441b46c"><span class="d-label">‹ 较新一篇</span><span class="d-title">md2phone · 内容与构建约定（AGENTS.md）</span></a><a class="next" href="#doc-8f07a8680e"><span class="d-label">较早一篇 ›</span><span class="d-title">GitHub Pages 全自动发布：绕开 git 端点、空仓库与排障假信号</span></a></nav></article>
 <article class="doc single-doc" id="doc-8f07a8680e"><div class="doc-head"><a class="backtop" href="#top">↑ 文档列表</a></div><details class="doctoc"><summary>目录</summary><nav><a class="lv2" href="#8f07a8680e-git-github-pages">一、方案：不经过 git 的 GitHub Pages 发布</a>
 <a class="lv2" href="#8f07a8680e-_1">二、三个真实的坑（都花过排障时间）</a>
 <a class="lv2" href="#8f07a8680e-_2">三、最大的教训：测试环境的进程视图 ≠ 真实环境</a>
-<a class="lv2" href="#8f07a8680e-_3">四、时延账本（客户预期管理）</a></nav></details><h1 id="8f07a8680e-github-pages-git">GitHub Pages 全自动发布：绕开 git 端点、空仓库与排障假信号</h1>
+<a class="lv2" href="#8f07a8680e-_3">四、时延账本（客户预期管理）</a></nav></details><h1 id="8f07a8680e-github-pages-git">GitHub Pages 全自动发布：绕开 git 端点、空仓库与排障假信号</h1><div class="doc-meta-line">更新于 2026-10-01 11:19 · 约 4 分钟 · 第 6/8 篇</div>
 <blockquote>
 <p>定位：练习⑦（全自动同步）的实践层沉淀。规则层结论在指南 v0.7（3.2「外部服务依赖」行）。</p>
 </blockquote>
@@ -2075,16 +2587,13 @@ DEPLOY_CMD=&quot;netlify deploy --dir site --prod&quot; python3 build.py --watch
 </tr>
 </tbody>
 </table></div>
-<p>对时效极敏感的场景（改完 10 秒内必须看到）：用 App 内导入（发 文档库.html），秒级。</p></article>
+<p>对时效极敏感的场景（改完 10 秒内必须看到）：用 App 内导入（发 文档库.html），秒级。</p><nav class="doc-nav"><a class="prev" href="#doc-76a7821113"><span class="d-label">‹ 较新一篇</span><span class="d-title">FDE 工作指南（Forward Deployed Engineer Work Guide）</span></a><a class="next" href="#doc-a8e08c60a5"><span class="d-label">较早一篇 ›</span><span class="d-title">形态选型复盘：为什么没有早点想到 App</span></a></nav></article>
 <article class="doc single-doc" id="doc-a8e08c60a5"><div class="doc-head"><a class="backtop" href="#top">↑ 文档列表</a></div><details class="doctoc"><summary>目录</summary><nav><a class="lv2" href="#a8e08c60a5-_1">一、时间线还原（谁在什么时候知道什么）</a>
 <a class="lv2" href="#a8e08c60a5-_2">二、客观归因</a>
 <a class="lv2" href="#a8e08c60a5-_3">三、参考项目到底解锁了什么</a>
 <a class="lv2" href="#a8e08c60a5-_4">四、一个对称的事实（避免复盘变成单方面检讨）</a>
-<a class="lv2" href="#a8e08c60a5-fde">五、给 FDE 的三条带走的动作</a></nav></details><h1 id="a8e08c60a5-app">形态选型复盘：为什么没有早点想到 App</h1>
-<blockquote>
-<p>定位：FDE 演练「md 文档手机阅读」练习⑥的复盘笔记。客户问了一句「没让你参考前，你的结论一直是需要依赖第三方——是我表达不清晰，还是你认知不够？」本文是该问题的客观拆解。
-规则层结论已收进《FDE 工作指南》v0.6（3.2「既有资产」行）；本文是完整过程与细节。</p>
-</blockquote>
+<a class="lv2" href="#a8e08c60a5-fde">五、给 FDE 的三条带走的动作</a></nav></details><h1 id="a8e08c60a5-app">形态选型复盘：为什么没有早点想到 App</h1><div class="doc-meta-line">更新于 2026-10-01 11:19 · 约 5 分钟 · 第 7/8 篇</div>
+<div class="doc-meta"><p>定位：FDE 演练「md 文档手机阅读」练习⑥的复盘笔记。客户问了一句「没让你参考前，你的结论一直是需要依赖第三方——是我表达不清晰，还是你认知不够？」本文是该问题的客观拆解。</p><p>规则层结论已收进《FDE 工作指南》v0.6（3.2「既有资产」行）；本文是完整过程与细节。</p></div>
 <h2 id="a8e08c60a5-_1">一、时间线还原（谁在什么时候知道什么）</h2>
 <div class="table-wrap"><table>
 <thead>
@@ -2184,7 +2693,7 @@ DEPLOY_CMD=&quot;netlify deploy --dir site --prod&quot; python3 build.py --watch
 <li>方案概要永远给<strong>选项空间对照表</strong>，哪怕推荐倾向明显——决策人裁定的对象是选项，不是论证；</li>
 <li>环境评估必问<strong>既有资产</strong>（同类交付、参考实现、可复用管线，"哪怕叫别的名字、放在别处"）；</li>
 <li>M5 收尾题「有没有我没问到但重要的事」是防「interview-prep 情形」的唯一闸门，<strong>必问，不许省</strong>。</li>
-</ol></article>
+</ol><nav class="doc-nav"><a class="prev" href="#doc-8f07a8680e"><span class="d-label">‹ 较新一篇</span><span class="d-title">GitHub Pages 全自动发布：绕开 git 端点、空仓库与排障假信号</span></a><a class="next" href="#doc-c880ec32f7"><span class="d-label">较早一篇 ›</span><span class="d-title">把 md 放到手机上：PWA 跨端与实践笔记</span></a></nav></article>
 <article class="doc single-doc" id="doc-c880ec32f7"><div class="doc-head"><a class="backtop" href="#top">↑ 文档列表</a></div><details class="doctoc"><summary>目录</summary><nav><a class="lv2" href="#c880ec32f7-pwa">一、方案选型结论（为什么是 PWA 文档站）</a>
 <a class="lv3" href="#c880ec32f7-_1">三形态对比（同一构建器的三种交付形态）</a>
 <a class="lv3" href="#c880ec32f7-4">图标的技术本质（练习④：客户要「图标 → 列表 → 阅读」时）</a>
@@ -2193,11 +2702,8 @@ DEPLOY_CMD=&quot;netlify deploy --dir site --prod&quot; python3 build.py --watch
 <a class="lv2" href="#c880ec32f7-_2">三、客户上手引导脚本（非技术客户版）</a>
 <a class="lv2" href="#c880ec32f7-_3">四、踩坑记录（本次实做遇到并修掉的）</a>
 <a class="lv2" href="#c880ec32f7-_4">五、发布通道对比（内容不敏感场景）</a>
-<a class="lv2" href="#c880ec32f7-_5">六、遗留（下次实践补）</a></nav></details><h1 id="c880ec32f7-md-pwa">把 md 放到手机上：PWA 跨端与实践笔记</h1>
-<blockquote>
-<p>定位：FDE 演练「md 文档手机阅读」的<strong>实践层</strong>沉淀——技术差异、操作步骤、踩坑记录。
-规则层结论已收进《FDE 工作指南》v0.4（3.2「用户端」行、边界契约「代办/引导」条目）；本文档只放不进指南的具体与技术内容。副本已入文档库供手机阅读，以本文件（实践沉淀/）为正本。</p>
-</blockquote>
+<a class="lv2" href="#c880ec32f7-_5">六、遗留（下次实践补）</a></nav></details><h1 id="c880ec32f7-md-pwa">把 md 放到手机上：PWA 跨端与实践笔记</h1><div class="doc-meta-line">更新于 2026-10-01 11:19 · 约 10 分钟 · 第 8/8 篇</div>
+<div class="doc-meta"><p>定位：FDE 演练「md 文档手机阅读」的**实践层**沉淀——技术差异、操作步骤、踩坑记录。</p><p>规则层结论已收进《FDE 工作指南》v0.4（3.2「用户端」行、边界契约「代办/引导」条目）；本文档只放不进指南的具体与技术内容。副本已入文档库供手机阅读，以本文件（实践沉淀/）为正本。</p></div>
 <h2 id="c880ec32f7-pwa">一、方案选型结论（为什么是 PWA 文档站）</h2>
 <div class="table-wrap"><table>
 <thead>
@@ -2403,51 +2909,310 @@ DEPLOY_CMD=&quot;netlify deploy --dir site --prod&quot; python3 build.py --watch
 <li>真机双端验收（安装、图标、standalone、微信内打开引导）——需真实 HTTPS 域名 + 真机。</li>
 <li>iOS 上第三方浏览器（Chrome for iOS）添加主屏的行为不统一，本次未验证，口径上只承诺 Safari。</li>
 <li><code>--watch</code> 循环内「修改文件」路径只被间接覆盖，未单独断言。</li>
-</ul></article>
-<footer class="foot">本文件自包含全部文档与样式，无需联网即可阅读<br>电脑侧 docs/ 为内容来源 · 重新生成后需重新发送本文件</footer>
+</ul><nav class="doc-nav"><a class="prev" href="#doc-a8e08c60a5"><span class="d-label">‹ 较新一篇</span><span class="d-title">形态选型复盘：为什么没有早点想到 App</span></a><span class="doc-nav-side next"><span class="d-label">较早一篇 ›</span></span></nav></article>
+<footer class="foot">本文件自包含全部文档与样式，无需联网即可阅读<br>电脑侧 docs/ 为内容来源 · 重新生成后需重新发送本文件
+<div class="build-id">内容指纹 7573ae63103d · 来源 <span class="fs-src">—</span></div></footer>
 <script>
 (function () {
   'use strict';
 
-  // 字号：14–24px，记住用户选择
-  var KEY = 'md2phone.fs';
-  var fs = 17;
-  try {
-    var saved = parseInt(localStorage.getItem(KEY) || '', 10);
-    if (saved >= 14 && saved <= 24) fs = saved;
-  } catch (e) { /* 隐私模式等场景下 localStorage 不可用，用默认字号 */ }
+  // ============ 小工具 ============
+  function $(sel, el) { return (el || document).querySelector(sel); }
+  function $all(sel, el) {
+    return Array.prototype.slice.call((el || document).querySelectorAll(sel));
+  }
+  function on(el, ev, fn, opt) { if (el) el.addEventListener(ev, fn, opt); }
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* 隐私模式等场景下不可用 */ } }
+  function throttle(ms, fn) {
+    var t = null;
+    return function () {
+      if (t) return;
+      t = setTimeout(function () { t = null; fn(); }, ms);
+    };
+  }
+  function escHtml(s) {
+    return String(s).replace(/[&<>"]/g, function (ch) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch];
+    });
+  }
+  function escapeReg(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  // 把 text 中命中的 q（不区分大小写）包上 <mark>，其余部分转义
+  function markHtml(text, q) {
+    try {
+      var parts = text.split(new RegExp('(' + escapeReg(q) + ')', 'gi'));
+      return parts.map(function (p, i) {
+        return i % 2 ? '<mark>' + escHtml(p) + '</mark>' : escHtml(p);
+      }).join('');
+    } catch (e) { return escHtml(text); }
+  }
 
-  function applyFs() { document.documentElement.style.setProperty('--fs', fs + 'px'); }
-  applyFs();
+  // ============ 形态判定 ============
+  var isSingle = !!$('.single-doc');                    // 单文件整库形态
+  var isReader = !isSingle && !!$('.doc');              // 多页阅读形态
+  var isIndex = !isSingle && !isReader && !!$('.list'); // 文档列表页
 
-  document.querySelectorAll('[data-fs]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      fs = Math.min(24, Math.max(14, fs + parseInt(btn.dataset.fs, 10)));
-      applyFs();
-      try { localStorage.setItem(KEY, String(fs)); } catch (e) {}
+  // ============ 外观主题：跟随系统 / 浅色 / 深色 ============
+  var THEME_KEY = 'md2phone.theme';
+  var THEME_LABEL = { auto: '跟随系统', light: '浅色', dark: '深色' };
+  function applyTheme() {
+    var mode = lsGet(THEME_KEY) || 'auto';
+    if (mode === 'light' || mode === 'dark') {
+      document.documentElement.setAttribute('data-theme', mode);
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+    var btn = $('#themeBtn');   // 列表页顶栏的循环切换钮（若有）
+    if (btn) {
+      btn.textContent = mode === 'dark' ? '☾' : (mode === 'light' ? '☀' : '◐');
+      btn.title = '外观：' + THEME_LABEL[mode] + '（点击切换）';
+      btn.setAttribute('aria-label', btn.title);
+    }
+    $all('#themeSeg [data-theme-set]').forEach(function (b) {   // 面板三选钮（若有）
+      b.classList.toggle('on', b.dataset.themeSet === mode);
+    });
+  }
+  on($('#themeBtn'), 'click', function () {
+    var order = ['auto', 'light', 'dark'];
+    var cur = lsGet(THEME_KEY) || 'auto';
+    lsSet(THEME_KEY, order[(order.indexOf(cur) + 1) % order.length]);
+    applyTheme();
+  });
+  $all('#themeSeg [data-theme-set]').forEach(function (b) {
+    on(b, 'click', function () {
+      lsSet(THEME_KEY, b.dataset.themeSet);
+      applyTheme();
     });
   });
+  applyTheme();
 
-  // 目录抽屉
-  var body = document.body;
-  var tocBtn = document.getElementById('tocBtn');
-  var backdrop = document.querySelector('.toc-backdrop');
-  if (tocBtn) {
-    // 没有目录条目时隐藏按钮
-    if (!document.querySelector('.toc-panel a')) tocBtn.style.display = 'none';
-    tocBtn.addEventListener('click', function () { body.classList.toggle('toc-open'); });
+  // ============ 字号：五档预设，改字号时锚定当前阅读位置不跳动 ============
+  var FS_KEY = 'md2phone.fs';
+  var FS_PRESETS = [14, 17, 20, 23, 26];
+  var FS_DEFAULT = 17;
+  var fs = FS_DEFAULT;
+  var savedFs = parseInt(lsGet(FS_KEY) || '', 10);
+  if (FS_PRESETS.indexOf(savedFs) >= 0) fs = savedFs;
+  else if (savedFs >= 14 && savedFs <= 26) {
+    // 旧版逐 px 记忆的值吸附到最近档位
+    fs = FS_PRESETS.reduce(function (a, b) {
+      return Math.abs(b - savedFs) < Math.abs(a - savedFs) ? b : a;
+    });
   }
-  if (backdrop) backdrop.addEventListener('click', function () { body.classList.remove('toc-open'); });
-  document.querySelectorAll('.toc-panel a').forEach(function (a) {
-    a.addEventListener('click', function () { body.classList.remove('toc-open'); });
+  function applyFs() {
+    document.documentElement.style.setProperty('--fs', fs + 'px');
+    $all('#fsSeg [data-fs-preset]').forEach(function (b) {
+      b.classList.toggle('on', parseInt(b.dataset.fsPreset, 10) === fs);
+    });
+  }
+  // 改字号会整页重排：记住视口顶正在读的那个块，重排后把它按回原视口位置
+  function visibleAnchor() {
+    // 单文件版整库同页：须在全部文档小节里找锚点，不能只看第一篇
+    var root = isSingle ? document.body : $('.doc');
+    if (!root) return null;
+    var blocks = root.querySelectorAll(
+      'h1,h2,h3,h4,p,li,pre,blockquote,table,img,.table-wrap,.pre-wrap,.doc-meta');
+    for (var i = 0; i < blocks.length; i++) {
+      var r = blocks[i].getBoundingClientRect();
+      if (!r.height && !r.width) continue;   // 折叠/隐藏中的块不作为锚点
+      if (r.bottom >= 0) return blocks[i];   // 第一个底部还在视口顶之后的块
+    }
+    return null;
+  }
+  function setFs(v) {
+    if (FS_PRESETS.indexOf(v) < 0) v = FS_DEFAULT;
+    if (v === fs) { applyFs(); return; }
+    var anchor = window.scrollY > 0 ? visibleAnchor() : null;
+    var vpBefore = anchor ? anchor.getBoundingClientRect().bottom : 0;
+    fs = v;
+    applyFs();
+    lsSet(FS_KEY, String(fs));
+    if (!anchor) { adaptTables(); savePos(); return; }
+    requestAnimationFrame(function () {
+      adaptTables();   // 先让表格在新字号下适配到位，再量锚点位移
+      // 钉住锚点底边：锚点下方（正要读的内容）保持稳定，
+      // 锚点自身与上方内容随字号自然伸缩（下方间距随 em 缩放，允许小幅漂移）
+      var vpAfter = anchor.getBoundingClientRect().bottom;
+      var drift = vpAfter - vpBefore;
+      if (Math.abs(drift) > 0.5) {
+        window.scrollTo(0, Math.round(window.scrollY + drift));
+      }
+      savePos();
+    });
+  }
+  $all('#fsSeg [data-fs-preset]').forEach(function (b) {
+    on(b, 'click', function () { setFs(parseInt(b.dataset.fsPreset, 10)); });
+  });
+  on($('#fsReset'), 'click', function () { setFs(FS_DEFAULT); });
+  applyFs();
+
+  // ============ 代码换行：默认开（阅读优先），可关回「保结构横向滑动」 ============
+  var PREWRAP_KEY = 'md2phone.prewrap';
+  function applyPrewrap() {
+    var wrapOn = lsGet(PREWRAP_KEY) !== '0';
+    document.body.classList.toggle('code-wrap', wrapOn);
+    var sw = $('#prewrapBtn');
+    if (sw) sw.setAttribute('aria-checked', wrapOn ? 'true' : 'false');
+  }
+  on($('#prewrapBtn'), 'click', function () {
+    lsSet(PREWRAP_KEY, document.body.classList.contains('code-wrap') ? '0' : '1');
+    applyPrewrap();
+  });
+  applyPrewrap();
+
+  // ============ 表格自适应：放不下先压缩收窄，仍放不下才容器内横滑 ============
+  function adaptTables() {
+    $all('.table-wrap').forEach(function (w) {
+      if (w.getAttribute('tabindex') === null) w.setAttribute('tabindex', '0');
+      w.classList.remove('compact');
+      if (w.scrollWidth > w.clientWidth + 1) w.classList.add('compact');
+    });
+  }
+
+  // ============ 顶栏/底部工具条滚动隐退（下滑阅读让位内容，上滑唤出） ============
+  var lastY = window.scrollY;
+  function showTopbar() { document.body.classList.remove('top-hidden'); }
+  // 首次进入沉浸阅读时提示一次「点屏幕唤出工具条」，解决手势可发现性
+  function tapHint() {
+    try { if (sessionStorage.getItem('md2phone.hint')) return; } catch (e) { return; }
+    try { sessionStorage.setItem('md2phone.hint', '1'); } catch (e) { return; }
+    var t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = '轻点屏幕可呼出 目录 · 字号 · 查找';
+    document.body.appendChild(t);
+    requestAnimationFrame(function () { t.classList.add('show'); });
+    setTimeout(function () {
+      t.classList.remove('show');
+      setTimeout(function () { t.remove(); }, 400);
+    }, 3600);
+  }
+  function syncTopbar() {
+    if (document.body.classList.contains('toc-open')) { showTopbar(); lastY = window.scrollY; return; }
+    if (fsPop && !fsPop.hidden) { showTopbar(); return; }   // 设置面板打开时不隐退
+    var y = window.scrollY;
+    if (y < 120) showTopbar();
+    else if (y > lastY + 6) { document.body.classList.add('top-hidden'); tapHint(); }
+    else if (y < lastY - 6) showTopbar();
+    lastY = y;
+  }
+
+  // ============ 字号/外观/代码换行 底部设置面板（工具条 Aa） ============
+  var fsPop = $('#fsPop');
+  function closePopover() {
+    if (fsPop && !fsPop.hidden) { fsPop.hidden = true; syncTopbar(); }
+  }
+  on($('#fsBtn'), 'click', function () {
+    if (!fsPop) return;
+    var willOpen = fsPop.hidden;
+    fsPop.hidden = !fsPop.hidden;
+    if (willOpen) showTopbar();
+  });
+  on(document, 'click', function (e) {
+    if (!fsPop || fsPop.hidden) return;
+    if (e.target.closest && (e.target.closest('#fsPop') || e.target.closest('#fsBtn'))) return;
+    closePopover();
   });
 
-  // ---- 阅读位置记忆（按文档存手机本地，百分比定位：调字号/换设备仍落回同处）----
+  // ============ 点击正文空白处：唤出/收起阅读控制层（顶栏 + 工具条一起） ============
+  // 阅读类 App 的通行做法：屏幕中央轻点切换控制层，随手可调字号/看目录，不必滚回篇首。
+  var TAP_SKIP = 'a,button,input,textarea,select,summary,img,video,pre,table,code,'
+    + '.table-wrap,.fs-pop,.readbar,.top,.find-bar,.toc-panel,.toc-backdrop,'
+    + '.doc-nav,.resume-card,.sw-banner,.lightbox,details';
+  on(document, 'click', function (e) {
+    if (!isReader && !isSingle) return;
+    if (fsPop && !fsPop.hidden) return;                        // 面板开着：只关面板
+    if (document.body.classList.contains('toc-open')) return;  // 抽屉有自己的关闭逻辑
+    var t = e.target;
+    if (!t.closest || t.closest(TAP_SKIP)) return;
+    var sel = window.getSelection ? window.getSelection() : null;
+    if (sel && String(sel).length) return;                     // 正在选字，别打扰
+    if (window.scrollY < 120) return;                          // 篇首顶栏常驻
+    if (document.body.classList.contains('top-hidden')) showTopbar();
+    else document.body.classList.add('top-hidden');
+  });
+
+  // ============ 回到顶部（工具条第 4 键，深滚动时出现） ============
+  on($('#topBtn'), 'click', function () {
+    try { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    catch (e) { window.scrollTo(0, 0); }
+  });
+
+  // ============ 目录抽屉 ============
+  var spyItems = [];
+  function buildSpy(panel) {
+    spyItems = [];
+    $all('a', panel).forEach(function (a) {
+      var hid = (a.getAttribute('href') || '').slice(1);
+      var h = hid && document.getElementById(hid);
+      if (h) spyItems.push({ h: h, a: a });
+    });
+  }
+  var tocBtn = $('#tocBtn');
+  var backdrop = $('.toc-backdrop');
+  // 单文件版：抽屉内容按「当前读到的文档」动态装配
+  function populateSingleToc() {
+    var panel = $('.toc-panel');
+    if (!panel) return;
+    var secs = $all('.single-doc');
+    var cur = secs[0] || null;
+    for (var i = 0; i < secs.length; i++) {
+      if (secs[i].offsetTop <= window.scrollY + window.innerHeight * 0.35) cur = secs[i];
+    }
+    var links = cur ? $all('.doctoc nav a', cur) : [];
+    var h1 = cur ? cur.querySelector('h1') : null;
+    var head = '<div class="toc-head"><span>' + escHtml(h1 ? h1.textContent : '目录')
+      + '</span><span class="toc-pct" id="tocPct"></span></div>';
+    panel.innerHTML = head + (links.length
+      ? links.map(function (a) { return a.outerHTML; }).join('\n')
+      : '<div class="toc-none">本文档没有可用的目录。</div>');
+    buildSpy(panel);
+  }
+  if (tocBtn) {
+    if (isReader && !$('.toc-panel a')) tocBtn.style.display = 'none';
+    on(tocBtn, 'click', function () {
+      var opening = !document.body.classList.contains('toc-open');
+      if (isSingle && opening) populateSingleToc();
+      document.body.classList.toggle('toc-open', opening);
+      if (opening) {
+        showTopbar();
+        updateSpy();
+        // 打开即定位到当前小节（在抽屉内部滚动，不动正文）
+        var panel = $('.toc-panel');
+        var act = $('.toc-panel a.active');
+        if (panel && act) panel.scrollTop = Math.max(0, act.offsetTop - panel.clientHeight * 0.4);
+        var tp = $('#tocPct');
+        if (tp) updateProgress();
+      }
+    });
+  }
+  on(backdrop, 'click', function () {
+    document.body.classList.remove('toc-open');
+    showTopbar();
+  });
+  // 抽屉链接点击用事件委托：单文件版每次打开重建内容也能接住
+  on($('.toc-panel'), 'click', function (e) {
+    if (!e.target.closest('a')) return;
+    document.body.classList.remove('toc-open');
+    showTopbar();
+  });
+
+  // ============ 阅读位置记忆（按文档存本机，百分比定位；带时间戳供「继续阅读」取最近） ============
+  var POS_PREFIX = 'md2phone.pos:';
   function docHeight() {
     return document.documentElement.scrollHeight - window.innerHeight;
   }
-  var isSingle = !!document.querySelector('.single-doc');   // 单文件整库形态
-  var isReader = !isSingle && !!document.querySelector('.doc'); // 多页阅读形态
+  // 兼容两种存储格式：旧版纯数字，新版 JSON {r: 比例, t: 时间戳}
+  function parsePos(raw) {
+    if (!raw) return null;
+    try {
+      if (raw.charAt(0) === '{') {
+        var o = JSON.parse(raw);
+        return (o && typeof o.r === 'number') ? o : null;
+      }
+      var f = parseFloat(raw);
+      return isFinite(f) ? { r: f, t: 0 } : null;
+    } catch (e) { return null; }
+  }
 
   function savePos() {
     try {
@@ -2456,9 +3221,10 @@ DEPLOY_CMD=&quot;netlify deploy --dir site --prod&quot; python3 build.py --watch
         if (h <= 0) return;
         var y = window.scrollY / h;
         if (y <= 0.002 || y >= 0.998) y = 0;
-        localStorage.setItem('md2phone.pos:' + location.pathname, y.toFixed(4));
+        lsSet(POS_PREFIX + location.pathname,
+          JSON.stringify({ r: +y.toFixed(4), t: Date.now() }));
       } else if (isSingle) {
-        var secs = document.querySelectorAll('.single-doc');
+        var secs = $all('.single-doc');
         if (!secs.length) return;
         var cur = secs[0];
         for (var i = 0; i < secs.length; i++) {
@@ -2466,8 +3232,9 @@ DEPLOY_CMD=&quot;netlify deploy --dir site --prod&quot; python3 build.py --watch
         }
         var rel = cur.offsetHeight > 0
           ? (window.scrollY - cur.offsetTop) / cur.offsetHeight : 0;
-        localStorage.setItem('md2phone.pos:single',
-          JSON.stringify({ s: cur.id, r: +Math.max(0, Math.min(0.998, rel)).toFixed(4) }));
+        lsSet(POS_PREFIX + 'single', JSON.stringify({
+          s: cur.id, r: +Math.max(0, Math.min(0.998, rel)).toFixed(4), t: Date.now()
+        }));
       }
     } catch (e) { /* localStorage 不可用则不记忆 */ }
   }
@@ -2475,23 +3242,22 @@ DEPLOY_CMD=&quot;netlify deploy --dir site --prod&quot; python3 build.py --watch
   function restorePos() {
     try {
       if (isReader) {
-        var saved = parseFloat(localStorage.getItem('md2phone.pos:' + location.pathname));
-        if (!(saved > 0.002 && saved < 0.998)) return;
+        var p = parsePos(lsGet(POS_PREFIX + location.pathname));
+        if (!(p && p.r > 0.002 && p.r < 0.998)) return;
         setTimeout(function () {
           if (window.scrollY > 0) return; // 用户已自行滚动，不打扰
           var h = docHeight();
-          if (h > 0) window.scrollTo(0, saved * h);
+          if (h > 0) window.scrollTo(0, p.r * h);
         }, 150);
         window.addEventListener('load', function () {
           if (window.scrollY > 0) return;
           var h2 = docHeight();
-          if (h2 > 0) window.scrollTo(0, saved * h2);
+          if (h2 > 0) window.scrollTo(0, p.r * h2);
         });
       } else if (isSingle) {
-        var raw = localStorage.getItem('md2phone.pos:single');
-        if (!raw) return;
-        var o = JSON.parse(raw);
-        var el = o.s && document.getElementById(o.s);
+        var o = parsePos(lsGet(POS_PREFIX + 'single'));
+        if (!(o && o.s)) return;
+        var el = document.getElementById(o.s);
         if (!el || !(o.r > 0.002 && o.r < 0.998)) return;
         setTimeout(function () {
           if (window.scrollY > 0) return;
@@ -2500,23 +3266,518 @@ DEPLOY_CMD=&quot;netlify deploy --dir site --prod&quot; python3 build.py --watch
       }
     } catch (e) {}
   }
-  restorePos();
 
-  var saveTimer = null;
-  window.addEventListener('scroll', function () {
-    if (saveTimer) return;
-    saveTimer = setTimeout(function () { saveTimer = null; savePos(); }, 400);
+  // ============ 继续阅读（列表页横幅，取最近在读的一篇） ============
+  function resumeBanner() {
+    if (!isIndex && !isSingle) return;
+    var list = $('.list');
+    if (!list) return;
+    var a = document.createElement('a');
+    a.className = 'resume-card';
+    if (isSingle) {
+      var o = parsePos(lsGet(POS_PREFIX + 'single'));
+      if (!(o && o.s && o.r > 0.002 && o.r < 0.998)) return;
+      var el = document.getElementById(o.s);
+      if (!el) return;   // 该文档可能已被删除
+      var h1 = el.querySelector('h1');
+      a.href = '#' + o.s;
+      a.innerHTML = '<span class="r-label">继续阅读</span>'
+        + '<span class="r-title"></span>'
+        + '<span class="r-meta">上次读到约 ' + Math.round(o.r * 100) + '%</span>';
+      a.querySelector('.r-title').textContent = h1 ? h1.textContent : '上次阅读的文档';
+      on(a, 'click', function (e) {
+        e.preventDefault();
+        window.scrollTo(0, el.offsetTop + o.r * el.offsetHeight);
+      });
+    } else {
+      // 扫描全部位置记录，取最近写入的一条（旧格式无时间戳按 0 处理）
+      var best = null;
+      try {
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (k && k.indexOf(POS_PREFIX) === 0 && k !== POS_PREFIX + 'single') {
+            var p = parsePos(lsGet(k));
+            if (p && p.r > 0.002 && p.r < 0.998 && (!best || p.t > best.t)) {
+              best = { t: p.t, r: p.r, slug: k.slice(POS_PREFIX.length) };
+            }
+          }
+        }
+      } catch (e) { best = null; }
+      if (!best) return;
+      var name = best.slug.split('/').pop().replace(/\.html$/, '');
+      var card = document.querySelector('.card[data-slug="' + name + '"]');
+      if (!card) return;   // 文档已删除，位置记录作废
+      a.href = card.getAttribute('href');
+      a.innerHTML = '<span class="r-label">继续阅读</span>'
+        + '<span class="r-title"></span>'
+        + '<span class="r-meta">上次读到约 ' + Math.round(best.r * 100) + '%</span>';
+      var h2 = card.querySelector('h2');
+      a.querySelector('.r-title').textContent = h2 ? h2.textContent : '上次阅读的文档';
+    }
+    list.insertBefore(a, list.firstChild);
+  }
+
+  // ============ 列表搜索（列表页：标题 + 正文；单文件版：Enter 跳到第一篇命中） ============
+  function initSearch() {
+    var input = $('#searchInput');
+    var listEl = $('.list');
+    var cards = $all('.card', listEl);
+    if (!input || !listEl || !cards.length) return;
+    var countEl = $('#searchCount');
+    var clearBtn = $('#searchClear');
+    var emptyHit = null;
+
+    // 卡片原始标题（高亮后要能还原）
+    cards.forEach(function (c) {
+      var h2 = c.querySelector('h2');
+      c.__title = h2 ? h2.textContent : '';
+    });
+
+    function reset() {
+      $all('.card .snippet', listEl).forEach(function (n) { n.remove(); });
+      cards.forEach(function (c) {
+        c.classList.remove('hit-title', 'hit-body');
+        var h2 = c.querySelector('h2');
+        if (h2 && h2.innerHTML !== escHtml(c.__title)) h2.textContent = c.__title;
+      });
+      listEl.classList.remove('filtering');
+      if (countEl) countEl.hidden = true;
+      if (clearBtn) clearBtn.hidden = true;
+      if (emptyHit) { emptyHit.remove(); emptyHit = null; }
+    }
+
+    function showCount(text) {
+      if (!countEl) return;
+      if (text === null) { countEl.hidden = true; return; }
+      countEl.textContent = text;
+      countEl.hidden = false;
+    }
+
+    // 索引：列表页用构建时内联的 JSON；单文件版直接扫 DOM
+    var idx = null, byKey = null, keyName = null;
+    function loadIndex() {
+      if (idx) return idx;
+      if (isSingle) {
+        keyName = 'id';
+        idx = $all('.single-doc').map(function (sec) {
+          var h1 = sec.querySelector('h1');
+          return { id: sec.id, title: h1 ? h1.textContent : '', text: sec.textContent.toLowerCase() };
+        });
+      } else {
+        keyName = 'slug';
+        try {
+          var node = document.getElementById('search-data');
+          idx = node ? JSON.parse(node.textContent || '[]') : [];
+        } catch (e) { idx = []; }
+      }
+      idx.forEach(function (d) { d.text = (d.text || '').toLowerCase(); });
+      byKey = {};
+      idx.forEach(function (d) { byKey[d[keyName]] = d; });
+      return idx;
+    }
+
+    function cardKey(c) {
+      return isSingle
+        ? (c.getAttribute('href') || '').replace(/^#/, '')
+        : (c.getAttribute('data-slug') || '');
+    }
+
+    function run() {
+      reset();
+      var q = input.value.trim().toLowerCase();
+      if (!q) return;
+      loadIndex();
+      var hits = 0;
+      cards.forEach(function (c) {
+        var d = byKey[cardKey(c)];
+        var inTitle = !!(d && d.title.toLowerCase().indexOf(q) >= 0);
+        var pos = d ? d.text.indexOf(q) : -1;
+        if (!inTitle && pos < 0) return;
+        hits++;
+        c.classList.add(inTitle ? 'hit-title' : 'hit-body');
+        var h2 = c.querySelector('h2');
+        if (h2 && inTitle) h2.innerHTML = markHtml(c.__title, q);
+        if (pos >= 0 && !inTitle) {
+          var start = Math.max(0, pos - 24);
+          var frag = d.text.slice(start, pos + q.length + 56);
+          var s = document.createElement('div');
+          s.className = 'snippet';
+          s.innerHTML = (start > 0 ? '…' : '') + markHtml(frag, q) + '…';
+          var meta = c.querySelector('.meta');
+          if (meta) c.insertBefore(s, meta); else c.appendChild(s);
+        }
+      });
+      listEl.classList.add('filtering');
+      showCount('命中 ' + hits + ' / ' + cards.length + ' 篇');
+      if (clearBtn) clearBtn.hidden = false;
+      if (!hits) {
+        emptyHit = document.createElement('div');
+        emptyHit.className = 'empty';
+        emptyHit.textContent = '没有找到「' + input.value.trim() + '」';
+        listEl.appendChild(emptyHit);
+      }
+    }
+
+    on(input, 'input', throttle(200, run));
+    on(input, 'keydown', function (e) {
+      if (e.key !== 'Enter') return;
+      if (isSingle) {
+        // 单文件版：跳到第一篇命中的文档
+        var first = $all('.card.hit-title, .card.hit-body', listEl)[0];
+        if (first) {
+          var sec = document.getElementById(cardKey(first));
+          if (sec) {
+            window.scrollTo(0, Math.max(0, sec.offsetTop - 12));
+            sec.classList.remove('flash');
+            // 触发一次闪烁动画，标记落点
+            void sec.offsetWidth;
+            sec.classList.add('flash');
+          }
+        }
+      } else {
+        run();
+      }
+    });
+    on(clearBtn, 'click', function () {
+      input.value = '';
+      reset();
+      input.focus();
+    });
+  }
+
+  // ============ 页内查找（阅读页 / 单文件版：高亮 + 上一个/下一个） ============
+  var closeFindFn = null;
+  function initFind() {
+    var bar = $('#findBar');
+    var input = $('#findInput');
+    var cnt = $('#findCount');
+    if (!bar || !input) return;
+    var marks = [], curIdx = -1, timer = null;
+    var SKIP = 'header, .readbar, .fs-pop, .find-bar, .toc-panel, .copy-btn, script, style, mark, '
+      + '.search-row, .resume-card, .sw-banner, .lightbox, .progress, .doc-nav';
+
+    function clearMarks() {
+      marks.forEach(function (m) {
+        var p = m.parentNode;
+        if (!p) return;
+        p.replaceChild(document.createTextNode(m.textContent), m);
+        p.normalize();
+      });
+      marks = [];
+      curIdx = -1;
+    }
+    function setCur(i, scroll) {
+      if (!marks.length) return;
+      if (curIdx >= 0 && marks[curIdx]) marks[curIdx].classList.remove('cur');
+      curIdx = ((i % marks.length) + marks.length) % marks.length;
+      var m = marks[curIdx];
+      m.classList.add('cur');
+      if (cnt) cnt.textContent = (curIdx + 1) + ' / ' + marks.length;
+      if (scroll !== false) {
+        var y = m.getBoundingClientRect().top + window.scrollY - 110;
+        window.scrollTo(0, Math.max(0, y));
+      }
+    }
+    function doFind() {
+      clearMarks();
+      var q = input.value.trim();
+      if (!q) { if (cnt) cnt.textContent = ''; return; }
+      var root = isSingle ? document.body : ($('.doc') || document.body);
+      var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+        acceptNode: function (n) {
+          if (!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+          var el = n.parentElement;
+          if (el && el.closest && el.closest(SKIP)) return NodeFilter.FILTER_REJECT;
+          return n.nodeValue.toLowerCase().indexOf(q.toLowerCase()) >= 0
+            ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+        }
+      });
+      var nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+      var ql = q.toLowerCase();
+      nodes.forEach(function (n) {
+        if (marks.length > 500) return;   // 防极端长文卡顿
+        var text = n.nodeValue, low = text.toLowerCase(), i = 0, j;
+        var parts = [];
+        while ((j = low.indexOf(ql, i)) >= 0) {
+          if (j > i) parts.push(document.createTextNode(text.slice(i, j)));
+          var mk = document.createElement('mark');
+          mk.textContent = text.slice(j, j + q.length);
+          parts.push(mk);
+          marks.push(mk);
+          i = j + q.length;
+        }
+        if (!parts.length) return;
+        if (i < text.length) parts.push(document.createTextNode(text.slice(i)));
+        var parent = n.parentNode;
+        if (!parent) return;
+        parts.forEach(function (f) { parent.insertBefore(f, n); });
+        parent.removeChild(n);
+      });
+      if (marks.length) setCur(0, true);
+      else if (cnt) cnt.textContent = '无结果';
+    }
+    function closeFind() {
+      bar.hidden = true;
+      clearMarks();
+      if (cnt) cnt.textContent = '';
+    }
+    closeFindFn = closeFind;
+    on($('#findBtn'), 'click', function () {
+      bar.hidden = false;
+      input.focus();
+      input.select();
+    });
+    on($('#findClose'), 'click', closeFind);
+    on($('#findNext'), 'click', function () { if (marks.length) setCur(curIdx + 1, true); });
+    on($('#findPrev'), 'click', function () { if (marks.length) setCur(curIdx - 1, true); });
+    on(input, 'input', function () {
+      clearTimeout(timer);
+      timer = setTimeout(doFind, 250);
+    });
+    on(input, 'keydown', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (marks.length) setCur(curIdx + 1, true);
+        else doFind();
+      }
+    });
+  }
+
+  // ============ 目录 scrollspy：滚到哪节，目录里高亮到哪条；顶栏标题随之切换 ============
+  var titleEl = $('#docTitle');
+  if (titleEl) titleEl.dataset.base = titleEl.textContent;
+  if (isReader) buildSpy($('.toc-panel'));
+  function updateSpy() {
+    if (!spyItems.length) return;
+    var line = window.scrollY + window.innerHeight * 0.35;
+    var cur = null;
+    for (var i = 0; i < spyItems.length; i++) {
+      if (spyItems[i].h.offsetTop <= line) cur = spyItems[i];
+      else break;
+    }
+    spyItems.forEach(function (it) {
+      var active = it === cur;
+      if (it.a.classList.contains('active') !== active) {
+        it.a.classList.toggle('active', active);
+        if (active && document.body.classList.contains('toc-open')) {
+          it.a.scrollIntoView({ block: 'nearest' });
+        }
+      }
+    });
+    // 顶栏标题：深处阅读时显示当前小节，回到篇首恢复文档标题
+    if (titleEl) {
+      var name = cur ? cur.a.textContent : (titleEl.dataset.base || '');
+      if (titleEl.textContent !== name) titleEl.textContent = name;
+    }
+  }
+
+  // ============ 阅读进度条（顺带刷新目录抽屉里的「已读 x%」） ============
+  var progress = $('#progress');
+  function updateProgress() {
+    if (!progress) return;
+    var h = docHeight();
+    var pct = h > 0 ? Math.min(100, Math.max(0, window.scrollY / h * 100)) : 0;
+    progress.style.width = pct + '%';
+    var tp = $('#tocPct');
+    if (tp) tp.textContent = pct > 1 ? '已读 ' + Math.round(pct) + '%' : '';
+  }
+
+  // ============ 代码块一键复制 ============
+  function fallbackCopy(text) {
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    } catch (e) { return false; }
+  }
+  function copyText(text, cb) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { cb(true); },
+        function () { cb(fallbackCopy(text)); });
+    } else {
+      cb(fallbackCopy(text));
+    }
+  }
+  $all('.doc pre').forEach(function (pre) {
+    pre.setAttribute('tabindex', '0');   // 可滚动区域可聚焦（可访问性）
+    // 按钮包在滚动容器外：代码横向滚动时按钮仍固定在右上角
+    if (pre.parentElement && pre.parentElement.classList.contains('pre-wrap')) return;
+    var wrap = document.createElement('div');
+    wrap.className = 'pre-wrap';
+    pre.replaceWith(wrap);
+    wrap.appendChild(pre);
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'copy-btn';
+    btn.textContent = '复制';
+    on(btn, 'click', function () {
+      var code = pre.querySelector('code') || pre;
+      copyText(code.innerText || code.textContent, function (ok) {
+        btn.textContent = ok ? '已复制' : '复制失败';
+        btn.classList.toggle('ok', ok);
+        setTimeout(function () {
+          btn.textContent = '复制';
+          btn.classList.remove('ok');
+        }, 1200);
+      });
+    });
+    wrap.appendChild(btn);
+  });
+
+  // ============ 图片灯箱（点击正文图片全屏查看） ============
+  var lightbox = document.createElement('div');
+  lightbox.className = 'lightbox';
+  lightbox.setAttribute('aria-hidden', 'true');
+  lightbox.innerHTML = '<img alt="">';
+  document.body.appendChild(lightbox);
+  $all('.doc img').forEach(function (img) {
+    img.classList.add('zoomable');
+    on(img, 'click', function () {
+      lightbox.querySelector('img').src = img.currentSrc || img.src;
+      document.body.classList.add('img-zoom');
+    });
+  });
+  on(lightbox, 'click', function () { document.body.classList.remove('img-zoom'); });
+
+  // Esc：依次关灯箱 / 查找条 / 设置面板 / 目录抽屉
+  on(document, 'keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (document.body.classList.contains('img-zoom')) {
+      document.body.classList.remove('img-zoom');
+    } else if (closeFindFn && $('#findBar') && !$('#findBar').hidden) {
+      closeFindFn();
+    } else if (fsPop && !fsPop.hidden) {
+      closePopover();
+    } else if (document.body.classList.contains('toc-open')) {
+      document.body.classList.remove('toc-open');
+      showTopbar();
+    }
+  });
+
+  // ============ 列表排序切换（更新时间 / 标题） ============
+  function initSort() {
+    var btn = $('#sortBtn');
+    var listEl = $('.list');
+    var cards = $all('.card', listEl);
+    if (!btn || !listEl || !cards.length) return;
+    var KEY = 'md2phone.sort';
+    function apply(mode) {
+      var sorted = cards.slice().sort(function (a, b) {
+        if (mode === 'title') {
+          return (a.getAttribute('data-title') || '')
+            .localeCompare(b.getAttribute('data-title') || '', 'zh-Hans-CN');
+        }
+        return (parseInt(b.getAttribute('data-mts'), 10) || 0)
+          - (parseInt(a.getAttribute('data-mts'), 10) || 0);
+      });
+      sorted.forEach(function (c) { listEl.appendChild(c); });
+      btn.textContent = mode === 'title' ? '⇅ 标题' : '⇅ 时间';
+      btn.title = '排序：' + (mode === 'title' ? '按标题' : '按更新时间') + '（点击切换）';
+      btn.setAttribute('aria-label', btn.title);
+    }
+    var mode = lsGet(KEY) === 'title' ? 'title' : 'time';
+    apply(mode);
+    on(btn, 'click', function () {
+      mode = mode === 'title' ? 'time' : 'title';
+      lsSet(KEY, mode);
+      apply(mode);
+    });
+  }
+
+  // ============ 列表滚动位置记忆（从阅读页返回不回顶） ============
+  function initListScroll() {
+    var KEY = 'md2phone.listScroll';
+    var y = 0;
+    try { y = parseInt(sessionStorage.getItem(KEY) || '0', 10) || 0; } catch (e) {}
+    if (y > 0 && !location.hash) {
+      setTimeout(function () { window.scrollTo(0, y); }, 80);
+    }
+    var save = throttle(300, function () {
+      try { sessionStorage.setItem(KEY, String(window.scrollY)); } catch (e) {}
+    });
+    on(window, 'scroll', save, { passive: true });
+  }
+
+  // ============ 初始化（顺序有讲究：横幅先插入，列表位置恢复在其后） ============
+  restorePos();
+  resumeBanner();
+  adaptTables();
+  if (isIndex) {
+    initListScroll();
+    initSort();
+  }
+  initSearch();
+  initFind();
+
+  // ============ 滚动统一处理：rAF 节流渲染 + 400ms 节流写位置 ============
+  var savePosThrottled = throttle(400, savePos);
+  var ticking = false;
+  on(window, 'scroll', function () {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () {
+      ticking = false;
+      updateSpy();
+      updateProgress();
+      syncTopbar();
+      document.body.classList.toggle('deep-scroll',
+        window.scrollY > window.innerHeight * 2.5);
+      savePosThrottled();
+    });
   }, { passive: true });
+  on(window, 'resize', throttle(180, adaptTables));
   window.addEventListener('pagehide', savePos);
   document.addEventListener('visibilitychange', function () {
     if (document.visibilityState === 'hidden') savePos();
   });
+  window.addEventListener('load', function () {
+    updateProgress();
+    updateSpy();
+    syncTopbar();
+    adaptTables();
+    document.body.classList.toggle('deep-scroll',
+      window.scrollY > window.innerHeight * 2.5);
+  });
 
-  // Service Worker：HTTPS（或 localhost）下注册；离线回退与更新由 sw.js 负责
+  // ============ 内容身份标识（排障：一眼看出加载的是哪份内容、有没有脚本异常） ============
+  function fillSrc(text) {
+    $all('.build-id .fs-src, .fs-ver .fs-src').forEach(function (el) { el.textContent = text; });
+  }
+  fillSrc(/android_asset/.test(location.href) ? 'APK 内置'
+        : /\/files\//.test(location.href) ? '导入快照' : '网页');
+  window.onerror = function (msg, src2, line) {
+    fillSrc('脚本异常 ' + String(msg).slice(0, 60) + ' @' + line);
+  };
+
+  // ============ Service Worker：HTTPS（或 localhost）下注册 ============
+  // shell 资源 cache-first 秒开；SW 换代激活后广播「内容已更新」提示条
   var secure = location.protocol === 'https:' ||
     location.hostname === 'localhost' || location.hostname === '127.0.0.1';
   if ('serviceWorker' in navigator && secure) {
     navigator.serviceWorker.register('sw.js').catch(function () {});
+    navigator.serviceWorker.addEventListener('message', function (e) {
+      if (e.data && e.data.type === 'md2phone:updated' && !$('#swBanner')) {
+        var b = document.createElement('div');
+        b.id = 'swBanner';
+        b.className = 'sw-banner';
+        b.innerHTML = '<span>内容已更新</span>';
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = '刷新查看';
+        on(btn, 'click', function () { location.reload(); });
+        b.appendChild(btn);
+        document.body.appendChild(b);
+        requestAnimationFrame(function () { document.body.classList.add('sw-update'); });
+        setTimeout(function () { document.body.classList.remove('sw-update'); }, 10000);
+      }
+    });
   }
 })();
 

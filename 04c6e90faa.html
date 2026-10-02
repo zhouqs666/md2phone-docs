@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>md2phone · 把 Markdown 放进手机 · 文档库</title>
 <meta name="theme-color" content="#2563eb">
+<meta name="theme-color" content="#0f1419" media="(prefers-color-scheme: dark)">
 <meta name="robots" content="noindex">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -17,14 +18,54 @@
 <body>
 <header class="top">
   <a class="icon-btn back" href="index.html" aria-label="返回列表">‹</a>
-  <div class="title">md2phone · 把 Markdown 放进手机</div>
-  <button class="icon-btn fs" data-fs="-1" aria-label="缩小字号">A−</button>
-  <button class="icon-btn fs" data-fs="1" aria-label="放大字号">A+</button>
-  <button class="icon-btn" id="tocBtn" aria-label="目录">☰</button>
+  <div class="title" id="docTitle">md2phone · 把 Markdown 放进手机</div>
 </header>
+<div class="fs-pop" id="fsPop" hidden>
+  <div class="fs-row">
+    <span class="fs-label">字号</span>
+    <div class="fs-seg" id="fsSeg">
+      <button type="button" data-fs-preset="14">小</button>
+      <button type="button" data-fs-preset="17">标准</button>
+      <button type="button" data-fs-preset="20">大</button>
+      <button type="button" data-fs-preset="23">特大</button>
+      <button type="button" data-fs-preset="26">超大</button>
+    </div>
+    <button type="button" class="fs-reset" id="fsReset">默认</button>
+  </div>
+  <div class="fs-row">
+    <span class="fs-label">外观</span>
+    <div class="fs-seg" id="themeSeg">
+      <button type="button" data-theme-set="auto">自动</button>
+      <button type="button" data-theme-set="light">浅色</button>
+      <button type="button" data-theme-set="dark">深色</button>
+    </div>
+  </div>
+  <div class="fs-row">
+    <span class="fs-label">代码</span>
+    <button type="button" class="fs-switch" id="prewrapBtn" role="switch" aria-checked="true">
+      <span class="sw-track"><span class="sw-dot"></span></span>
+      <span class="sw-text">长代码自动换行</span>
+    </button>
+  </div>
+  <div class="fs-ver">内容指纹 7573ae63103d · 来源 <span class="fs-src">—</span></div>
+</div>
+<button class="top-btn" id="topBtn" aria-label="回到顶部">↑</button>
+<nav class="readbar" aria-label="阅读工具">
+  <button type="button" class="readbar-btn" id="tocBtn" aria-label="目录"><span class="rb-ico">☰</span><span class="rb-txt">目录</span></button>
+  <button type="button" class="readbar-btn" id="fsBtn" aria-label="字号与外观"><span class="rb-ico">Aa</span><span class="rb-txt">字号</span></button>
+  <button type="button" class="readbar-btn" id="findBtn" aria-label="页内查找"><span class="rb-ico">🔍</span><span class="rb-txt">查找</span></button>
+</nav>
+<div class="find-bar" id="findBar" hidden>
+  <input id="findInput" type="search" placeholder="在本文中查找…" autocomplete="off">
+  <span class="f-count" id="findCount"></span>
+  <button class="icon-btn" id="findPrev" aria-label="上一个">↑</button>
+  <button class="icon-btn" id="findNext" aria-label="下一个">↓</button>
+  <button class="icon-btn" id="findClose" aria-label="关闭查找">×</button>
+</div>
+<div class="progress" id="progress"></div>
 <div class="toc-backdrop"></div>
 <nav class="toc-panel" aria-label="目录">
-  <div class="toc-head">目录</div>
+  <div class="toc-head"><span>目录</span><span class="toc-pct" id="tocPct"></span></div>
 <a class="lv2" href="#_1">两种用法</a>
 <a class="lv3" href="#a">用法 A · 单文件版（第一版：不依赖任何第三方，今天就能用）</a>
 <a class="lv3" href="#a2">用法 A2 · 局域网版（不要第三方，但要「桌面图标」）</a>
@@ -37,7 +78,7 @@
 <a class="lv2" href="#_3">开发者</a>
 </nav>
 <main><article class="doc">
-<h1 id="md2phone-markdown">md2phone · 把 Markdown 放进手机</h1>
+<h1 id="md2phone-markdown">md2phone · 把 Markdown 放进手机</h1><div class="doc-meta-line">更新于 2026-10-02 01:39 · 约 11 分钟 · 第 2/8 篇</div>
 <p>电脑上的 <code>.md</code> 文档 → 手机桌面图标、App 般的阅读体验、内容随电脑同步更新。
 纯静态产物（一个 <code>site/</code> 文件夹），不依赖任何付费服务；文档不经过本工具之外的第三方处理（部署到你自己选的托管上）。</p>
 <h2 id="_1">两种用法</h2>
@@ -63,11 +104,12 @@
 <h3 id="a3-appapk-app">用法 A3 · 安卓 App（<code>文档库.apk</code>）：真 App 形态</h3>
 <ol>
 <li><strong>安装（一次）</strong>：把 <code>文档库.apk</code> 传到手机点开安装（首次需允许「安装未知应用」）；桌面出现「文档库」图标，点开即文档列表，出厂已内置全部文档，离线可读；</li>
-<li><strong>日常更新·方式一（联网，一键）</strong>：App 右上角菜单「<strong>从网站拉取最新</strong>」→ 自动比对版本 → 有更新即下载并加载（无更新提示「已是最新」）；前提：电脑侧已用「自动同步.command」确认发布上网站；</li>
-<li><strong>日常更新·方式二（离线可用，约 20 秒）</strong>：电脑 <code>python3 build.py</code> → 把新的 <code>文档库.html</code> 发到手机 → 菜单「<strong>导入文档库</strong>」选中该文件即完成；
+<li><strong>日常更新·方式一（联网，一键）</strong>：App 启动时会静默比对版本，有新内容弹窗询问；也可随时点右上角菜单「<strong>从网站拉取最新</strong>」→ 进度对话框内自动比对版本 → 有更新即下载并加载（无更新提示「已是最新」）；前提：电脑侧已用「自动同步.command」确认发布上网站；</li>
+<li><strong>日常更新·方式二（离线可用，约 20 秒）</strong>：电脑 <code>python3 build.py</code> → 把新的 <code>文档库.html</code> 发到手机 → 菜单「<strong>导入文档库</strong>」选中该文件即完成（App 会校验文件确实为整库快照，选错会提示）；
    ⚠️ 导入的是 <strong><code>文档库.html</code> 这个整库文件</strong>（里面已打包全部文档的最新版本），不是 .md 原文——App 不解析 md；改了几篇都只需发这一个文件；</li>
 <li>「<strong>恢复内置</strong>」：菜单里一键回到出厂文档；</li>
-<li><strong>阅读位置记忆</strong>：每个文档自动记住读到的位置，重开即从上次处继续（存在手机本地，不跨设备）。</li>
+<li><strong>阅读位置记忆</strong>：每个文档自动记住读到的位置，重开即从上次处继续（存在手机本地，不跨设备）；</li>
+<li><strong>文档里的外链</strong>（网页/邮件/电话）点击后交给系统浏览器等应用打开，不会困在 App 里。</li>
 </ol>
 <p>iPhone 不在此用法内（苹果不允许直接装安装包），用 A / A2 / B。</p>
 <h3 id="b-pwa">用法 B · PWA 托管版【已配置并实测 ✅】</h3>
@@ -86,7 +128,8 @@
    <strong>iPhone（Safari）</strong>：底部分享按钮 → 「添加到主屏幕」；</li>
 <li>桌面出现「文档库」图标，点开即全屏阅读，断网也能读看过的文档。</li>
 </ol>
-<p>阅读页顶部：<code>‹</code> 返回列表 · <code>A−/A+</code> 调整字号（手机会记住）· <code>☰</code> 目录（点击条目直接跳小节）。深色模式跟随系统。</p>
+<p>阅读页：顶栏 <code>‹</code> 返回列表 · 标题（滚到深处自动切换为当前小节名）；<strong>轻点正文空白处唤出/收起控制层</strong>——顶栏与底部工具条（<code>☰</code> 目录 · <code>Aa</code> 字号 · <code>🔍</code> 查找）一起进出，读到一半随时可用，不必滚回篇首；首次进入沉浸阅读会有一次性手势提示。目录抽屉打开即定位当前小节并显示已读百分比。字号五档预设（14/17/20/23/26px，当前档高亮，「默认」键一键回 17），<strong>改字号阅读位置不跳动</strong>；外观三档：跟随系统/浅色/深色；「长代码自动换行」默认开（面板可关回横向滑动保结构），超长代码块限高内滚。<code>🔍</code> 页内查找（高亮 + 上/下一个）。宽表格先自适应收窄装下，装不下才容器内滑动（两缘渐隐提示）；下滑阅读时控制层自动隐退、上滑唤出；深滚动时右下角悬浮「↑ 回到顶部」。</p>
+<p>正文还有：标题下元信息行（更新时间/时长/序号）、开篇文档头卡（版本/定位逐行呈现）、顶部阅读进度条、代码块一键复制（独立工具位不遮内容）、表格与代码块两缘渐隐滑动提示、图片点击放大、底部「较新一篇 / 较早一篇」切换。首页：搜索框（标题+正文，命中片段高亮）· <code>⇅</code> 排序切换 · 「继续阅读」横幅 · 列表滚动位置记忆。PWA 有新内容时弹「内容已更新」提示条。</p>
 <h2 id="b">第一次部署（用法 B 已完成 ✅，以下仅备查；三选一，都是免费档）</h2>
 <p><strong>当前已配置：GitHub Pages + <code>publish_github.py</code> 全 API 发布 + <code>自动同步.command</code> 全自动同步。</strong>
 备选方案（如需更换托管）：</p>
@@ -130,15 +173,19 @@ DEPLOY_CMD=&quot;netlify deploy --dir site --prod&quot; python3 build.py --watch
 <ul>
 <li><strong>手机上没出现「安装」提示？</strong> iPhone 需在 Safari 里用「分享 → 添加到主屏幕」手动添加；网址必须是 https。</li>
 <li><strong>删除的文档手机上还能看到？</strong> 列表刷新后即消失；已缓存的正文副本会在下次联网刷新后被清掉（Service Worker 按构建版本清理旧缓存）。</li>
-<li><strong>文档里表格太宽？</strong> 表格在手机上可左右滑动，不会撑破页面。</li>
+<li><strong>「从网站拉取最新」之后内容反而变旧了？</strong> 拉取拉的是「网站上的版本」——如果电脑改完文档还没发布（双击 <code>自动同步.command</code> 确认发布），网站上就是旧的，拉取会用旧构建替换手机内容。先发布再拉取即可；拉错了就用菜单「恢复内置文档」回滚。</li>
+<li><strong>重装/更新 App 后还是旧内容？</strong> App 优先加载之前「导入文档库 / 从网站拉取最新」留下的快照，覆盖安装 APK 不会覆盖它。菜单「恢复内置文档」回到出厂内容，或直接「导入文档库」选新的 文档库.html。想确认加载的是哪份内容：Aa 设置面板或文章末尾有「内容指纹 + 来源」标识。</li>
+<li><strong>文档里表格太宽？</strong> 表格先自适应收窄（缩字号/紧边距）尽量装下；实在装不下的在卡片容器内左右滑动，两缘有渐隐提示。代码块默认自动换行，可在阅读工具条 <code>Aa</code> 面板里改回「保结构横向滑动」。</li>
 <li><strong>想换图标/名字？</strong> 改 <code>build.py</code> 里的 <code>manifest</code> 与 <code>make_icons()</code>，或直接替换 <code>site/assets/</code> 下的图标后重建。</li>
 </ul>
 <h2 id="_3">开发者</h2>
 <ul>
 <li><code>build.py</code> 生成器；<code>assets/</code> 模板与样式；<code>docs/</code> 内容源；<code>site/</code> 产物（可整目录重新生成，勿手改）。</li>
-<li>自测：<code>python3 verify_build.py</code>（增/改/删同步场景）；<code>python3 verify_ui.py</code>（需配合本地静态服务，见文件头注释）。</li>
+<li>自测：<code>python3 verify_build.py</code>（增/改/删同步场景）；<code>python3 verify_single.py</code>（单文件）；<code>python3 verify_lan.py</code>（局域网）；<code>python3 verify_memory.py</code>（阅读记忆）；<code>python3 verify_extras.py</code>（v1.7 体验功能：搜索/继续阅读/查找/图片打包等）；<code>python3 verify_ui.py</code>（需配合本地静态服务，见文件头注释）。</li>
 <li>需求、验收标准与验证边界见 <code>需求与验收.md</code> 与 <code>交付记录.md</code>。</li>
 </ul>
+<nav class="doc-nav"><a class="prev" href="ea877eb60d.html"><span class="d-label">‹ 较新一篇</span><span class="d-title">交付记录 · md2phone（2026-09-30）</span></a><a class="next" href="899b96eadf.html"><span class="d-label">较早一篇 ›</span><span class="d-title">需求与验收 · md 文档手机阅读（2026-09-30）</span></a></nav>
+<div class="build-id">文档库 内容指纹 7573ae63103d · 来源 <span class="fs-src">—</span></div>
 </article></main>
 <script src="app.js"></script>
 </body>

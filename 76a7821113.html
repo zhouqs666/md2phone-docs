@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>FDE 工作指南（Forward Deployed Engineer Work Guide） · 文档库</title>
 <meta name="theme-color" content="#2563eb">
+<meta name="theme-color" content="#0f1419" media="(prefers-color-scheme: dark)">
 <meta name="robots" content="noindex">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -17,16 +18,55 @@
 <body>
 <header class="top">
   <a class="icon-btn back" href="index.html" aria-label="返回列表">‹</a>
-  <div class="title">FDE 工作指南（Forward Deployed Engineer Work Guide）</div>
-  <button class="icon-btn fs" data-fs="-1" aria-label="缩小字号">A−</button>
-  <button class="icon-btn fs" data-fs="1" aria-label="放大字号">A+</button>
-  <button class="icon-btn" id="tocBtn" aria-label="目录">☰</button>
+  <div class="title" id="docTitle">FDE 工作指南（Forward Deployed Engineer Work Guide）</div>
 </header>
+<div class="fs-pop" id="fsPop" hidden>
+  <div class="fs-row">
+    <span class="fs-label">字号</span>
+    <div class="fs-seg" id="fsSeg">
+      <button type="button" data-fs-preset="14">小</button>
+      <button type="button" data-fs-preset="17">标准</button>
+      <button type="button" data-fs-preset="20">大</button>
+      <button type="button" data-fs-preset="23">特大</button>
+      <button type="button" data-fs-preset="26">超大</button>
+    </div>
+    <button type="button" class="fs-reset" id="fsReset">默认</button>
+  </div>
+  <div class="fs-row">
+    <span class="fs-label">外观</span>
+    <div class="fs-seg" id="themeSeg">
+      <button type="button" data-theme-set="auto">自动</button>
+      <button type="button" data-theme-set="light">浅色</button>
+      <button type="button" data-theme-set="dark">深色</button>
+    </div>
+  </div>
+  <div class="fs-row">
+    <span class="fs-label">代码</span>
+    <button type="button" class="fs-switch" id="prewrapBtn" role="switch" aria-checked="true">
+      <span class="sw-track"><span class="sw-dot"></span></span>
+      <span class="sw-text">长代码自动换行</span>
+    </button>
+  </div>
+  <div class="fs-ver">内容指纹 7573ae63103d · 来源 <span class="fs-src">—</span></div>
+</div>
+<button class="top-btn" id="topBtn" aria-label="回到顶部">↑</button>
+<nav class="readbar" aria-label="阅读工具">
+  <button type="button" class="readbar-btn" id="tocBtn" aria-label="目录"><span class="rb-ico">☰</span><span class="rb-txt">目录</span></button>
+  <button type="button" class="readbar-btn" id="fsBtn" aria-label="字号与外观"><span class="rb-ico">Aa</span><span class="rb-txt">字号</span></button>
+  <button type="button" class="readbar-btn" id="findBtn" aria-label="页内查找"><span class="rb-ico">🔍</span><span class="rb-txt">查找</span></button>
+</nav>
+<div class="find-bar" id="findBar" hidden>
+  <input id="findInput" type="search" placeholder="在本文中查找…" autocomplete="off">
+  <span class="f-count" id="findCount"></span>
+  <button class="icon-btn" id="findPrev" aria-label="上一个">↑</button>
+  <button class="icon-btn" id="findNext" aria-label="下一个">↓</button>
+  <button class="icon-btn" id="findClose" aria-label="关闭查找">×</button>
+</div>
+<div class="progress" id="progress"></div>
 <div class="toc-backdrop"></div>
 <nav class="toc-panel" aria-label="目录">
-  <div class="toc-head">目录</div>
+  <div class="toc-head"><span>目录</span><span class="toc-pct" id="tocPct"></span></div>
 <a class="lv2" href="#_1">本版验证状态（先读）</a>
-<a class="lv2" href="#_2">目录</a>
 <a class="lv2" href="#0">0. 角色与公理</a>
 <a class="lv3" href="#01-fde">0.1 FDE 是什么</a>
 <a class="lv3" href="#02">0.2 三条公理（一切裁剪的推导起点）</a>
@@ -79,12 +119,8 @@
 <a class="lv2" href="#_4">变更记录</a>
 </nav>
 <main><article class="doc">
-<h1 id="fde-forward-deployed-engineer-work-guide">FDE 工作指南（Forward Deployed Engineer Work Guide）</h1>
-<blockquote>
-<p>版本：v0.7 · 日期：2026-10-01
-定位：面向「前置部署工程师（FDE）」角色的通用交付流程框架。独立于任何具体产品、技术栈、AI 工具与硬件环境。
-使用方式：本文档是骨架与公理的唯一定义处。所有裁剪（流程轻重、工件增减、工具选择）都从公理与适配层推导，不修改本文档；修改本文档 = 版本升级（见文末变更记录）。</p>
-</blockquote>
+<h1 id="fde-forward-deployed-engineer-work-guide">FDE 工作指南（Forward Deployed Engineer Work Guide）</h1><div class="doc-meta-line">更新于 2026-10-01 11:19 · 约 61 分钟 · 第 5/8 篇</div>
+<div class="doc-meta"><p>版本：v0.7 · 日期：2026-10-01</p><p>定位：面向「前置部署工程师（FDE）」角色的通用交付流程框架。独立于任何具体产品、技术栈、AI 工具与硬件环境。</p><p>使用方式：本文档是骨架与公理的唯一定义处。所有裁剪（流程轻重、工件增减、工具选择）都从公理与适配层推导，不修改本文档；修改本文档 = 版本升级（见文末变更记录）。</p></div>
 <h2 id="_1">本版验证状态（先读）</h2>
 <p>这份文档的规则分三种可信度，混着读会误判：</p>
 <div class="table-wrap"><table>
@@ -193,80 +229,6 @@
 </tbody>
 </table></div>
 <p><strong>每完成一轮实战或演练，往附录 C 记一行</strong>——那是这份文档唯一的迭代输入。</p>
-<hr />
-<h2 id="_2">目录</h2>
-<ul>
-<li>
-<ol start="0">
-<li>角色与公理（FDE 是什么 / 三条公理 / 职责槽位 / 职业红线 / 转型者入口）</li>
-</ol>
-</li>
-<li>
-<ol>
-<li>交付全程总览（阶段、门、时间配比）</li>
-</ol>
-</li>
-<li>
-<ol start="2">
-<li>接洽前：项目评估（门 G0）</li>
-</ol>
-</li>
-<li>
-<ol start="3">
-<li>阶段一：理解（Discovery）｜出口门 G1</li>
-</ol>
-</li>
-<li>
-<ol start="4">
-<li>阶段二：定义｜出口门 G2</li>
-</ol>
-</li>
-<li>
-<ol start="5">
-<li>阶段三：构建｜出口门 G3</li>
-</ol>
-</li>
-<li>
-<ol start="6">
-<li>阶段四：交付｜出口门 G4</li>
-</ol>
-</li>
-<li>
-<ol start="7">
-<li>收尾与沉淀（门 G5）</li>
-</ol>
-</li>
-<li>
-<ol start="8">
-<li>工件体系（存在什么、何时加重）</li>
-</ol>
-</li>
-<li>
-<ol start="9">
-<li>适配层（进新项目/新公司先跑一遍）</li>
-</ol>
-</li>
-<li>
-<ol start="10">
-<li>能力模型（刻意练习映射）</li>
-</ol>
-</li>
-<li>
-<ol start="11">
-<li>与公司内部的协作</li>
-</ol>
-</li>
-<li>
-<ol start="12">
-<li>常见困境与应对</li>
-</ol>
-</li>
-<li>附录 A：示例（虚构项目，用于校准「写到多细」）</li>
-<li>附录 B：术语表</li>
-<li>附录 C：实践验证记录</li>
-<li>资料来源与时效</li>
-<li>变更记录</li>
-</ul>
 <hr />
 <h2 id="0">0. 角色与公理</h2>
 <h3 id="01-fde">0.1 FDE 是什么</h3>
@@ -1310,7 +1272,7 @@
 </table></div>
 <p><strong>校准规则</strong>：本节数据每年校准一次（与年度复盘合并）。指南正文刻意不绑定具体工具与厂商，正文内容不随行业热点漂移；漂移只发生在本节的证据数字上。<strong>v0.3 未逐条核对原始报告</strong>，校准时请补原始链接并标注核对结论。</p>
 <hr />
-<h2 id="_4">变更记录</h2>
+<h2 id="_4">变更记录</h2><details class="changelog"><summary>展开变更记录（23 条）</summary>
 <ul>
 <li>v0.7（2026-10-01）：练习⑦（全自动同步）触发的修订，见附录 C。</li>
 <li>3.2 环境评估清单新增「外部服务依赖」行：第三方服务的账号授权归属、配额/延迟/可达性的逐项验证、不可达时的替代路径是必答项（<code>待验证</code>；本轮实践中「git 端点不可达 → 全 API 发布替代」正是该条的实证）。</li>
@@ -1335,7 +1297,9 @@
 <li>复核层（独立上下文对抗性复核后修正）：统一 4.6 与 6.4 的范围判据（消除环状引用）；8.1 补入边界契约/环境评估/签认与验收记录/运维手册，8.2 与 4.5 的触发条件对齐；5.1 补「显式证据替代自动化」的唯一例外口径；把非确定性产出的落点补全（4.4 抽样项、4.5 评测集触发器、3.4 成本与延迟字段）；0.3 增设「独立审查」槽位并给出单人场景的审查解法（5.4）；5.4 定义「关键改动」；6.3 补最小观测动作清单；第 9 章补每步产出物与强度对照表；G4 纳入发布门；术语表补 P95/制品哈希/回归/抽样比例；清除「实践教训」「行业的新共识」「2026 年的市场现实」等暗示已验证或脱离来源保护的表述；修正岗位数量区间（991 不在 1,000–1,500 内）与附录 C 示例行。</li>
 <li>v0.2（2026-09-30）：资深 FDE 视角全面审查后修订——补齐 DoD 检查表（4.4）与 G0/G5 过门标准，门控体系闭环；新增需求变更管理（6.4）、内部协作（11）、常见困境（12）；环境评估补数据质量维度；时间配比等绝对化表述改为参考值；新增转型者入口（0.5，含求职防坑）、访谈观察法与怀疑者名单（3.1）；新增附录 A 示例、附录 B 术语表；行业证据更新至 2026 年并新增「资料来源与时效」小节。</li>
 <li>v0.1（2026-09-30）：初稿。四阶段骨架 + 三公理 + 职责槽位 + 理解阶段标准化（访谈提纲/环境评估/两张一页纸）+ 工件触发器 + 适配层 + 能力映射。</li>
-</ul>
+</ul></details>
+<nav class="doc-nav"><a class="prev" href="bc5441b46c.html"><span class="d-label">‹ 较新一篇</span><span class="d-title">md2phone · 内容与构建约定（AGENTS.md）</span></a><a class="next" href="8f07a8680e.html"><span class="d-label">较早一篇 ›</span><span class="d-title">GitHub Pages 全自动发布：绕开 git 端点、空仓库与排障假信号</span></a></nav>
+<div class="build-id">文档库 内容指纹 7573ae63103d · 来源 <span class="fs-src">—</span></div>
 </article></main>
 <script src="app.js"></script>
 </body>

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>交付记录 · md2phone（2026-09-30） · 文档库</title>
 <meta name="theme-color" content="#2563eb">
+<meta name="theme-color" content="#0f1419" media="(prefers-color-scheme: dark)">
 <meta name="robots" content="noindex">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -17,14 +18,54 @@
 <body>
 <header class="top">
   <a class="icon-btn back" href="index.html" aria-label="返回列表">‹</a>
-  <div class="title">交付记录 · md2phone（2026-09-30）</div>
-  <button class="icon-btn fs" data-fs="-1" aria-label="缩小字号">A−</button>
-  <button class="icon-btn fs" data-fs="1" aria-label="放大字号">A+</button>
-  <button class="icon-btn" id="tocBtn" aria-label="目录">☰</button>
+  <div class="title" id="docTitle">交付记录 · md2phone（2026-09-30）</div>
 </header>
+<div class="fs-pop" id="fsPop" hidden>
+  <div class="fs-row">
+    <span class="fs-label">字号</span>
+    <div class="fs-seg" id="fsSeg">
+      <button type="button" data-fs-preset="14">小</button>
+      <button type="button" data-fs-preset="17">标准</button>
+      <button type="button" data-fs-preset="20">大</button>
+      <button type="button" data-fs-preset="23">特大</button>
+      <button type="button" data-fs-preset="26">超大</button>
+    </div>
+    <button type="button" class="fs-reset" id="fsReset">默认</button>
+  </div>
+  <div class="fs-row">
+    <span class="fs-label">外观</span>
+    <div class="fs-seg" id="themeSeg">
+      <button type="button" data-theme-set="auto">自动</button>
+      <button type="button" data-theme-set="light">浅色</button>
+      <button type="button" data-theme-set="dark">深色</button>
+    </div>
+  </div>
+  <div class="fs-row">
+    <span class="fs-label">代码</span>
+    <button type="button" class="fs-switch" id="prewrapBtn" role="switch" aria-checked="true">
+      <span class="sw-track"><span class="sw-dot"></span></span>
+      <span class="sw-text">长代码自动换行</span>
+    </button>
+  </div>
+  <div class="fs-ver">内容指纹 7573ae63103d · 来源 <span class="fs-src">—</span></div>
+</div>
+<button class="top-btn" id="topBtn" aria-label="回到顶部">↑</button>
+<nav class="readbar" aria-label="阅读工具">
+  <button type="button" class="readbar-btn" id="tocBtn" aria-label="目录"><span class="rb-ico">☰</span><span class="rb-txt">目录</span></button>
+  <button type="button" class="readbar-btn" id="fsBtn" aria-label="字号与外观"><span class="rb-ico">Aa</span><span class="rb-txt">字号</span></button>
+  <button type="button" class="readbar-btn" id="findBtn" aria-label="页内查找"><span class="rb-ico">🔍</span><span class="rb-txt">查找</span></button>
+</nav>
+<div class="find-bar" id="findBar" hidden>
+  <input id="findInput" type="search" placeholder="在本文中查找…" autocomplete="off">
+  <span class="f-count" id="findCount"></span>
+  <button class="icon-btn" id="findPrev" aria-label="上一个">↑</button>
+  <button class="icon-btn" id="findNext" aria-label="下一个">↓</button>
+  <button class="icon-btn" id="findClose" aria-label="关闭查找">×</button>
+</div>
+<div class="progress" id="progress"></div>
 <div class="toc-backdrop"></div>
 <nav class="toc-panel" aria-label="目录">
-  <div class="toc-head">目录</div>
+  <div class="toc-head"><span>目录</span><span class="toc-pct" id="tocPct"></span></div>
 <a class="lv2" href="#_1">交付日志</a>
 <a class="lv2" href="#7">第三方可用性验证（练习⑦客户专项要求：依赖第三方但必须充分验证其可用性）</a>
 <a class="lv2" href="#04-3">已验证 / 未验证清单（红线 0.4-3：诚实声明验证边界）</a>
@@ -35,7 +76,7 @@
 <a class="lv2" href="#c">演练复盘（回填附录 C）</a>
 </nav>
 <main><article class="doc">
-<h1 id="md2phone2026-09-30">交付记录 · md2phone（2026-09-30）</h1>
+<h1 id="md2phone2026-09-30">交付记录 · md2phone（2026-09-30）</h1><div class="doc-meta-line">更新于 2026-10-02 01:39 · 约 20 分钟 · 第 1/8 篇</div>
 <h2 id="_1">交付日志</h2>
 <div class="table-wrap"><table>
 <thead>
@@ -88,6 +129,54 @@
 <td>练习⑧：确认式上传 + App 云端拉取 + 阅读位置记忆（客户确认方案后实现）。新增：确认门（弹窗三按钮/终端降级/测试钩子）、version.json+library.html 发布端点、App「从网站拉取最新」（版本比对→按需下载→原子替换）、阅读位置记忆（多页按文档/单文件按篇+段内比例）；<strong>修复真 bug：index 构建时间戳破坏内容指纹 → 跳过守卫永不生效</strong>（改为内容驱动的确定性时间）</td>
 <td>FDE（自主）</td>
 <td>F1-RESULT PASS（跳过分支：仓库不动；确认分支：发布前进）；F2-RESULT PASS（公网端点+协议模拟+file:// 渲染）；F3-RESULT PASS（恢复/隔离/单文件五项）；三套回归通过；APK 重打</td>
+</tr>
+<tr>
+<td>v1.7 · 2026-10-01</td>
+<td>练习⑨·体验复盘：全量代码体验审计（21 项清单）分批落地——代码高亮配色补齐（codehilite 有 class 无配色的高亮空转）、首页「继续阅读」横幅（复用位置记忆）、列表全文搜索（标题+正文，构建时内联索引）+ 阅读页/单文件页内查找、目录 scrollspy、字号档位显示+点击重置、外观三档手动切换、代码块一键复制（按钮在滚动容器外）、阅读进度条、上一篇/下一篇、列表滚动位置记忆、排序切换、卡片摘要、SW 静态壳 cache-first 秒开 + 「内容已更新」提示条、docs 本地图片打包（PWA 相对路径 / 单文件 data URI）、图片灯箱；App 侧：外链外跳、拉取进度对话框、导入校验、启动静默查更新、夜间主题</td>
+<td>FDE（自主）</td>
+<td>新增 verify_extras.py 34 项 PASS（可重复执行）；六套回归全过（build/single/lan/memory/ui/extras）；verify_ui 断言修正为动态选文档（测试假设过时，非功能回归）；APK 重打</td>
+</tr>
+<tr>
+<td>v1.8 · 2026-10-01</td>
+<td>练习⑨·二次复盘（以阅读体验专家身份 390×844 实读复检，18 张截图逐张审读）→ 14 项问题全部整改：①表格/代码块两缘渐隐滑动提示 + 表头允许换行（图例表/流程图不再被静默裁切）②复制按钮移到代码块上方工具位（不再压住内容）③开篇 blockquote 升级「文档头卡」（逐行还原字段结构，修复软合并粘连 + 灰字弱化）④行内 code 标记浅色下描边可见 ⑤顶栏收敛为 ‹/标题/Aa/🔍/☰，字号外观入 Aa 弹出层 ⑥顶栏下滑隐退上滑唤出 ⑦深滚动标题自动切换为当前小节名 ⑧h1 下元信息行 ⑨右下角回顶按钮 ⑩h3 品牌色竖条/h4 加粗 + 列表节奏调整 ⑪「目录」自带列表压缩、「变更记录」折叠（23 条）⑫目录遮罩降至顶栏之下（☰ 可再点关闭）+ Esc 全局关闭 ⑬底部导航语义「较新/较早」⑭暗色正文亮度微调 + 摘要单行；<strong>源格式修复：《需求与验收》8 处「AC：」后缺空行致列表被吞成段落墙</strong>（36 条 AC 恢复列表形态）；🔍 替换过淡的 ⌕ 图标</td>
+<td>FDE（自主）</td>
+<td>verify_extras.py 扩至 46 项 PASS；六套回归全过；第二轮实读复检（/tmp/ux_review2/）确认全部生效、无新问题；APK 重打</td>
+</tr>
+<tr>
+<td>v1.9 · 2026-10-02</td>
+<td>客户实读反馈三项整改 + 专家二次实读走查（Playwright 390×844 截图与 DOM 诊断）：①宽表格自适应（逐表检测溢出→压缩档，14 表 3 压缩后 0 溢出，仍放不下才容器内滑动）②代码块默认自动换行（面板开关可关）+ 限高 65vh 内滚③轻点正文唤出/收起阅读控制层（顶栏+底部工具条：目录/字号/查找），首用一次性手势提示，回顶保持独立悬浮键④字号五档预设 14/17/20/23/26 + 改字号锚定阅读位置不跳（修复过程揪出 Chrome scroll anchoring 与表格适配叠加干扰，禁用锚定+锚点底边补偿后 17→26→14→20→17 往返实测通过；旧版逐 px 记忆自动吸附档位）⑤目录统一：正文手写「目录」小节构建时移除、抽屉打开即定位当前小节+已读百分比、单文件版 ☰ 按当前文档动态装配抽屉⑥外观三选分段按钮 ⑦细节：正文 overflow-wrap、行内 code 任意断行、滚动区 tabindex、暗色 theme-color</td>
+<td>FDE（自主）</td>
+<td>verify_extras.py 扩至 58 项 PASS；六套回归全过（build/single/lan/memory/ui/extras）；字号位置保持双形态往返实测；APK 重打</td>
+</tr>
+<tr>
+<td>v1.9.1 · 2026-10-02</td>
+<td>客户真机对比发现差异：APK 里阅读进度条（top:0 的 3px 条）不可见。根因：targetSdk 36 在 Android 15+ 强制 edge-to-edge，WebView 顶进状态栏/手势条底下，而 WebView 内 env(safe-area-inset-*) 恒为 0、网页无从感知。修复：MainActivity 给 WebView 挂 OnApplyWindowInsetsListener，把系统栏内边距套到 WebView 上（R+ 用 getInsets，老版本走废弃字段降级），网页视口从状态栏下方开始，页内布局零改动——进度条/底部工具条/悬浮键一并归位</td>
+<td>FDE（自主）</td>
+<td>APK 重打（01:08）；手机视口 Playwright 复核网页侧渲染正常；真机状态栏避让列为未验证清单</td>
+</tr>
+<tr>
+<td>v1.9.2 · 2026-10-02</td>
+<td>客户真机复测：进度条仍不可见且顶部文字被状态栏遮挡——坐实 v1.9.1 修复无效。根因升级：WebView.setPadding 不改变网页内容布局（WebView 已知怪癖），把内边距套在 WebView 自身上不生效。改用标准做法：WebView 放进 fitsSystemWindows=true 的父容器（FrameLayout），系统栏内边距落到容器上，网页视口从状态栏下方、手势条上方开始</td>
+<td>FDE（自主）</td>
+<td>APK 重打（01:14）；真机系统栏避让与进度条可见性待客户复测</td>
+</tr>
+<tr>
+<td>v1.9.3 · 2026-10-02</td>
+<td>客户复测（iQOO 11 / Android 16）：进度条仍不可见且「轻点唤出工具条」失效——轻点唤出是 v1.9 新增功能不可能凭空回退，高度怀疑手机在跑旧内容（此前导入的旧快照优先级高于 APK 内置）。为远程定位给页面加「内容身份标识」：构建指纹 + 内容来源（APK 内置 / 导入快照 / 网页，按 location.href 判别）渲染在文章末尾与设置面板，window.onerror 会把脚本异常写进同一位置；APK versionName 升至 1.9.2 供安装核验</td>
+<td>FDE（自主）</td>
+<td>APK 重打（指纹 7a46e3bd77ab 与 site 一致）；待客户按标识复测回传</td>
+</tr>
+<tr>
+<td>v1.9.4 · 2026-10-02</td>
+<td>客户真机复测回传（iQOO 11 / Android 16）：安装 v1.9.2 APK 后未恢复内置仍无进度条，菜单「恢复内置文档」后一切正常——确认为旧导入快照优先加载（导入件 &gt; APK 内置为免重装更新的设计），叠加 Android 15+ edge-to-edge 遮挡。进度条、轻点唤出工具条、顶部遮挡在真机全部通过；内容身份标识完成定位使命。README 常见问题补充「重装后还是旧内容」条目</td>
+<td>FDE（自主）</td>
+<td>真机验收通过；APK 与 site 指纹一致</td>
+</tr>
+<tr>
+<td>v1.9.5 · 2026-10-02</td>
+<td>客户再报：点「从网站拉取最新」后再次回退。定位：拉取功能正常，但网站自 10-01 发布后未再更新，拉下来的是旧构建——「网站过期 + 指纹不一致即提示更新」的组合把旧内容当成了「新内容」。处置：重新发布最新构建到 GitHub Pages（手动运行 publish_github.py 按约定视为已确认），发布后拉取即得最新；README 常见问题补充「拉取后变旧了」条目</td>
+<td>FDE（自主）</td>
+<td>远端 version.json 与本地 site 指纹核对一致；真机「恢复内置 → 拉取」复测待客户</td>
 </tr>
 </tbody>
 </table></div>
@@ -151,6 +240,9 @@
 <li>安卓 App（v1.4）：gradle assembleDebug 成功（gradle 本地缓存 + aliyun 源，可离线构建）；APK 静态检查：assets 内 7 页齐全、包名 com.mddocs、应用名「文档库」、启动 Activity 正确、自适应图标就位；三套回归全过（验证脚本预期值改为按 docs.json 动态取数，文档数量变化不再误报）</li>
 <li>练习⑧（v1.6）：F1 确认门两分支（跳过不发布/确认发布，同进程树编排）✅；F2 拉取协议全流程（指纹比对→按需下载→校验→落盘→file:// 渲染 8 篇）✅；F3 阅读记忆五项（多页恢复、跨文档隔离×2、单文件回篇、段内落点）✅；<code>verify_memory.py</code> 可重复执行</li>
 <li>内容指纹稳定性：确定性时间戳修复后，未变化内容重复构建 → 发布跳过（守卫生效实证）</li>
+<li>v1.7 体验升级全套（<code>verify_extras.py</code> 34 项可重复执行）：全文搜索（列表过滤/命中片段高亮/命中数、单文件 Enter 跳转）、继续阅读横幅（回列表出现、点击落回上次位置）、排序切换（zh locale 升序）、列表位置记忆（返回不回顶）、页内查找（高亮/计数/循环/清除）、目录 scrollspy、阅读进度条、代码复制按钮（滚动容器外定位）、字号档位显示+重置、上一篇/下一篇、主题三档（切换/记住/配色实测变化）、SW 更新提示条（模拟广播）、图片打包（site 拷贝 + data URI 字节级一致 + APK 资产同步 + 灯箱）</li>
+<li>v1.7 安卓 App（代码路径本机验证 + gradle assembleDebug 成功）：外链外跳（http/https/mailto/tel/sms → ACTION_VIEW，file:// 照常页内）、拉取进度对话框（连接→下载两段提示、可取消、取消不落盘）、导入校验（≥2KB + 「文档库」标记，与拉取路径同款）、启动静默查更新（指纹不一致才弹窗询问）、夜间主题（values-night + 窗口背景与网页 --bg 同色防闪白）</li>
+<li>v1.8 阅读体验整改（<code>verify_extras.py</code> 扩至 46 项）：表格/代码块渐隐滑动提示、表头换行后图例表首屏完整、复制按钮工具位不遮内容（几何断言 b.bottom ≤ p.top）、文档头卡 + meta 行、顶栏隐退/唤出/标题随小节切换、回顶按钮、自带目录压缩、变更记录折叠、☰ 再点关闭、Esc 关闭弹出层、上下篇「较新/较早」标签；第二轮实读复检 18 张截图确认无新问题</li>
 </ul>
 <h3 id="fde">未验证及原因（部署后由 FDE 在真机补验）</h3>
 <ul>
@@ -162,15 +254,18 @@
 <li><strong>单文件版在部分安卓浏览器的字号记忆</strong>：content:// 源下 localStorage 可能不持久，字号调节本身可用，记忆降级为可选。</li>
 <li><strong>局域网版真机环节</strong>（v1.3）：真手机同 WiFi 访问、添加到主屏幕（iOS 全屏 / Android 图标形态）、macOS 防火墙弹窗处理——需真机与真实局域网环境。</li>
 <li><strong>Netlify/GitHub Pages 部署步骤本身</strong>——需客户账号；命令行流程来自托管方公开文档，未在本机实跑。</li>
+<li><strong>v1.7 真机项</strong>：App 外链拉起系统浏览器的实际跳转、拉取进度对话框手感与取消时机、启动更新弹窗、夜间主题实机配色；PWA「内容已更新」提示条需「两代构建 + 真机」才能自然触发（本地以模拟广播验证）。</li>
+<li><strong>v1.7 单文件图片内嵌的体积代价</strong>：图片转 data URI 会放大体积（base64 +33%），微信传输与 WebView 加载的真实体感需有图文档出现后实测（当前 docs/ 无图片，verify_extras 以临时文档验证）。</li>
 </ul>
 <h3 id="51">验证替代理由（5.1 例外条款）</h3>
 <p>AC2-2 / AC3-5 属「依赖第三方界面与硬件条件」的验证，自动化成本明显高于收益，以显式证据（产物校验 + 本地全链路模拟）替代，经交付责任人（本人，演练）确认；<strong>真实客户场景下应转为真机验收项</strong>。</p>
 <h2 id="backlog-46">风险与后续（Backlog，按 4.6 排序）</h2>
 <ol>
-<li>P2｜全文搜索（文档多了以后的第一个需求）</li>
-<li>P2｜手动深色/浅色切换（当前仅跟随系统）</li>
+<li>~~P2｜全文搜索~~ ✅ v1.7 完成（列表搜索 + 单文件搜索 + 页内查找）</li>
+<li>~~P2｜手动深色/浅色切换~~ ✅ v1.7 完成（三档：跟随系统/浅色/深色）</li>
 <li>P2｜iOS 微信内打开体验引导页</li>
 <li>P3｜发布状态回执（当前 DEPLOY_CMD 失败仅打印，不重试通知）</li>
+<li>P3｜mermaid 图 / LaTeX 公式渲染（当前文档未出现；出现时引入，需离线内联方案以保住「自包含」承诺）</li>
 </ol>
 <h2 id="c">演练复盘（回填附录 C）</h2>
 <ul>
@@ -179,6 +274,8 @@
 <li>缺失：指南没有「客户非技术背景时，部署步骤如何代办/引导」的规则；本次用 README 三选一缓解，真实场景应写入边界契约（客户提供项：托管账号）。</li>
 <li>待改进：--watch 的「修改后自动重建」仅由 verify_build 的独立更新场景间接覆盖，监听循环内的修改路径未单独断言。</li>
 </ul>
+<nav class="doc-nav"><span class="doc-nav-side prev"><span class="d-label">‹ 较新一篇</span></span><a class="next" href="04c6e90faa.html"><span class="d-label">较早一篇 ›</span><span class="d-title">md2phone · 把 Markdown 放进手机</span></a></nav>
+<div class="build-id">文档库 内容指纹 7573ae63103d · 来源 <span class="fs-src">—</span></div>
 </article></main>
 <script src="app.js"></script>
 </body>

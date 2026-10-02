@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>GitHub Pages 全自动发布：绕开 git 端点、空仓库与排障假信号 · 文档库</title>
 <meta name="theme-color" content="#2563eb">
+<meta name="theme-color" content="#0f1419" media="(prefers-color-scheme: dark)">
 <meta name="robots" content="noindex">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -17,21 +18,61 @@
 <body>
 <header class="top">
   <a class="icon-btn back" href="index.html" aria-label="返回列表">‹</a>
-  <div class="title">GitHub Pages 全自动发布：绕开 git 端点、空仓库与排障假信号</div>
-  <button class="icon-btn fs" data-fs="-1" aria-label="缩小字号">A−</button>
-  <button class="icon-btn fs" data-fs="1" aria-label="放大字号">A+</button>
-  <button class="icon-btn" id="tocBtn" aria-label="目录">☰</button>
+  <div class="title" id="docTitle">GitHub Pages 全自动发布：绕开 git 端点、空仓库与排障假信号</div>
 </header>
+<div class="fs-pop" id="fsPop" hidden>
+  <div class="fs-row">
+    <span class="fs-label">字号</span>
+    <div class="fs-seg" id="fsSeg">
+      <button type="button" data-fs-preset="14">小</button>
+      <button type="button" data-fs-preset="17">标准</button>
+      <button type="button" data-fs-preset="20">大</button>
+      <button type="button" data-fs-preset="23">特大</button>
+      <button type="button" data-fs-preset="26">超大</button>
+    </div>
+    <button type="button" class="fs-reset" id="fsReset">默认</button>
+  </div>
+  <div class="fs-row">
+    <span class="fs-label">外观</span>
+    <div class="fs-seg" id="themeSeg">
+      <button type="button" data-theme-set="auto">自动</button>
+      <button type="button" data-theme-set="light">浅色</button>
+      <button type="button" data-theme-set="dark">深色</button>
+    </div>
+  </div>
+  <div class="fs-row">
+    <span class="fs-label">代码</span>
+    <button type="button" class="fs-switch" id="prewrapBtn" role="switch" aria-checked="true">
+      <span class="sw-track"><span class="sw-dot"></span></span>
+      <span class="sw-text">长代码自动换行</span>
+    </button>
+  </div>
+  <div class="fs-ver">内容指纹 7573ae63103d · 来源 <span class="fs-src">—</span></div>
+</div>
+<button class="top-btn" id="topBtn" aria-label="回到顶部">↑</button>
+<nav class="readbar" aria-label="阅读工具">
+  <button type="button" class="readbar-btn" id="tocBtn" aria-label="目录"><span class="rb-ico">☰</span><span class="rb-txt">目录</span></button>
+  <button type="button" class="readbar-btn" id="fsBtn" aria-label="字号与外观"><span class="rb-ico">Aa</span><span class="rb-txt">字号</span></button>
+  <button type="button" class="readbar-btn" id="findBtn" aria-label="页内查找"><span class="rb-ico">🔍</span><span class="rb-txt">查找</span></button>
+</nav>
+<div class="find-bar" id="findBar" hidden>
+  <input id="findInput" type="search" placeholder="在本文中查找…" autocomplete="off">
+  <span class="f-count" id="findCount"></span>
+  <button class="icon-btn" id="findPrev" aria-label="上一个">↑</button>
+  <button class="icon-btn" id="findNext" aria-label="下一个">↓</button>
+  <button class="icon-btn" id="findClose" aria-label="关闭查找">×</button>
+</div>
+<div class="progress" id="progress"></div>
 <div class="toc-backdrop"></div>
 <nav class="toc-panel" aria-label="目录">
-  <div class="toc-head">目录</div>
+  <div class="toc-head"><span>目录</span><span class="toc-pct" id="tocPct"></span></div>
 <a class="lv2" href="#git-github-pages">一、方案：不经过 git 的 GitHub Pages 发布</a>
 <a class="lv2" href="#_1">二、三个真实的坑（都花过排障时间）</a>
 <a class="lv2" href="#_2">三、最大的教训：测试环境的进程视图 ≠ 真实环境</a>
 <a class="lv2" href="#_3">四、时延账本（客户预期管理）</a>
 </nav>
 <main><article class="doc">
-<h1 id="github-pages-git">GitHub Pages 全自动发布：绕开 git 端点、空仓库与排障假信号</h1>
+<h1 id="github-pages-git">GitHub Pages 全自动发布：绕开 git 端点、空仓库与排障假信号</h1><div class="doc-meta-line">更新于 2026-10-01 11:19 · 约 4 分钟 · 第 6/8 篇</div>
 <blockquote>
 <p>定位：练习⑦（全自动同步）的实践层沉淀。规则层结论在指南 v0.7（3.2「外部服务依赖」行）。</p>
 </blockquote>
@@ -88,6 +129,8 @@
 </tbody>
 </table></div>
 <p>对时效极敏感的场景（改完 10 秒内必须看到）：用 App 内导入（发 文档库.html），秒级。</p>
+<nav class="doc-nav"><a class="prev" href="76a7821113.html"><span class="d-label">‹ 较新一篇</span><span class="d-title">FDE 工作指南（Forward Deployed Engineer Work Guide）</span></a><a class="next" href="a8e08c60a5.html"><span class="d-label">较早一篇 ›</span><span class="d-title">形态选型复盘：为什么没有早点想到 App</span></a></nav>
+<div class="build-id">文档库 内容指纹 7573ae63103d · 来源 <span class="fs-src">—</span></div>
 </article></main>
 <script src="app.js"></script>
 </body>
